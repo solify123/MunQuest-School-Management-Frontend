@@ -83,13 +83,6 @@ const StudentProfile: React.FC = () => {
     }));
   };
 
-  const handleGradeTypeSelect = (gradeType: 'grade' | 'year' | 'programme' | 'other') => {
-    setFormData(prev => ({
-      ...prev,
-      gradeType
-    }));
-  };
-
   const handleCountryCodeSelect = (code: string) => {
     setFormData(prev => ({
       ...prev,
