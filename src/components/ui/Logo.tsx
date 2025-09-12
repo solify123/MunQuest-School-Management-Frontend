@@ -15,7 +15,7 @@ const Logo: React.FC<LogoProps> = ({ size = 'medium', className = '' }) => {
   };
 
   return (
-    <div className={`flex items-center justify-center ${className}`}>
+    <div className={`flex items-center justify-start ${className}`}>
       <img 
         src={logoImage} 
         alt="MunQuest Logo" 

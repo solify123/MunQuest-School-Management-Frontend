@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button, Input, PasswordInput, Logo } from '../components/ui';
 import type { AuthFormData } from '../types';
 
 const Login: React.FC = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState<AuthFormData>({
     email: '',
     password: '',
@@ -51,6 +52,13 @@ const Login: React.FC = () => {
     if (validateForm()) {
       console.log('Form submitted:', formData);
       // Handle form submission here
+      // For demo purposes, redirect to student profile creation if role is student
+      if (formData.role === 'student') {
+        navigate('/student-profile');
+      } else {
+        // Handle teacher login
+        console.log('Teacher login - implement teacher dashboard');
+      }
     }
   };
 
