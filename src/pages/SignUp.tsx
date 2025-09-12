@@ -70,7 +70,7 @@ const SignUp: React.FC = () => {
           <div className="w-[566px] bg-[#1E395D] flex flex-col items-center justify-end p-12 relative flex-shrink-0 rounded-[32px]">
             {/* Logo */}
             <div className="mb-10">
-              <div className="bg-[#F7F7F7] p-7 rounded-[24px] shadow-lg">
+              <div className="bg-[#F7F7F7] p-6 rounded-[24px] shadow-lg">
                 <Logo size="figma" />
               </div>
             </div>
