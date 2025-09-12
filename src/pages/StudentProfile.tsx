@@ -193,7 +193,7 @@ const StudentProfile: React.FC = () => {
           placeholder="E.g. Sam Morgan Lee"
           value={formData.name}
           onChange={handleInputChange}
-          className={`w-full px-4 py-4 border rounded-lg text-sm bg-white placeholder-gray-500 focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors.name ? 'border-red-500' : 'border-gray-300'
+          className={`w-[400px] px-4 py-4 border rounded-lg text-sm bg-white placeholder-gray-500 focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors.name ? 'border-red-500' : 'border-gray-300'
             }`}
         />
         {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name}</p>}
@@ -210,7 +210,7 @@ const StudentProfile: React.FC = () => {
             name="dateOfBirth"
             value={formData.dateOfBirth}
             onChange={handleInputChange}
-            className={`w-full px-4 py-4 pl-12 border rounded-lg text-sm bg-white focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors.dateOfBirth ? 'border-red-500' : 'border-gray-300'
+            className={`w-[400px] px-4 py-4 pl-12 border rounded-lg text-sm bg-white focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors.dateOfBirth ? 'border-red-500' : 'border-gray-300'
               }`}
           />
           <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
@@ -233,7 +233,7 @@ const StudentProfile: React.FC = () => {
               key={gender}
               type="button"
               onClick={() => handleGenderSelect(gender)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all flex items-center justify-center w-24 ${formData.gender === gender
+              className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all flex items-center justify-center w-[200px] ${formData.gender === gender
                   ? 'bg-[#1E395D] text-white border-[#1E395D]'
                   : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400'
                 }`}
@@ -259,7 +259,7 @@ const StudentProfile: React.FC = () => {
             name="locality"
             value={formData.locality}
             onChange={(e) => setFormData(prev => ({ ...prev, locality: e.target.value }))}
-            className={`w-full px-4 py-4 pr-10 border rounded-lg text-sm bg-white focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 appearance-none ${errors.locality ? 'border-red-500' : 'border-gray-300'
+            className={`w-[400px] px-4 py-4 pr-10 border rounded-lg text-sm bg-white focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 appearance-none ${errors.locality ? 'border-red-500' : 'border-gray-300'
               }`}
           >
             <option value="">E.g. Dubai</option>
@@ -289,7 +289,7 @@ const StudentProfile: React.FC = () => {
             placeholder="E.g. Oasis World School"
             value={formData.schoolName}
             onChange={handleInputChange}
-            className={`w-full px-4 py-4 pl-12 pr-12 border rounded-lg text-sm bg-white placeholder-gray-500 focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors.schoolName ? 'border-red-500' : 'border-gray-300'
+            className={`w-[400px] px-4 py-4 pl-12 pr-12 border rounded-lg text-sm bg-white placeholder-gray-500 focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors.schoolName ? 'border-red-500' : 'border-gray-300'
               }`}
           />
           <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
@@ -315,7 +315,7 @@ const StudentProfile: React.FC = () => {
         <label className="block text-base font-bold text-black mb-2">
           Grade or Year or Programme
         </label>
-        <div className="border border-gray-300 rounded-lg p-4 mb-4">
+        <div className="w-[400px] border border-gray-300 rounded-lg p-4 mb-4">
           <div className="flex gap-4 bg-white">
             {(['grade', 'year', 'programme', 'other'] as const).map((type) => (
               <label key={type} className="flex items-center">
@@ -541,7 +541,7 @@ const StudentProfile: React.FC = () => {
         </div>
 
         {/* Form Content */}
-        <div className="rounded-lg shadow-sm p-8 mb-8">
+        <div className="w-[400px] rounded-lg shadow-sm mb-8" style={{ padding: '2rem 0.5rem' }}>
           {currentStep === 'personal' && renderPersonalInfo()}
           {currentStep === 'school' && renderSchoolInfo()}
           {currentStep === 'contact' && renderContactInfo()}

@@ -10,9 +10,7 @@ interface StudentProfileData {
   // School Info
   locality: string;
   schoolName: string;
-  gradeType: 'grade' | 'year' | 'programme' | 'other' | '';
-  grade: string;
-  studentId: string;
+  yearsOfWorkExperience: string;
 
   // Contact Info
   phone: string;
@@ -29,9 +27,7 @@ const StudentProfile: React.FC = () => {
     gender: '',
     locality: '',
     schoolName: '',
-    gradeType: '',
-    grade: '',
-    studentId: '',
+    yearsOfWorkExperience: '',
     phone: '',
     countryCode: '+971'
   });
@@ -126,8 +122,7 @@ const StudentProfile: React.FC = () => {
     } else if (currentStep === 'school') {
       if (!formData.locality) newErrors.locality = 'Locality is required';
       if (!formData.schoolName) newErrors.schoolName = 'School name is required';
-      if (!formData.gradeType) newErrors.gradeType = 'Grade type is required';
-      if (!formData.grade) newErrors.grade = 'Grade is required';
+      if (!formData.yearsOfWorkExperience) newErrors.yearsOfWorkExperience = 'Years of work experience is required';
     } else if (currentStep === 'contact') {
       if (!formData.phone) newErrors.phone = 'Mobile number is required';
     }
@@ -183,7 +178,7 @@ const StudentProfile: React.FC = () => {
   const renderPersonalInfo = () => (
     <div className="space-y-6">
       {/* Name */}
-      <div>
+      <div className='w-[400px]'>
         <label className="block text-base font-bold text-black mb-2">
           Name
         </label>
@@ -200,7 +195,7 @@ const StudentProfile: React.FC = () => {
       </div>
 
       {/* Date of Birth */}
-      <div>
+      <div className='w-[400px]'>
         <label className="block text-base font-bold text-black mb-2">
           Date of Birth
         </label>
@@ -223,7 +218,7 @@ const StudentProfile: React.FC = () => {
       </div>
 
       {/* Gender */}
-      <div>
+      <div className='w-[400px]'>
         <label className="block text-base font-bold text-black mb-2">
           Gender
         </label>
@@ -250,7 +245,7 @@ const StudentProfile: React.FC = () => {
   const renderSchoolInfo = () => (
     <div className="space-y-6">
       {/* Locality of School */}
-      <div>
+      <div className='w-[400px]'>
         <label className="block text-base font-bold text-black mb-2">
           Locality of School <span className="text-[#7E7E7E] text-base font-normal leading-[150%]">(City or Town)</span>
         </label>
@@ -278,7 +273,7 @@ const StudentProfile: React.FC = () => {
       </div>
 
       {/* School Name */}
-      <div>
+      <div className='w-[400px]'>
         <label className="block text-base font-bold text-black mb-2">
           School Name
         </label>
@@ -310,107 +305,39 @@ const StudentProfile: React.FC = () => {
         {errors.schoolName && <p className="mt-1 text-xs text-red-600">{errors.schoolName}</p>}
       </div>
 
-      {/* Grade Type Selection */}
-      <div>
+      {/* Years of Work Experience */}
+      <div className='w-[400px]'>
         <label className="block text-base font-bold text-black mb-2">
-          Grade or Year or Programme
+          Years of Work Experience
         </label>
-        <div className="border border-gray-300 rounded-lg p-4 mb-4">
-          <div className="flex gap-4 bg-white">
-            {(['grade', 'year', 'programme', 'other'] as const).map((type) => (
-              <label key={type} className="flex items-center">
-                <input
-                  type="radio"
-                  name="gradeType"
-                  value={type}
-                  checked={formData.gradeType === type}
-                  onChange={() => handleGradeTypeSelect(type)}
-                  className="mr-3 w-5 h-5 text-[#1E395D] focus:ring-[#1E395D]"
-                />
-                <span className={`text-sm capitalize ${formData.gradeType === type ? 'text-black' : 'text-gray-500'
-                  }`}>{type}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-        {errors.gradeType && <p className="mt-1 text-xs text-red-600">{errors.gradeType}</p>}
-      </div>
-
-      {/* Grade Selection */}
-      <div>
         <div className="relative">
-          <select
-            name="grade"
-            value={formData.grade}
-            onChange={(e) => setFormData(prev => ({ ...prev, grade: e.target.value }))}
-            className={`w-full px-4 py-4 pr-10 border rounded-lg text-sm bg-white focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 appearance-none ${errors.grade ? 'border-red-500' : 'border-gray-300'
+          <input
+            type="text"
+            name="yearsOfWorkExperience"
+            placeholder="E.g. 20"
+            value={formData.yearsOfWorkExperience}
+            onChange={handleInputChange}
+            className={`w-full px-4 py-4 pl-12 border rounded-lg text-sm bg-white placeholder-gray-500 focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors.yearsOfWorkExperience ? 'border-red-500' : 'border-gray-300'
               }`}
-          >
-            <option value="">Select Grade</option>
-            {formData.gradeType === 'grade' && (
-              <>
-                <option value="grade-1">Grade 1</option>
-                <option value="grade-2">Grade 2</option>
-                <option value="grade-3">Grade 3</option>
-                <option value="grade-4">Grade 4</option>
-                <option value="grade-5">Grade 5</option>
-                <option value="grade-6">Grade 6</option>
-                <option value="grade-7">Grade 7</option>
-                <option value="grade-8">Grade 8</option>
-                <option value="grade-9">Grade 9</option>
-                <option value="grade-10">Grade 10</option>
-                <option value="grade-11">Grade 11</option>
-                <option value="grade-12">Grade 12</option>
-              </>
-            )}
-            {formData.gradeType === 'year' && (
-              <>
-                <option value="year-1">Year 1</option>
-                <option value="year-2">Year 2</option>
-                <option value="year-3">Year 3</option>
-                <option value="year-4">Year 4</option>
-                <option value="year-5">Year 5</option>
-                <option value="year-6">Year 6</option>
-                <option value="year-7">Year 7</option>
-                <option value="year-8">Year 8</option>
-                <option value="year-9">Year 9</option>
-                <option value="year-10">Year 10</option>
-                <option value="year-11">Year 11</option>
-                <option value="year-12">Year 12</option>
-              </>
-            )}
-            {formData.gradeType === 'programme' && (
-              <>
-                <option value="foundation">Foundation</option>
-                <option value="diploma">Diploma</option>
-                <option value="bachelor">Bachelor</option>
-                <option value="master">Master</option>
-                <option value="phd">PhD</option>
-              </>
-            )}
-            {formData.gradeType === 'other' && (
-              <>
-                <option value="other-1">Other 1</option>
-                <option value="other-2">Other 2</option>
-                <option value="other-3">Other 3</option>
-              </>
-            )}
-          </select>
-          <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+          />
+          <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
         </div>
-        {errors.grade && <p className="mt-1 text-xs text-red-600">{errors.grade}</p>}
+        {errors.yearsOfWorkExperience && <p className="mt-1 text-xs text-red-600">{errors.yearsOfWorkExperience}</p>}
       </div>
+
+     
+    
     </div>
   );
 
   const renderContactInfo = () => (
     <div className="space-y-6">
       {/* Mobile */}
-      <div>
+      <div className='w-[400px]'>
         <label className="block text-base font-bold text-black mb-2">
           Mobile
         </label>
@@ -474,7 +401,7 @@ const StudentProfile: React.FC = () => {
         <div className="text-center">
           {/* Success Message */}
           <h1 className="text-black text-center text-4xl font-medium leading-[150%] mb-8">
-            Your Student Profile is created.
+            Your Teacher Profile is created.
           </h1>
           {/* Navigation Buttons */}
           <div className="flex gap-4 justify-center">
@@ -536,12 +463,12 @@ const StudentProfile: React.FC = () => {
       {/* Main Content */}
       <div className="max-w-4xl mx-auto px-6 py-8">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6 text-left">Student Signup</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-6 text-left">Tracher Signup</h1>
           {renderStepIndicator()}
         </div>
 
         {/* Form Content */}
-        <div className="rounded-lg shadow-sm p-8 mb-8">
+        <div className="rounded-lg shadow-sm mb-8" style={{ padding: '2rem 0.5rem' }}>
           {currentStep === 'personal' && renderPersonalInfo()}
           {currentStep === 'school' && renderSchoolInfo()}
           {currentStep === 'contact' && renderContactInfo()}

@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import SignUp from './pages/SignUp';
 import Login from './pages/Login';
 import StudentProfile from './pages/StudentProfile';
+import TeacherProfile from './pages/TeacherProfile';
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
           <Route path="/signup" element={<SignUp />} />
           <Route path="/login" element={<Login />} />
           <Route path="/student-profile" element={<StudentProfile />} />
+          <Route path="/teacher-profile" element={<TeacherProfile />} />
         </Routes>
       </div>
     </Router>
