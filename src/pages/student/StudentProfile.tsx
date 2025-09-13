@@ -20,6 +20,10 @@ const StudentProfile: React.FC = () => {
   const [grade, setGrade] = useState<string>('');
   const [phone, setPhone] = useState<string>('');
   const [countryCode, setCountryCode] = useState<string>('UAE');
+  const [schools, setSchools] = useState<any[]>([]);
+  const [filteredSchools, setFilteredSchools] = useState<any[]>([]);
+  const [showSchoolDropdown, setShowSchoolDropdown] = useState(false);
+  const [schoolSearchTerm, setSchoolSearchTerm] = useState<string>('');
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -59,11 +63,64 @@ const StudentProfile: React.FC = () => {
     setShowCountryDropdown(false);
   };
 
+  const loadSchoolData = async (cityCode: string) => {
+    try {
+      const response = await fetch(`/src/assets/school_list/${cityCode}.json`);
+      if (response.ok) {
+        const schoolData = await response.json();
+        setSchools(schoolData);
+        setFilteredSchools(schoolData);
+      } else {
+        setSchools([]);
+        setFilteredSchools([]);
+      }
+    } catch (error) {
+      console.error('Error loading school data:', error);
+      setSchools([]);
+      setFilteredSchools([]);
+    }
+  };
+
+  const handleCityChange = (cityCode: string) => {
+    setLocality(cityCode);
+    setSchoolName('');
+    setSchoolSearchTerm('');
+    if (cityCode) {
+      loadSchoolData(cityCode);
+    } else {
+      setSchools([]);
+      setFilteredSchools([]);
+    }
+  };
+
+  const handleSchoolSearch = (searchTerm: string) => {
+    setSchoolSearchTerm(searchTerm);
+    if (searchTerm.trim() === '') {
+      setFilteredSchools(schools);
+    } else {
+      const filtered = schools.filter(school => 
+        school.school_label?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        school.school_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        school.school_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        school.location?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredSchools(filtered);
+    }
+  };
+
+  const handleSchoolSelect = (school: any) => {
+    const schoolLabel = school.school_label || school.school_name;
+    setSchoolName(schoolLabel);
+    setSchoolSearchTerm(schoolLabel);
+    setShowSchoolDropdown(false);
+  };
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setShowCountryDropdown(false);
+        setShowSchoolDropdown(false);
       }
     };
 
@@ -181,15 +238,18 @@ const StudentProfile: React.FC = () => {
           <select
             name="locality"
             value={locality}
-            onChange={(e) => setLocality(e.target.value)}
+            onChange={(e) => handleCityChange(e.target.value)}
             className={`w-[400px] px-4 py-4 pr-10 border rounded-lg text-sm bg-white focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 appearance-none ${errors.locality ? 'border-red-500' : 'border-gray-300'
               }`}
           >
             <option value="">E.g. Dubai</option>
-            <option value="dubai">Dubai</option>
-            <option value="abu-dhabi">Abu Dhabi</option>
-            <option value="sharjah">Sharjah</option>
-            <option value="ajman">Ajman</option>
+            <option value="AD">Abu Dhabi</option>
+            <option value="DU">Dubai</option>
+            <option value="SH">Sharjah</option>
+            <option value="AJ">Ajman</option>
+            <option value="RAK">Ras Al Khaimah</option>
+            <option value="UAQ">Umm Al Quwain</option>
+            <option value="AIN">Al Ain</option>
           </select>
           <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -205,15 +265,16 @@ const StudentProfile: React.FC = () => {
         <label className="block text-base font-bold text-black mb-2">
           School Name
         </label>
-        <div className="relative">
+        <div className="relative" ref={dropdownRef}>
           <input
             type="text"
             name="schoolName"
-            placeholder="E.g. Oasis World School"
-            value={schoolName}
-            onChange={e => setSchoolName(e.target.value)}
-            className={`w-[400px] px-4 py-4 pl-12 pr-12 border rounded-lg text-sm bg-white placeholder-gray-500 focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors.schoolName ? 'border-red-500' : 'border-gray-300'
-              }`}
+            placeholder={locality ? "Search by school name or code..." : "Please select a city first"}
+            value={schoolSearchTerm}
+            onChange={e => handleSchoolSearch(e.target.value)}
+            onFocus={() => setShowSchoolDropdown(true)}
+            disabled={!locality}
+            className={`w-[400px] px-4 py-4 pl-12 pr-12 border rounded-lg text-sm bg-white placeholder-gray-500 focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors.schoolName ? 'border-red-500' : 'border-gray-300'} ${!locality ? 'bg-gray-100 cursor-not-allowed' : ''}`}
           />
           <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -222,13 +283,52 @@ const StudentProfile: React.FC = () => {
           </div>
           <button
             type="button"
-            onClick={() => setSchoolName('')}
+            onClick={() => {
+              setSchoolName('');
+              setSchoolSearchTerm('');
+              setShowSchoolDropdown(false);
+            }}
             className="absolute right-4 top-1/2 transform -translate-y-1/2 w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center hover:bg-gray-400 transition-colors"
           >
             <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
+          
+          {/* School Dropdown */}
+          {showSchoolDropdown && locality && filteredSchools.length > 0 && (
+            <div className="absolute top-full left-0 z-10 w-[400px] mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              {filteredSchools.map((school, index) => (
+                <div
+                  key={`${school.school_code}-${index}`}
+                  className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                  onClick={() => handleSchoolSelect(school)}
+                >
+                  <div className="font-medium text-sm text-gray-900">
+                    {school.school_label || school.school_name}
+                  </div>
+                  <div className="text-xs text-blue-600 mt-1">
+                    Code: {school.school_code}
+                  </div>
+                  {(school.area_label && school.area_label !== '-') && (
+                    <div className="text-xs text-gray-500 mt-1">
+                      {school.area_label}
+                    </div>
+                  )}
+                  {school.location && (
+                    <div className="text-xs text-gray-500 mt-1">
+                      {school.location}
+                    </div>
+                  )}
+                </div>
+              ))}
+              {filteredSchools.length === 0 && schoolSearchTerm && (
+                <div className="px-4 py-3 text-sm text-gray-500">
+                  No schools found matching "{schoolSearchTerm}"
+                </div>
+              )}
+            </div>
+          )}
         </div>
         {errors.schoolName && <p className="mt-1 text-xs text-red-600">{errors.schoolName}</p>}
       </div>
@@ -269,13 +369,9 @@ const StudentProfile: React.FC = () => {
             className={`w-full px-4 py-4 pr-10 border rounded-lg text-sm bg-white focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 appearance-none ${errors.grade ? 'border-red-500' : 'border-gray-300'
               }`}
           >
-            <option value="">Select Grade</option>
             {gradeType === 'grade' && (
               <>
-                <option value="grade-1">Grade 1</option>
-                <option value="grade-2">Grade 2</option>
-                <option value="grade-3">Grade 3</option>
-                <option value="grade-4">Grade 4</option>
+                <option value="">Select Grade</option>
                 <option value="grade-5">Grade 5</option>
                 <option value="grade-6">Grade 6</option>
                 <option value="grade-7">Grade 7</option>
@@ -288,11 +384,7 @@ const StudentProfile: React.FC = () => {
             )}
             {gradeType === 'year' && (
               <>
-                <option value="year-1">Year 1</option>
-                <option value="year-2">Year 2</option>
-                <option value="year-3">Year 3</option>
-                <option value="year-4">Year 4</option>
-                <option value="year-5">Year 5</option>
+                <option value="">Select Year</option>
                 <option value="year-6">Year 6</option>
                 <option value="year-7">Year 7</option>
                 <option value="year-8">Year 8</option>
@@ -300,22 +392,33 @@ const StudentProfile: React.FC = () => {
                 <option value="year-10">Year 10</option>
                 <option value="year-11">Year 11</option>
                 <option value="year-12">Year 12</option>
+                <option value="year-13">Year 13</option>
               </>
             )}
             {gradeType === 'programme' && (
               <>
-                <option value="foundation">Foundation</option>
-                <option value="diploma">Diploma</option>
-                <option value="bachelor">Bachelor</option>
-                <option value="master">Master</option>
-                <option value="phd">PhD</option>
+                <option value="">Select Programme</option>
+                <option value="PYP-5">PYP 5</option>
+                <option value="MYP-1">MYP 1</option>
+                <option value="MYP-2">MYP 2</option>
+                <option value="MYP-3">MYP 3</option>
+                <option value="MYP-4">MYP 4</option>
+                <option value="MYP-5">MYP 5</option>
+                <option value="IB-DP-1">IB DP 1</option>
+                <option value="IB-DP-2">IB DP 2</option>
               </>
             )}
             {gradeType === 'other' && (
               <>
+                <option value="">Select Other</option>
                 <option value="other-1">Other 1</option>
                 <option value="other-2">Other 2</option>
                 <option value="other-3">Other 3</option>
+                <option value="other-4">Other 4</option>
+                <option value="other-5">Other 5</option>
+                <option value="other-6">Other 6</option>
+                <option value="other-7">Other 7</option>
+                <option value="other-8">Other 8</option>
               </>
             )}
           </select>
