@@ -65,7 +65,7 @@ const StudentProfile: React.FC = () => {
 
   const loadSchoolData = async (cityCode: string) => {
     try {
-      const response = await fetch(`/src/assets/school_list/${cityCode}.json`);
+      const response = await fetch(`/school_list/${cityCode}.json`);
       if (response.ok) {
         const schoolData = await response.json();
         setSchools(schoolData);
