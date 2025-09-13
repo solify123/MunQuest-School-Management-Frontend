@@ -20,11 +20,11 @@ export const loginApi = async (email: string, password: string) => {
     }
 };
 
-export const teacherProfileApi = async (username: string, birthday: string, gender: string, locality: string, schoolName: string, yearsOfWorkExperience: string, phone: string, countryCode: string) => {
+export const teacherProfileApi = async (fullname: string, username: string, birthday: string, gender: string, locality: string, schoolName: string, yearsOfWorkExperience: string, phone: string, countryCode: string) => {
     try {
         const token = localStorage.getItem('token');
-        console.log(token);
         const response = await axios.post(`${backendUrl}/api/v1/users/teacher-profile`, {
+            fullname,
             username,
             birthday,
             gender,
@@ -44,11 +44,12 @@ export const teacherProfileApi = async (username: string, birthday: string, gend
     }
 };
 
-export const studentProfileApi = async (username: string, birthday: string, gender: string, locality: string, schoolName: string, gradeType: string, grade: string, phone: string, countryCode: string) => {
+export const studentProfileApi = async (fullname: string, username: string, birthday: string, gender: string, locality: string, schoolName: string, gradeType: string, grade: string, phone: string, countryCode: string) => {
     try {
         const token = localStorage.getItem('token');
         console.log(token);
         const response = await axios.post(`${backendUrl}/api/v1/users/student-profile`, {
+            fullname,
             username,
             birthday,
             gender,
@@ -59,6 +60,79 @@ export const studentProfileApi = async (username: string, birthday: string, gend
             phone,
             countryCode
         }, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+};
+
+export const getUserByIdApi = async () => {
+    try {
+        const token = localStorage.getItem('token');
+
+        const response = await axios.get(`${backendUrl}/api/v1/users/user-profile`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+};
+
+export const updateUserProfileApi = async (fullname: string, username: string, birthday: string, gender: string, locality: string, schoolName: string, grade: string, phone: string, email: string, avatar?: string, countryCode?: string) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.post(`${backendUrl}/api/v1/users/user-profile-update`, {
+            fullname,
+            username,
+            birthday,
+            gender,
+            locality,
+            schoolName,
+            grade,
+            phone,
+            email,
+            avatar,
+            countryCode
+        }, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+};
+
+export const uploadAvatarApi = async (avatarFile: File) => {
+    try {
+        const token = localStorage.getItem('token');
+        const formData = new FormData();
+        formData.append('avatar', avatarFile);
+
+        const response = await axios.post(`${backendUrl}/api/v1/users/upload-avatar`, formData, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+};
+
+export const changePasswordApi = async (newPassword: string) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.post(`${backendUrl}/api/v1/users/change-password`, { newPassword }, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }

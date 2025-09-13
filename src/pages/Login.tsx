@@ -4,6 +4,7 @@ import { Button, Input, PasswordInput, Logo } from '../components/ui';
   import type { AuthFormData, CustomJwtPayload } from '../types';
 import { toast } from 'sonner';
 import { loginApi } from '../apis/userApi';
+import { checkUserProfileExists } from '../utils/profileCheck';
 import { jwtDecode } from 'jwt-decode';
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -57,10 +58,22 @@ const Login: React.FC = () => {
         toast.success('Login successful');
         localStorage.setItem('token', loginResponse.token);
         const decodedToken = jwtDecode<CustomJwtPayload>(loginResponse.token);
+        
+        // Check if user already has a profile
+        const hasProfile = await checkUserProfileExists();
+        
         if (decodedToken!.role === 'student') {
-          navigate('/student-profile');
+          if (hasProfile) {
+            navigate('/student-home');
+          } else {
+            navigate('/student-profile');
+          }
         } else {
-          navigate('/teacher-profile');
+          if (hasProfile) {
+            navigate('/teacher-home');
+          } else {
+            navigate('/teacher-profile');
+          }
         }
       }
 

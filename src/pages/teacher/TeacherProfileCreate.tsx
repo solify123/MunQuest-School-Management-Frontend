@@ -3,13 +3,16 @@ import { Logo } from '../../components/ui';
 import { toast } from 'sonner';
 import { teacherProfileApi } from '../../apis/userApi';
 import { useNavigate } from 'react-router-dom';
+import { generateUsername } from '../../utils/usernameGenerator';
 
 type Step = 'personal' | 'school' | 'contact' | 'success';
 
 const TeacherProfile: React.FC = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState<Step>('personal');
+  const [fullname, setFullname] = useState<string>('');
   const [username, setUsername] = useState<string>('');
+  const [generatedUsername, setGeneratedUsername] = useState<string>('');
   const [birthday, setBirthday] = useState<string>('');
   const [gender, setGender] = useState<string>('');
   const [locality, setLocality] = useState<string>('');
@@ -17,6 +20,10 @@ const TeacherProfile: React.FC = () => {
   const [yearsOfWorkExperience, setYearsOfWorkExperience] = useState<string>('');
   const [phone, setPhone] = useState<string>('');
   const [countryCode, setCountryCode] = useState<string>('UAE');
+  const [schools, setSchools] = useState<any[]>([]);
+  const [filteredSchools, setFilteredSchools] = useState<any[]>([]);
+  const [showSchoolDropdown, setShowSchoolDropdown] = useState(false);
+  const [schoolSearchTerm, setSchoolSearchTerm] = useState<string>('');
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -46,10 +53,63 @@ const TeacherProfile: React.FC = () => {
     { code: '+27', country: 'South Africa', flag: '🇿🇦' }
   ];
 
+  const loadSchoolData = async (cityCode: string) => {
+    try {
+      const response = await fetch(`/school_list/${cityCode}.json`);
+      if (response.ok) {
+        const schoolData = await response.json();
+        setSchools(schoolData);
+        setFilteredSchools(schoolData);
+      } else {
+        setSchools([]);
+        setFilteredSchools([]);
+      }
+    } catch (error) {
+      console.error('Error loading school data:', error);
+      setSchools([]);
+      setFilteredSchools([]);
+    }
+  };
+
+  const handleCityChange = (cityCode: string) => {
+    setLocality(cityCode);
+    setSchoolName('');
+    setSchoolSearchTerm('');
+    if (cityCode) {
+      loadSchoolData(cityCode);
+    } else {
+      setSchools([]);
+      setFilteredSchools([]);
+    }
+  };
+
+  const handleSchoolSearch = (searchTerm: string) => {
+    setSchoolSearchTerm(searchTerm);
+    if (searchTerm.trim() === '') {
+      setFilteredSchools(schools);
+    } else {
+      const filtered = schools.filter(school => 
+        school.school_label?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        school.school_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        school.school_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        school.location?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredSchools(filtered);
+    }
+  };
+
+  const handleSchoolSelect = (school: any) => {
+    const schoolLabel = school.school_label || school.school_name;
+    setSchoolName(schoolLabel);
+    setSchoolSearchTerm(schoolLabel);
+    setShowSchoolDropdown(false);
+  };
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setShowCountryDropdown(false);
+        setShowSchoolDropdown(false);
       }
     };
 
@@ -91,7 +151,7 @@ const TeacherProfile: React.FC = () => {
   const renderPersonalInfo = () => (
     <div className="space-y-6">
       {/* Name */}
-      <div className='w-[400px]'>
+      <div>
         <label className="block text-base font-bold text-black mb-2">
           Name
         </label>
@@ -99,16 +159,43 @@ const TeacherProfile: React.FC = () => {
           type="text"
           name="name"
           placeholder="E.g. Sam Morgan Lee"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className={`w-full px-4 py-4 border rounded-lg text-sm bg-white placeholder-gray-500 focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors.name ? 'border-red-500' : 'border-gray-300'
+          value={fullname}
+          onChange={(e) => {
+            setFullname(e.target.value);
+            setUsername(e.target.value);
+            const generated = generateUsername(e.target.value);
+            setGeneratedUsername(generated);
+          }}
+          className={`w-[400px] px-4 py-4 border rounded-lg text-sm bg-white placeholder-gray-500 focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors.name ? 'border-red-500' : 'border-gray-300'
             }`}
         />
         {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name}</p>}
+        
+        {/* Generated Username Display */}
+        {generatedUsername && (
+          <div className="mt-2 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-sm text-gray-600">Generated Username:</span>
+                <span className="ml-2 font-mono text-sm font-medium text-[#1E395D]">{generatedUsername}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const newGenerated = generateUsername(fullname);
+                  setGeneratedUsername(newGenerated);
+                }}
+                className="text-xs text-[#1E395D] hover:text-[#0f2a47] underline"
+              >
+                Regenerate
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Date of Birth */}
-      <div className='w-[400px]'>
+      <div>
         <label className="block text-base font-bold text-black mb-2">
           Date of Birth
         </label>
@@ -118,7 +205,7 @@ const TeacherProfile: React.FC = () => {
             name="dateOfBirth"
             value={birthday}
             onChange={(e) => setBirthday(e.target.value)}
-            className={`w-full px-4 py-4 pl-12 border rounded-lg text-sm bg-white focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors.dateOfBirth ? 'border-red-500' : 'border-gray-300'
+            className={`w-[400px] px-4 py-4 pl-12 border rounded-lg text-sm bg-white focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors.dateOfBirth ? 'border-red-500' : 'border-gray-300'
               }`}
           />
           <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
@@ -131,7 +218,7 @@ const TeacherProfile: React.FC = () => {
       </div>
 
       {/* Gender */}
-      <div className='w-[400px]'>
+      <div>
         <label className="block text-base font-bold text-black mb-2">
           Gender
         </label>
@@ -141,7 +228,7 @@ const TeacherProfile: React.FC = () => {
               key={genderOption}
               type="button"
               onClick={() => setGender(genderOption)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all flex items-center justify-center w-24 ${gender === genderOption
+              className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all flex items-center justify-center w-[200px] ${gender === genderOption
                 ? 'bg-[#1E395D] text-white border-[#1E395D]'
                 : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400'
                 }`}
@@ -158,7 +245,7 @@ const TeacherProfile: React.FC = () => {
   const renderSchoolInfo = () => (
     <div className="space-y-6">
       {/* Locality of School */}
-      <div className='w-[400px]'>
+      <div>
         <label className="block text-base font-bold text-black mb-2">
           Locality of School <span className="text-[#7E7E7E] text-base font-normal leading-[150%]">(City or Town)</span>
         </label>
@@ -166,15 +253,18 @@ const TeacherProfile: React.FC = () => {
           <select
             name="locality"
             value={locality}
-            onChange={(e) => setLocality(e.target.value)}
-            className={`w-full px-4 py-4 pr-10 border rounded-lg text-sm bg-white focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 appearance-none ${errors.locality ? 'border-red-500' : 'border-gray-300'
+            onChange={(e) => handleCityChange(e.target.value)}
+            className={`w-[400px] px-4 py-4 pr-10 border rounded-lg text-sm bg-white focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 appearance-none ${errors.locality ? 'border-red-500' : 'border-gray-300'
               }`}
           >
             <option value="">E.g. Dubai</option>
-            <option value="dubai">Dubai</option>
-            <option value="abu-dhabi">Abu Dhabi</option>
-            <option value="sharjah">Sharjah</option>
-            <option value="ajman">Ajman</option>
+            <option value="AD">Abu Dhabi</option>
+            <option value="DU">Dubai</option>
+            <option value="SH">Sharjah</option>
+            <option value="AJ">Ajman</option>
+            <option value="RAK">Ras Al Khaimah</option>
+            <option value="UAQ">Umm Al Quwain</option>
+            <option value="AIN">Al Ain</option>
           </select>
           <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -186,19 +276,20 @@ const TeacherProfile: React.FC = () => {
       </div>
 
       {/* School Name */}
-      <div className='w-[400px]'>
+      <div>
         <label className="block text-base font-bold text-black mb-2">
           School Name
         </label>
-        <div className="relative">
+        <div className="relative" ref={dropdownRef}>
           <input
             type="text"
             name="schoolName"
-            placeholder="E.g. Oasis World School"
-            value={schoolName}
-            onChange={(e) => setSchoolName(e.target.value)}
-            className={`w-full px-4 py-4 pl-12 pr-12 border rounded-lg text-sm bg-white placeholder-gray-500 focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors.schoolName ? 'border-red-500' : 'border-gray-300'
-              }`}
+            placeholder={locality ? "Search by school name or code..." : "Please select a city first"}
+            value={schoolSearchTerm}
+            onChange={e => handleSchoolSearch(e.target.value)}
+            onFocus={() => setShowSchoolDropdown(true)}
+            disabled={!locality}
+            className={`w-[400px] px-4 py-4 pl-12 pr-12 border rounded-lg text-sm bg-white placeholder-gray-500 focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors.schoolName ? 'border-red-500' : 'border-gray-300'} ${!locality ? 'bg-gray-100 cursor-not-allowed' : ''}`}
           />
           <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -207,19 +298,58 @@ const TeacherProfile: React.FC = () => {
           </div>
           <button
             type="button"
-            onClick={() => setSchoolName('')}
+            onClick={() => {
+              setSchoolName('');
+              setSchoolSearchTerm('');
+              setShowSchoolDropdown(false);
+            }}
             className="absolute right-4 top-1/2 transform -translate-y-1/2 w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center hover:bg-gray-400 transition-colors"
           >
             <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
+          
+          {/* School Dropdown */}
+          {showSchoolDropdown && locality && filteredSchools.length > 0 && (
+            <div className="absolute top-full left-0 z-10 w-[400px] mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              {filteredSchools.map((school, index) => (
+                <div
+                  key={`${school.school_code}-${index}`}
+                  className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                  onClick={() => handleSchoolSelect(school)}
+                >
+                  <div className="font-medium text-sm text-gray-900">
+                    {school.school_label || school.school_name}
+                  </div>
+                  <div className="text-xs text-blue-600 mt-1">
+                    Code: {school.school_code}
+                  </div>
+                  {(school.area_label && school.area_label !== '-') && (
+                    <div className="text-xs text-gray-500 mt-1">
+                      {school.area_label}
+                    </div>
+                  )}
+                  {school.location && (
+                    <div className="text-xs text-gray-500 mt-1">
+                      {school.location}
+                    </div>
+                  )}
+                </div>
+              ))}
+              {filteredSchools.length === 0 && schoolSearchTerm && (
+                <div className="px-4 py-3 text-sm text-gray-500">
+                  No schools found matching "{schoolSearchTerm}"
+                </div>
+              )}
+            </div>
+          )}
         </div>
         {errors.schoolName && <p className="mt-1 text-xs text-red-600">{errors.schoolName}</p>}
       </div>
 
       {/* Years of Work Experience */}
-      <div className='w-[400px]'>
+      <div>
         <label className="block text-base font-bold text-black mb-2">
           Years of Work Experience
         </label>
@@ -230,7 +360,7 @@ const TeacherProfile: React.FC = () => {
             placeholder="E.g. 20"
             value={yearsOfWorkExperience}
             onChange={(e) => setYearsOfWorkExperience(e.target.value)}
-            className={`w-full px-4 py-4 pl-12 border rounded-lg text-sm bg-white placeholder-gray-500 focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors.yearsOfWorkExperience ? 'border-red-500' : 'border-gray-300'
+            className={`w-[400px] px-4 py-4 pl-12 border rounded-lg text-sm bg-white placeholder-gray-500 focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors.yearsOfWorkExperience ? 'border-red-500' : 'border-gray-300'
               }`}
           />
           <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
@@ -250,7 +380,7 @@ const TeacherProfile: React.FC = () => {
   const renderContactInfo = () => (
     <div className="space-y-6">
       {/* Mobile */}
-      <div className='w-[400px]'>
+      <div>
         <label className="block text-base font-bold text-black mb-2">
           Mobile
         </label>
@@ -301,9 +431,9 @@ const TeacherProfile: React.FC = () => {
   );
 
 
-  const TeacherProfileHandler = async (username: string, birthday: string, gender: string, locality: string, schoolName: string, yearsOfWorkExperience: string, phone: string, countryCode: string) => {
+  const TeacherProfileHandler = async (fullname: string, username: string, birthday: string, gender: string, locality: string, schoolName: string, yearsOfWorkExperience: string, phone: string, countryCode: string) => {
     try {
-      const response = await teacherProfileApi(username, birthday, gender, locality, schoolName, yearsOfWorkExperience, phone, countryCode);
+      const response = await teacherProfileApi(fullname, username, birthday, gender, locality, schoolName, yearsOfWorkExperience, phone, countryCode);
       if (response.success) {
         toast.success('Teacher profile created successfully');
         navigate('/teacher-home');
@@ -335,7 +465,7 @@ const TeacherProfile: React.FC = () => {
         </div>
 
         {/* Form Content */}
-        <div className="rounded-lg shadow-sm mb-8" style={{ padding: '2rem 0.5rem' }}>
+        <div className="w-[400px] rounded-lg shadow-sm mb-8" style={{ padding: '2rem 0.5rem' }}>
           {currentStep === 'personal' && renderPersonalInfo()}
           {currentStep === 'school' && renderSchoolInfo()}
           {currentStep === 'contact' && renderContactInfo()}
@@ -363,7 +493,7 @@ const TeacherProfile: React.FC = () => {
               } else if (currentStep === 'contact') {
                 // Validate contact info and submit
                 if (phone && countryCode) {
-                  TeacherProfileHandler(username, birthday, gender, locality, schoolName, yearsOfWorkExperience, phone, countryCode);
+                  TeacherProfileHandler(fullname, generatedUsername, birthday, gender, locality, schoolName, yearsOfWorkExperience, phone, countryCode);
                 } else {
                   toast.error('Please fill in all contact information fields');
                 }

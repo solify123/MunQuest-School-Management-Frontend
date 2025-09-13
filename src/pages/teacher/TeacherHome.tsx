@@ -1,7 +1,10 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Logo } from '../../components/ui';
 
 const TeacherHome: React.FC = () => {
+    const navigate = useNavigate();
+    
     return <div className="min-h-screen" style={{ backgroundColor: '#F8F8F8' }}>
         {/* Header */}
         <div className="shadow-sm">
@@ -39,10 +42,7 @@ const TeacherHome: React.FC = () => {
 
                     {/* Profile Button */}
                     <button
-                        onClick={() => {
-                            // Navigate to profile page
-                            console.log('Navigate to profile');
-                        }}
+                        onClick={() => navigate('/teacher-profile-page')}
                         className="flex items-center px-6 py-3 rounded-lg font-medium transition-all"
                         style={{
                             backgroundColor: '#C2A46D',

@@ -3,6 +3,7 @@ import { Logo } from '../../components/ui';
 import { useNavigate } from 'react-router-dom';
 import { studentProfileApi } from '../../apis/userApi';
 import { toast } from 'sonner';
+import { generateUsername } from '../../utils/usernameGenerator';
 
 type Step = 'personal' | 'school' | 'contact' | 'success';
 
@@ -11,7 +12,9 @@ const StudentProfile: React.FC = () => {
   const navigate = useNavigate();
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [fullname, setFullname] = useState<string>('');
   const [username, setUsername] = useState<string>('');
+  const [generatedUsername, setGeneratedUsername] = useState<string>('');
   const [birthday, setBirthday] = useState<string>('');
   const [gender, setGender] = useState<string>('');
   const [locality, setLocality] = useState<string>('');
@@ -49,6 +52,13 @@ const StudentProfile: React.FC = () => {
     { code: '+64', country: 'New Zealand', flag: '🇳🇿' },
     { code: '+27', country: 'South Africa', flag: '🇿🇦' }
   ];
+
+  const handleNameChange = (fullName: string) => {
+    setFullname(fullName);
+    setUsername(fullName);
+    const generated = generateUsername(fullName);
+    setGeneratedUsername(generated);
+  };
 
   const handleGenderSelect = (gender: 'male' | 'female' | 'other') => {
     setGender(gender);
@@ -172,11 +182,33 @@ const StudentProfile: React.FC = () => {
           name="name"
           placeholder="E.g. Sam Morgan Lee"
           value={username}
-          onChange={e => setUsername(e.target.value)}
+          onChange={e => handleNameChange(e.target.value)}
           className={`w-[400px] px-4 py-4 border rounded-lg text-sm bg-white placeholder-gray-500 focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors.name ? 'border-red-500' : 'border-gray-300'
             }`}
         />
         {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name}</p>}
+        
+        {/* Generated Username Display */}
+        {generatedUsername && (
+          <div className="mt-2 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-sm text-gray-600">Generated Username:</span>
+                <span className="ml-2 font-mono text-sm font-medium text-[#1E395D]">{generatedUsername}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const newGenerated = generateUsername(username);
+                  setGeneratedUsername(newGenerated);
+                }}
+                className="text-xs text-[#1E395D] hover:text-[#0f2a47] underline"
+              >
+                Regenerate
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Date of Birth */}
@@ -486,9 +518,9 @@ const StudentProfile: React.FC = () => {
     </div>
   );
 
-  const StudentProfileHandler = async (username: string, birthday: string, gender: string, locality: string, schoolName: string, gradeType: string, grade: string, phone: string, countryCode: string) => {
+  const StudentProfileHandler = async (fullName: string, generatedUsername: string, birthday: string, gender: string, locality: string, schoolName: string, gradeType: string, grade: string, phone: string, countryCode: string) => {
     try {
-      const response = await studentProfileApi(username, birthday, gender, locality, schoolName, gradeType, grade, phone, countryCode);
+      const response = await studentProfileApi(fullName, generatedUsername, birthday, gender, locality, schoolName, gradeType, grade, phone, countryCode);
       if (response.success) {
         toast.success('Student profile created successfully');
         navigate('/student-home');
@@ -532,7 +564,7 @@ const StudentProfile: React.FC = () => {
             type="button"
             onClick={() => {
               if (currentStep === 'personal') {
-                if (username && birthday && gender) {
+                if (username && generatedUsername && birthday && gender) {
                   setCurrentStep('school');
                 }
               } else if (currentStep === 'school') {
@@ -541,7 +573,7 @@ const StudentProfile: React.FC = () => {
                 }
               } else if (currentStep === 'contact') {
                 if (phone && countryCode) {
-                  StudentProfileHandler(username, birthday, gender, locality, schoolName, gradeType, grade, phone, countryCode);
+                  StudentProfileHandler(fullname, generatedUsername, birthday, gender, locality, schoolName, gradeType, grade, phone, countryCode);
                 }
               }
             }}
