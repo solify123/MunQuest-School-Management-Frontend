@@ -8,6 +8,13 @@ export interface User {
   updatedAt: Date;
 }
 
+export interface CustomJwtPayload {
+  role: 'student' | 'teacher' | "organizer" | "super_user" ;
+  sub: string;
+  iat: number;
+  exp: number;
+}
+
 export interface AuthFormData {
   email: string;
   password: string;

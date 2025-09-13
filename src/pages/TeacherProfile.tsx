@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Logo } from '../components/ui';
+import { showToast } from '../utils/toast';
 
 interface StudentProfileData {
   // Personal Info
@@ -131,10 +132,12 @@ const StudentProfile: React.FC = () => {
       } else if (currentStep === 'school') {
         setCurrentStep('contact');
       } else if (currentStep === 'contact') {
-        // Submit form
         console.log('Form submitted:', formData);
+        showToast.success('Teacher profile created successfully!');
         setCurrentStep('success');
       }
+    } else {
+      showToast.error('Please fill in all required fields');
     }
   };
 

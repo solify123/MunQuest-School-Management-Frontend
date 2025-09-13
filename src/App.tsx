@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'sonner';
 import SignUp from './pages/SignUp';
 import Login from './pages/Login';
 import StudentProfile from './pages/StudentProfile';
@@ -15,6 +16,7 @@ function App() {
           <Route path="/student-profile" element={<StudentProfile />} />
           <Route path="/teacher-profile" element={<TeacherProfile />} />
         </Routes>
+        <Toaster position="top-right" richColors />
       </div>
     </Router>
   );
