@@ -3,8 +3,6 @@ import { Logo } from '../../components/ui';
 import { toast } from 'sonner';
 import { teacherProfileApi } from '../../apis/userApi';
 import { useNavigate } from 'react-router-dom';
-import { jwtDecode } from 'jwt-decode';
-import type { CustomJwtPayload } from '../../types';
 
 type Step = 'personal' | 'school' | 'contact' | 'success';
 
