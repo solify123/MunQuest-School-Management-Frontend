@@ -9,39 +9,45 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Partial<AuthFormData>>({});
 
   const loginHandler = async (email: string, password: string) => {
     try {
+      setIsLoading(true);
       const errors: Partial<AuthFormData> = {};
       const gmailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
 
       if (!email) {
         errors.email = 'Email is required';
         toast.error('Email is required');
+        setIsLoading(false);
         return;
       } else if (!gmailRegex.test(email)) {
         errors.email = 'Please enter a valid Gmail address';
         toast.error('Please enter a valid Gmail address');
+        setIsLoading(false);
         return;
       }
 
       if (!password) {
         errors.password = 'Password is required';
         toast.error('Password is required');
+        setIsLoading(false);
         return;
       } else if (password.length < 6) {
         errors.password = 'Password must be at least 6 characters';
         toast.error('Password must be at least 6 characters');
+        setIsLoading(false);
         return;
       }
 
       if (Object.keys(errors).length > 0) {
         setErrors(errors);
         toast.error('Please fill in all required fields');
+        setIsLoading(false);
         return;
       }
-
 
       const loginResponse = await loginApi(email, password);
 
@@ -60,7 +66,8 @@ const Login: React.FC = () => {
 
     } catch (error: any) {
       toast.error(error.message);
-
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -129,8 +136,15 @@ const Login: React.FC = () => {
                   variant="primary"
                   className="w-full py-4 rounded-[32px] text-base font-bold"
                   style={{ backgroundColor: '#C2A46D' }}
+                  disabled={isLoading}
                 >
-                  Log In
+                  {isLoading ? (
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    </div>
+                  ) : (
+                    'Log In'
+                  )}
                 </Button>
 
                 {/* Sign Up Link */}

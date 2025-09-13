@@ -10,6 +10,7 @@ const SignUp: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('student');
+  const [isLoading, setIsLoading] = useState(false);
 
   const [errors, setErrors] = useState<Partial<AuthFormData>>({});
 
@@ -19,7 +20,7 @@ const SignUp: React.FC = () => {
 
   const signupHandler = async () => {
     try {
-
+      setIsLoading(true);
 
       // Validate email is a Gmail address and password is at least 6 characters
       const newErrors: Partial<AuthFormData> = {};
@@ -28,29 +29,33 @@ const SignUp: React.FC = () => {
       if (!email) {
         newErrors.email = 'Email is required';
         toast.error('Email is required');
+        setIsLoading(false);
         return;
       } else if (!gmailRegex.test(email)) {
         newErrors.email = 'Please enter a valid Gmail address';
         toast.error('Please enter a valid Gmail address');
+        setIsLoading(false);
         return;
       }
 
       if (!password) {
         newErrors.password = 'Password is required';
         toast.error('Password is required');
+        setIsLoading(false);
         return;
       } else if (password.length < 6) {
         newErrors.password = 'Password must be at least 6 characters';
         toast.error('Password must be at least 6 characters');
+        setIsLoading(false);
         return;
       }
 
       if (Object.keys(newErrors).length > 0) {
         setErrors(newErrors);
         toast.error('Please fill in all required fields');
+        setIsLoading(false);
         return;
       }
-
 
       const signupResponse = await signupApi(email, password, role);
 
@@ -62,6 +67,8 @@ const SignUp: React.FC = () => {
       }
     } catch (error: any) {
       toast.error(error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -149,8 +156,15 @@ const SignUp: React.FC = () => {
                   className="w-full py-4 rounded-[32px] text-base font-bold"
                   style={{ backgroundColor: '#C2A46D' }}
                   onClick={signupHandler}
+                  disabled={isLoading}
                 >
-                  Sign Up
+                  {isLoading ? (
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    </div>
+                  ) : (
+                    'Sign Up'
+                  )}
                 </Button>
 
                 {/* Login Link */}
