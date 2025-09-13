@@ -20,18 +20,49 @@ export const loginApi = async (email: string, password: string) => {
     }
 };
 
-export const getUserApi = async (email: string) => {
+export const teacherProfileApi = async (username: string, birthday: string, gender: string, locality: string, schoolName: string, yearsOfWorkExperience: string, phone: string, countryCode: string) => {
     try {
-        const response = await axios.get(`${backendUrl}/api/v1/users/${email}`);
+        const token = localStorage.getItem('token');
+        console.log(token);
+        const response = await axios.post(`${backendUrl}/api/v1/users/teacher-profile`, {
+            username,
+            birthday,
+            gender,
+            locality,
+            schoolName,
+            yearsOfWorkExperience,
+            phone,
+            countryCode
+        }, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
         return response.data;
     } catch (error: any) {
         throw new Error(error.response.data.message);
     }
 };
 
-export const getUserByIdApi = async (id: string) => {
+export const studentProfileApi = async (username: string, birthday: string, gender: string, locality: string, schoolName: string, gradeType: string, grade: string, phone: string, countryCode: string) => {
     try {
-        const response = await axios.get(`${backendUrl}/api/v1/users/${id}`);
+        const token = localStorage.getItem('token');
+        console.log(token);
+        const response = await axios.post(`${backendUrl}/api/v1/users/student-profile`, {
+            username,
+            birthday,
+            gender,
+            locality,
+            schoolName,
+            gradeType,
+            grade,
+            phone,
+            countryCode
+        }, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
         return response.data;
     } catch (error: any) {
         throw new Error(error.response.data.message);

@@ -1,5 +1,5 @@
 export interface User {
-  id: string;
+  userId: string;
   email: string;
   role: 'student' | 'teacher';
   firstName?: string;
@@ -10,6 +10,7 @@ export interface User {
 
 export interface CustomJwtPayload {
   role: 'student' | 'teacher' | "organizer" | "super_user" ;
+  userId: string;
   sub: string;
   iat: number;
   exp: number;

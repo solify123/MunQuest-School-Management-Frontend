@@ -2,8 +2,10 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Toaster } from 'sonner';
 import SignUp from './pages/SignUp';
 import Login from './pages/Login';
-import StudentProfile from './pages/StudentProfile';
-import TeacherProfile from './pages/TeacherProfile';
+import StudentProfile from './pages/student/StudentProfile';
+import TeacherProfile from './pages/teacher/TeacherProfile';
+import StudentHome from './pages/student/StudentHome';
+import TeacherHome from './pages/teacher/TeacherHome';
 
 function App() {
   return (
@@ -14,7 +16,9 @@ function App() {
           <Route path="/signup" element={<SignUp />} />
           <Route path="/login" element={<Login />} />
           <Route path="/student-profile" element={<StudentProfile />} />
+          <Route path="/student-home" element={<StudentHome />} />  
           <Route path="/teacher-profile" element={<TeacherProfile />} />
+          <Route path="/teacher-home" element={<TeacherHome />} />
         </Routes>
         <Toaster position="top-right" richColors />
       </div>
