@@ -85,7 +85,7 @@ export const getUserByIdApi = async () => {
     }
 };
 
-export const updateUserProfileApi = async (fullname: string, username: string, birthday: string, gender: string, locality: string, schoolName: string, grade: string, phone: string, email: string, avatar?: string, countryCode?: string) => {
+export const updateUserProfileApi = async (fullname: string, username: string, birthday: string, gender: string, locality: string, schoolName: string, grade: string, yearOfWorkExperience: string, phone: string, email: string, avatar?: string, countryCode?: string) => {
     try {
         const token = localStorage.getItem('token');
         const response = await axios.post(`${backendUrl}/api/v1/users/user-profile-update`, {
@@ -96,6 +96,7 @@ export const updateUserProfileApi = async (fullname: string, username: string, b
             locality,
             schoolName,
             grade,
+            year_of_work_experience: yearOfWorkExperience,
             phone,
             email,
             avatar,

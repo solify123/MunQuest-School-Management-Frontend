@@ -63,6 +63,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
         locality: user.data.school_location || '',
         schoolName: user.data.school_name || '',
         grade: user.data.grade || '',
+        year_of_work_experience: user.data.year_of_work_experience || '',
         phone_number: user.data.phone_number || '',
         email: user.data.email || '',
         avatar: user.data.avatar || (userType === 'student' ? StudentAvatar : TeacherAvatar)
@@ -79,6 +80,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
       setLocality(userData.locality);
       setSchoolName(userData.schoolName);
       setGrade(userData.grade);
+      setYearOfWorkExperience(userData.year_of_work_experience);
       setPhone(userData.phone_number);
       setCountryCode(userData.country_code || '+971');
       setEmail(userData.email);
@@ -120,7 +122,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
 
   // Dropdown states
   const [showLocalityDropdown, setShowLocalityDropdown] = useState(false);
-  const [showGradeDropdown, setShowGradeDropdown] = useState(false);
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -140,6 +141,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
   const [schoolName, setSchoolName] = useState<string>('');
   const [grade, setGrade] = useState<string>('');
   const [gradeType, setGradeType] = useState<string>('');
+  const [yearOfWorkExperience, setYearOfWorkExperience] = useState<string>('');
   const [phone, setPhone] = useState<string>('');
   const [countryCode, setCountryCode] = useState<string>('+971');
   const [email, setEmail] = useState<string>('');
@@ -231,6 +233,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
 
 
 
+
   // Handle field edit
   const handleEditField = (field: string, currentValue: string) => {
     setEditingField(field);
@@ -270,6 +273,9 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
         case 'gradeType':
           setGradeType(tempValue);
           break;
+        case 'year_of_work_experience':
+          setYearOfWorkExperience(tempValue);
+          break;
         case 'phone_number':
           setPhone(tempValue);
           break;
@@ -301,10 +307,11 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
         // Upload avatar to backend
         const response = await uploadAvatarApi(file);
 
+        console.log("avatar uploaded", response);
         if (response.success) {
           // Set the avatar URL returned from backend
-          setAvatar(response.avatarUrl || response.data.avatarUrl);
-          toast.success('Avatar updated successfully');
+          toast.success(response.message);
+          setAvatar(response.avatarUrl);
         } else {
           toast.error('Failed to upload avatar: ' + response.message);
         }
@@ -340,7 +347,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setShowLocalityDropdown(false);
-        setShowGradeDropdown(false);
         setShowSchoolDropdown(false);
         setShowCountryDropdown(false);
       }
@@ -1024,7 +1030,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
       const defaultAvatar = userType === 'student' ? StudentAvatar : TeacherAvatar;
       const avatarToSend = avatar === defaultAvatar ? undefined : avatar;
 
-      const response = await updateUserProfileApi(fullname, username, birthday, gender, locality, schoolName, grade, phone, email, avatarToSend, countryCode);
+      const response = await updateUserProfileApi(fullname, username, birthday, gender, locality, schoolName, grade, yearOfWorkExperience, phone, email, avatarToSend, countryCode);
       if (response.success) {
         toast.success(response.message);
       } else {
@@ -1049,7 +1055,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
             </div>
             <div className="flex items-center space-x-6">
               <button
-                onClick={() => navigate(userType === 'student' ? '/student-home' : '/teacher-home')}
+                onClick={() => navigate('/home')}
                 className="flex flex-col items-center space-y-1 text-gray-600 hover:text-[#1E395D] transition-colors"
               >
                 <img src={HomeIcon} alt="Home" className="w-6 h-6" />
@@ -1159,13 +1165,11 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
               grade
             )
           ) : (
-            renderDropdownField(
-              'Position or Department',
-              'grade',
-              grade,
-              teacherGradeOptions,
-              showGradeDropdown,
-              setShowGradeDropdown
+            renderField(
+              'Years of Work Experience',
+              'year_of_work_experience',
+              yearOfWorkExperience,
+              'text'
             )
           )}
 

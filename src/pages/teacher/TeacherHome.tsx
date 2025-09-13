@@ -25,8 +25,7 @@ const TeacherHome: React.FC = () => {
                     {/* Home Button */}
                     <button
                         onClick={() => {
-                            // Navigate to home page
-                            console.log('Navigate to home');
+                            navigate('/home');
                         }}
                         className="flex items-center px-6 py-3 rounded-lg font-medium transition-all"
                         style={{

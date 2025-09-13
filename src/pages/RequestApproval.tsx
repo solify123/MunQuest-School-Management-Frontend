@@ -1,0 +1,229 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Logo } from '../components/ui';
+import HomeIcon from '../assets/home_icon.svg';
+import NotificationIcon from '../assets/notification_icon.svg';
+
+const RequestApproval: React.FC = () => {
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    school: 'Gems Modern Academy',
+    locality: 'Dubai',
+    role: 'Head of Delegate Affairs'
+  });
+  const [uploadedFiles, setUploadedFiles] = useState<string[]>(['Approval_Letter.pdf']);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleProfileClick = () => {
+    const userType = localStorage.getItem('userType');
+    if (userType === 'student') {
+      navigate('/student-profile-page');
+    } else if (userType === 'teacher') {
+      navigate('/teacher-profile-page');
+    } else {
+      navigate('/profile-page');
+    }
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      const newFiles = Array.from(files).map(file => file.name);
+      setUploadedFiles(prev => [...prev, ...newFiles]);
+    }
+  };
+
+  const handleRemoveFile = (fileName: string) => {
+    setUploadedFiles(prev => prev.filter(file => file !== fileName));
+  };
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Navigate to event creation page
+      navigate('/event-create');
+    } catch (error) {
+      console.error('Error submitting request:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-white">
+      {/* Header Section */}
+      <div className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            {/* Logo */}
+            <div className="flex-shrink-0">
+              <Logo size="medium" />
+            </div>
+
+            {/* Navigation Icons */}
+            <div className="flex items-center space-x-8">
+              {/* Home Icon */}
+              <div className="flex flex-col items-center cursor-pointer" onClick={() => navigate('/home')}>
+                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-1">
+                  <img src={HomeIcon} alt="Home" className="w-6 h-6" />
+                </div>
+                <span className="text-xs text-gray-600 font-medium">Home</span>
+              </div>
+
+              {/* Notification Icon */}
+              <div className="flex flex-col items-center cursor-pointer">
+                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-1">
+                  <img src={NotificationIcon} alt="Notification" className="w-6 h-6" />
+                </div>
+                <span className="text-xs text-gray-600 font-medium">Notification</span>
+              </div>
+
+              {/* Profile Icon */}
+              <div className="flex flex-col items-center cursor-pointer" onClick={handleProfileClick}>
+                <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-pink-500 rounded-full flex items-center justify-center mb-1">
+                  <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                  </svg>
+                </div>
+                <span className="text-xs text-gray-600 font-medium">Profile</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-2xl mx-auto px-6 py-12">
+        {/* Page Title */}
+        <h1 className="text-3xl font-bold text-[#C2A46D] mb-8 text-center">
+          Request for Approval
+        </h1>
+
+        {/* Organiser Info Section */}
+        <div className="bg-white rounded-lg shadow-md p-8 mb-8">
+          <h2 className="text-xl font-bold text-black mb-6">Organiser Info</h2>
+          
+          <div className="space-y-6">
+            {/* School Field */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                School
+              </label>
+              <input
+                type="text"
+                value={formData.school}
+                onChange={(e) => handleInputChange('school', e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
+                placeholder="Enter school name"
+              />
+            </div>
+
+            {/* Locality Field */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Locality
+              </label>
+              <input
+                type="text"
+                value={formData.locality}
+                onChange={(e) => handleInputChange('locality', e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
+                placeholder="Enter locality"
+              />
+            </div>
+
+            {/* Role Field */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Role in Event or in School
+              </label>
+              <input
+                type="text"
+                value={formData.role}
+                onChange={(e) => handleInputChange('role', e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
+                placeholder="Enter your role"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Evidence Section */}
+        <div className="bg-white rounded-lg shadow-md p-8 mb-8">
+          <h2 className="text-xl font-bold text-black mb-6">Evidence</h2>
+          
+          {/* Upload Field */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Upload Evidence
+            </label>
+            <div className="flex items-center">
+              <input
+                type="text"
+                placeholder="E.g. Letter from School or / and ID"
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
+                readOnly
+              />
+              <label className="bg-[#1E395D] text-white px-4 py-3 rounded-r-lg cursor-pointer hover:bg-[#1a2f4a] transition-colors duration-200">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                <input
+                  type="file"
+                  multiple
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+              </label>
+            </div>
+          </div>
+
+          {/* Uploaded Files */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Uploaded Files
+            </label>
+            <div className="space-y-2">
+              {uploadedFiles.map((fileName, index) => (
+                <div key={index} className="flex items-center justify-between bg-gray-50 px-4 py-3 rounded-lg">
+                  <span className="text-sm text-gray-700">{fileName}</span>
+                  <button
+                    onClick={() => handleRemoveFile(fileName)}
+                    className="text-red-500 hover:text-red-700 transition-colors duration-200"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Submit Button */}
+        <div className="text-center">
+          <button
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className="bg-[#C2A46D] text-[#8B6F47] px-8 py-4 rounded-lg font-medium hover:bg-[#B8945F] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSubmitting ? 'Submitting...' : 'Submit'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default RequestApproval;

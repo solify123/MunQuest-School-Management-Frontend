@@ -4,7 +4,7 @@ import { Logo } from '../../components/ui';
 
 const StudentHome: React.FC = () => {
     const navigate = useNavigate();
-    
+
     return <div className="min-h-screen" style={{ backgroundColor: '#F8F8F8' }}>
         {/* Header */}
         <div className="shadow-sm">
@@ -25,8 +25,7 @@ const StudentHome: React.FC = () => {
                     {/* Home Button */}
                     <button
                         onClick={() => {
-                            // Navigate to home page
-                            console.log('Navigate to home');
+                            navigate('/home');
                         }}
                         className="flex items-center px-6 py-3 rounded-lg font-medium transition-all"
                         style={{
