@@ -49,7 +49,7 @@ const RequestApproval: React.FC = () => {
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       // Navigate to event creation page
       navigate('/event-create');
     } catch (error) {
@@ -92,7 +92,7 @@ const RequestApproval: React.FC = () => {
               <div className="flex flex-col items-center cursor-pointer" onClick={handleProfileClick}>
                 <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-pink-500 rounded-full flex items-center justify-center mb-1">
                   <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                   </svg>
                 </div>
                 <span className="text-xs text-gray-600 font-medium">Profile</span>
@@ -103,55 +103,82 @@ const RequestApproval: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-2xl mx-auto px-6 py-12">
+      <div className="max-w-[62rem] mx-auto px-6 py-12">
         {/* Page Title */}
-        <h1 className="text-3xl font-bold text-[#C2A46D] mb-8 text-center">
+        <h1 className="font-bold text-[#C2A46D] mb-8 text-left" style={{ fontSize: '40px' }}>
           Request for Approval
         </h1>
 
         {/* Organiser Info Section */}
-        <div className="bg-white rounded-lg shadow-md p-8 mb-8">
-          <h2 className="text-xl font-bold text-black mb-6">Organiser Info</h2>
-          
+        <div className="mb-8">
+          <h2 className="font-bold text-black mb-6" style={{ fontSize: '30px' }}>Organiser Info</h2>
+
           <div className="space-y-6">
             {/* School Field */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                className="block mb-2"
+                style={{
+                  color: '#000',
+                  fontSize: '16px',
+                  fontStyle: 'normal',
+                  fontWeight: 700,
+                  lineHeight: '150%',
+                }}
+              >
                 School
               </label>
               <input
                 type="text"
                 value={formData.school}
                 onChange={(e) => handleInputChange('school', e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
+                className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
                 placeholder="Enter school name"
               />
             </div>
 
             {/* Locality Field */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                className="block mb-2"
+                style={{
+                  color: '#000',
+                  fontSize: '16px',
+                  fontStyle: 'normal',
+                  fontWeight: 700,
+                  lineHeight: '150%',
+                }}
+              >
                 Locality
               </label>
               <input
                 type="text"
                 value={formData.locality}
                 onChange={(e) => handleInputChange('locality', e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
+                className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
                 placeholder="Enter locality"
               />
             </div>
 
             {/* Role Field */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                className="block mb-2"
+                style={{
+                  color: '#000',
+                  fontSize: '16px',
+                  fontStyle: 'normal',
+                  fontWeight: 700,
+                  lineHeight: '150%',
+                }}
+              >
                 Role in Event or in School
               </label>
               <input
                 type="text"
                 value={formData.role}
                 onChange={(e) => handleInputChange('role', e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
+                className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
                 placeholder="Enter your role"
               />
             </div>
@@ -159,19 +186,25 @@ const RequestApproval: React.FC = () => {
         </div>
 
         {/* Evidence Section */}
-        <div className="bg-white rounded-lg shadow-md p-8 mb-8">
-          <h2 className="text-xl font-bold text-black mb-6">Evidence</h2>
-          
-          {/* Upload Field */}
+        <div className="mb-8">
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Upload Evidence
+            <label
+              className="block mb-2"
+              style={{
+                color: '#000',
+                fontSize: '16px',
+                fontStyle: 'normal',
+                fontWeight: 700,
+                lineHeight: '150%',
+              }}
+            >
+              Evidence
             </label>
             <div className="flex items-center">
               <input
                 type="text"
                 placeholder="E.g. Letter from School or / and ID"
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
+                className="w-[350px] px-4 py-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
                 readOnly
               />
               <label className="bg-[#1E395D] text-white px-4 py-3 rounded-r-lg cursor-pointer hover:bg-[#1a2f4a] transition-colors duration-200">
@@ -190,12 +223,21 @@ const RequestApproval: React.FC = () => {
 
           {/* Uploaded Files */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              className="block mb-2"
+              style={{
+                color: 'grey',
+                fontSize: '12px',
+                fontStyle: 'normal',
+                fontWeight: 700,
+                lineHeight: '150%',
+              }}
+            >
               Uploaded Files
             </label>
             <div className="space-y-2">
               {uploadedFiles.map((fileName, index) => (
-                <div key={index} className="flex items-center justify-between bg-gray-50 px-4 py-3 rounded-lg">
+                <div key={index} className="w-[400px] flex items-center justify-between bg-gray-50 px-4 py-3 rounded-lg">
                   <span className="text-sm text-gray-700">{fileName}</span>
                   <button
                     onClick={() => handleRemoveFile(fileName)}
@@ -212,11 +254,25 @@ const RequestApproval: React.FC = () => {
         </div>
 
         {/* Submit Button */}
-        <div className="text-center">
+        <div className="text-left">
           <button
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="bg-[#C2A46D] text-[#8B6F47] px-8 py-4 rounded-lg font-medium hover:bg-[#B8945F] transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{
+              display: 'flex',
+              width: '120px',
+              padding: '10px',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: '10px',
+              borderRadius: '30px',
+              backgroundColor: '#C2A46D',
+              color: 'white',
+              fontWeight: 500,
+              transition: 'background-color 0.2s',
+              opacity: isSubmitting ? 0.5 : 1,
+              cursor: isSubmitting ? 'not-allowed' : 'pointer',
+            }}
           >
             {isSubmitting ? 'Submitting...' : 'Submit'}
           </button>
