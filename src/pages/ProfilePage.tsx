@@ -225,15 +225,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
     'Primary Teacher', 'Secondary Teacher', 'Subject Teacher', 'Head of Department',
     'Vice Principal', 'Principal', 'Counselor', 'Librarian', 'Other'
   ];
-
-  const teacherGradeOptions = [
-    'Primary Teacher', 'Secondary Teacher', 'Subject Teacher', 'Head of Department',
-    'Vice Principal', 'Principal', 'Counselor', 'Librarian', 'Other'
-  ];
-
-
-
-
   // Handle field edit
   const handleEditField = (field: string, currentValue: string) => {
     setEditingField(field);
@@ -951,74 +942,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderDropdownField = (label: string, field: keyof ProfileData, value: string, options: any[], _isOpen: boolean, _setIsOpen: (open: boolean) => void) => {
-    const isEditingThisField = editingField === field;
-    const displayValue = isEditingThisField ? tempValue : (() => {
-      if (field === 'school_location') {
-        const option = options.find(opt => opt.value === value);
-        return option ? option.label : value;
-      }
-      return value;
-    })();
-
-    return (
-      <div className="mb-6">
-        <label className="block text-base font-bold text-black mb-2">
-          {label}
-          {field === 'school_location' && (
-            <span className="text-[#7E7E7E] text-base font-normal leading-[150%] ml-1">
-              (City or Town)
-            </span>
-          )}
-        </label>
-        <div className="relative" ref={dropdownRef}>
-          <button
-            type="button"
-            onClick={() => isEditingThisField && _setIsOpen(false)}
-            disabled={!isEditingThisField}
-            style={{
-              display: 'flex',
-              width: '400px',
-              height: '40px',
-              padding: '10px',
-              alignItems: 'flex-start',
-              gap: '10px'
-            }}
-            className={`border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-500 w-full px-4 py-3 border rounded-lg text-sm bg-white focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 text-left ${isEditingThisField ? 'border-[#1E395D]' : 'border-gray-300 bg-gray-50'
-              }`}
-          >
-            {displayValue}
-          </button>
-          {!isEditingThisField && (
-            <button
-              onClick={() => handleEditField(field, value)}
-              className="absolute top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              style={{ right: '36.75rem' }}
-            >
-              <img src={EditIcon} alt="Edit" className="w-4 h-4" />
-            </button>
-          )}
-          {isEditingThisField && (
-            <div className="absolute top-1/2 transform -translate-y-1/2 flex space-x-2" style={{ right: '35rem' }}>
-              <button
-                onClick={handleSaveField}
-                className="text-green-600 hover:text-green-800 text-sm font-medium"
-              >
-                ✓
-              </button>
-              <button
-                onClick={handleCancelEdit}
-                className="text-red-600 hover:text-red-800 text-sm font-medium"
-              >
-                ✕
-              </button>
-            </div>
-          )}
         </div>
       </div>
     );
