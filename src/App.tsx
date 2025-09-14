@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import RequestApproval from './pages/RequestApproval';
 import RequestUnderVerification from './pages/RequestUnderVerification';
 import EventCreate from './pages/EventCreate';
+import Organiser from './pages/Organiser';
 import StudentProfile from './pages/student/StudentProfileCreate';
 import TeacherProfile from './pages/teacher/TeacherProfileCreate';
 import StudentProfilePage from './pages/student/StudentProfilePage';
@@ -27,6 +28,7 @@ function App() {
           <Route path="/request-approval" element={<RequestApproval />} />
           <Route path="/request-under-verification" element={<RequestUnderVerification />} />
           <Route path="/event-create" element={<EventCreate />} />
+          <Route path="/organiser" element={<Organiser />} />
           <Route path="/student-profile" element={<StudentProfile />} />
           <Route path="/student-profile-page" element={<StudentProfilePage />} />
           <Route path="/student-home" element={<StudentHome />} />  

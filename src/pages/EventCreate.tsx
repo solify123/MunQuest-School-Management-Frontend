@@ -54,7 +54,7 @@ const EventCreate: React.FC = () => {
     } else {
       // Handle final submission
       console.log('Event created:', formData);
-      navigate('/dashboard');
+      navigate('/organiser');
     }
   };
 

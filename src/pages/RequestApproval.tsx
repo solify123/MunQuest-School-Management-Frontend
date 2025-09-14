@@ -83,9 +83,9 @@ const RequestApproval: React.FC = () => {
     setIsSubmitting(true);
     try {
       const response = await requestApprovalApi(school, locality, role, evidenceDocs);
-      if (response.status === 200) {
+      if (response.success) {
         toast.success(response.message);
-        navigate('/request-under-verification');
+        navigate('/organiser');
       } else {
         toast.error(response.message);
         setIsSubmitting(false);
