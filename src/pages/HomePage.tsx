@@ -23,10 +23,6 @@ const HomePage: React.FC = () => {
     navigate('/request-approval');
   };
 
-  const handleViewEvents = () => {
-    navigate('/dashboard');
-  };
-
   return (
     <div className="min-h-screen bg-white">
       {/* Header Section */}
@@ -60,7 +56,7 @@ const HomePage: React.FC = () => {
               <div className="flex flex-col items-center cursor-pointer" onClick={handleProfileClick}>
                 <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-pink-500 rounded-full flex items-center justify-center mb-1">
                   <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                   </svg>
                 </div>
                 <span className="text-xs text-gray-600 font-medium">Profile</span>
@@ -71,22 +67,13 @@ const HomePage: React.FC = () => {
           {/* Action Buttons */}
           <div className="mt-6 flex justify-end space-x-4">
             <button
-              onClick={handleViewEvents}
-              className="bg-white text-[#1E395D] px-6 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors duration-200 flex items-center border border-[#1E395D]"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-              View Events
-            </button>
-            <button
               onClick={handleCreateEvent}
               className="bg-[#1E395D] text-white px-6 py-3 rounded-lg font-medium hover:bg-[#1a2f4a] transition-colors duration-200 flex items-center"
             >
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              + Create Event
+              Create Event
             </button>
           </div>
         </div>

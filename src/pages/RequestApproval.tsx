@@ -1,18 +1,45 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Logo } from '../components/ui';
 import HomeIcon from '../assets/home_icon.svg';
 import NotificationIcon from '../assets/notification_icon.svg';
+import { edviceDocsfileUploadApi, getUserByIdApi, requestApprovalApi } from '../apis/userApi';
+import { toast } from 'sonner';
 
 const RequestApproval: React.FC = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    school: 'Gems Modern Academy',
-    locality: 'Dubai',
-    role: 'Head of Delegate Affairs'
-  });
-  const [uploadedFiles, setUploadedFiles] = useState<string[]>(['Approval_Letter.pdf']);
+  const [school, setSchool] = useState('');
+  const [locality, setLocality] = useState('');
+  const [role, setRole] = useState('');
+  const [evidenceDocs, setEvidenceDocs] = useState('');
+
+  const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    async function getUserById() {
+      const user = await getUserByIdApi();
+
+      setSchool(user.data.school_name);
+      if (user.data.school_location === "AD") {
+        setLocality("Abu Dhabi");
+      } else if (user.data.school_location === "DU") {
+        setLocality("Dubai");
+      } else if (user.data.school_location === "SH") {
+        setLocality("Sharjah");
+      } else if (user.data.school_location === "AJ") {
+        setLocality("Ajman");
+      } else if (user.data.school_location === "RAK") {
+        setLocality("Ras Al Khaimah");
+      } else if (user.data.school_location === "UAQ") {
+        setLocality("Umm Al Quwain");
+      } else if (user.data.school_location === "AIN") {
+        setLocality("Al Ain");
+      }
+    }
+    getUserById();
+  }, []);
+
 
   const handleProfileClick = () => {
     const userType = localStorage.getItem('userType');
@@ -25,35 +52,47 @@ const RequestApproval: React.FC = () => {
     }
   };
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (files) {
-      const newFiles = Array.from(files).map(file => file.name);
-      setUploadedFiles(prev => [...prev, ...newFiles]);
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      const files = event.target.files;
+      if (files) {
+        const newFiles = Array.from(files).map(file => file.name);
+        const response = await edviceDocsfileUploadApi(files[0] as File);
+        console.log("response", response);
+        if (response.success) {
+          toast.success(response.message);
+          setUploadedFiles(prev => [...prev, ...newFiles]);
+        } else {
+          toast.error(response.message);
+        }
+        setEvidenceDocs(response.documentUrl);
+      }
+    } catch (error: any) {
+      toast.error(error.message);
+      setIsSubmitting(false);
+    } finally {
+      setIsSubmitting(false);
     }
-  };
+  }
 
   const handleRemoveFile = (fileName: string) => {
     setUploadedFiles(prev => prev.filter(file => file !== fileName));
   };
 
-  const handleSubmit = async () => {
+  const requestApprovalHandler = async () => {
     setIsSubmitting(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Navigate to event creation page
-      navigate('/event-create');
-    } catch (error) {
-      console.error('Error submitting request:', error);
+      const response = await requestApprovalApi(school, locality, role, evidenceDocs);
+      if (response.status === 200) {
+        toast.success(response.message);
+        navigate('/request-under-verification');
+      } else {
+        toast.error(response.message);
+        setIsSubmitting(false);
+      }
+    } catch (error: any) {
+      toast.error(error.message);
+      setIsSubmitting(false);
     } finally {
       setIsSubmitting(false);
     }
@@ -63,7 +102,10 @@ const RequestApproval: React.FC = () => {
     <div className="min-h-screen bg-white">
       {/* Header Section */}
       <div className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+        <div
+          className="mx-auto px-6 py-4"
+          style={{ maxWidth: "88rem" }}
+        >
           <div className="flex items-center justify-between">
             {/* Logo */}
             <div className="flex-shrink-0">
@@ -130,8 +172,8 @@ const RequestApproval: React.FC = () => {
               </label>
               <input
                 type="text"
-                value={formData.school}
-                onChange={(e) => handleInputChange('school', e.target.value)}
+                disabled
+                value={school}
                 className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
                 placeholder="Enter school name"
               />
@@ -153,8 +195,8 @@ const RequestApproval: React.FC = () => {
               </label>
               <input
                 type="text"
-                value={formData.locality}
-                onChange={(e) => handleInputChange('locality', e.target.value)}
+                disabled
+                value={locality}
                 className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
                 placeholder="Enter locality"
               />
@@ -176,8 +218,8 @@ const RequestApproval: React.FC = () => {
               </label>
               <input
                 type="text"
-                value={formData.role}
-                onChange={(e) => handleInputChange('role', e.target.value)}
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
                 className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
                 placeholder="Enter your role"
               />
@@ -256,7 +298,7 @@ const RequestApproval: React.FC = () => {
         {/* Submit Button */}
         <div className="text-left">
           <button
-            onClick={handleSubmit}
+            onClick={requestApprovalHandler}
             disabled={isSubmitting}
             style={{
               display: 'flex',
