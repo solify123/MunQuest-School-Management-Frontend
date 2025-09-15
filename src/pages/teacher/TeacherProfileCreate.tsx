@@ -88,7 +88,7 @@ const TeacherProfile: React.FC = () => {
     if (searchTerm.trim() === '') {
       setFilteredSchools(schools);
     } else {
-      const filtered = schools.filter(school => 
+      const filtered = schools.filter(school =>
         school.school_label?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         school.school_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         school.school_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -131,7 +131,7 @@ const TeacherProfile: React.FC = () => {
         {steps.map((step, index) => (
           <React.Fragment key={step.key}>
             <button
-              className={`flex items-center justify-center w-[200px] h-[58px] p-[5px] rounded-lg text-sm font-medium transition-all ${currentStep === step.key
+              className={`flex items-center justify-center w-[200px] h-[58px] p-[5px] rounded-[20px] text-sm font-medium transition-all ${currentStep === step.key
                 ? 'bg-[#1E395D] text-white'
                 : 'bg-white text-gray-600 border border-gray-300'
                 }`}
@@ -170,7 +170,7 @@ const TeacherProfile: React.FC = () => {
             }`}
         />
         {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name}</p>}
-        
+
         {/* Generated Username Display */}
         {generatedUsername && (
           <div className="mt-2 p-3 bg-gray-50 border border-gray-200 rounded-lg">
@@ -229,8 +229,8 @@ const TeacherProfile: React.FC = () => {
               type="button"
               onClick={() => setGender(genderOption)}
               className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all flex items-center justify-center w-[200px] ${gender === genderOption
-                ? 'bg-[#1E395D] text-white border-[#1E395D]'
-                : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400'
+                ? 'bg-[#D9C7A1] text-black border-[#1E395D]'
+                : 'bg-white text-black border-gray-300 hover:border-gray-400'
                 }`}
             >
               {genderOption.charAt(0).toUpperCase() + genderOption.slice(1)}
@@ -309,7 +309,7 @@ const TeacherProfile: React.FC = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
-          
+
           {/* School Dropdown */}
           {showSchoolDropdown && locality && filteredSchools.length > 0 && (
             <div className="absolute top-full left-0 z-10 w-[400px] mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
@@ -367,7 +367,7 @@ const TeacherProfile: React.FC = () => {
               if (hasNonNumeric) {
                 toast.error('Only numbers are allowed in this field');
               }
-              
+
               // Remove any non-numeric characters
               const numericValue = e.target.value.replace(/[^0-9]/g, '');
               setYearsOfWorkExperience(numericValue);
@@ -417,16 +417,16 @@ const TeacherProfile: React.FC = () => {
               placeholder="50 6362040"
               value={phone}
               onChange={(e) => {
-              // Check if user tried to enter invalid characters
-              const hasInvalidChars = /[^0-9\s]/.test(e.target.value);
-              if (hasInvalidChars) {
-                toast.error('Only numbers and spaces are allowed in phone number');
-              }
-              
-              // Remove any non-numeric characters except spaces
-              const phoneValue = e.target.value.replace(/[^0-9\s]/g, '');
-              setPhone(phoneValue);
-            }}
+                // Check if user tried to enter invalid characters
+                const hasInvalidChars = /[^0-9\s]/.test(e.target.value);
+                if (hasInvalidChars) {
+                  toast.error('Only numbers and spaces are allowed in phone number');
+                }
+
+                // Remove any non-numeric characters except spaces
+                const phoneValue = e.target.value.replace(/[^0-9\s]/g, '');
+                setPhone(phoneValue);
+              }}
               className={`flex-1 px-4 py-4 text-sm bg-white placeholder-gray-500 focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors.phone ? 'border-red-500' : 'border-gray-300'
                 }`}
             />
@@ -525,17 +525,20 @@ const TeacherProfile: React.FC = () => {
             }}
             className="font-medium text-white transition-all"
             style={{
-              backgroundColor: '#C2A46D',
+              backgroundColor: '#D9C7A1',
               borderRadius: '30px',
               display: 'flex',
               width: '120px',
               padding: '10px',
               justifyContent: 'center',
               alignItems: 'center',
-              gap: '10px'
+              gap: '10px',
+              transition: 'background-color 0.2s',
             }}
+            onMouseOver={e => (e.currentTarget.style.backgroundColor = '#C2A46D')}
+            onMouseOut={e => (e.currentTarget.style.backgroundColor = '#D9C7A1')}
           >
-            {currentStep === 'contact' ? 'Submit' : 'Continue'}
+            Continue
           </button>
         </div>
       </div>

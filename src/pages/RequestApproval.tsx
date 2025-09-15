@@ -1,12 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Logo, Avatar, LoadingSpinner } from '../components/ui';
-import HomeIcon from '../assets/home_icon.svg';
-import NotificationIcon from '../assets/notification_icon.svg';
+import { Header, LoadingSpinner } from '../components/ui';
 import { edviceDocsfileUploadApi, requestApprovalApi } from '../apis/Organisers';
 import { getUserByIdApi } from '../apis/Users';
 import { toast } from 'sonner';
-import { getUserType } from '../utils/avatarUtils';
 
 const RequestApproval: React.FC = () => {
   const navigate = useNavigate();
@@ -46,16 +43,6 @@ const RequestApproval: React.FC = () => {
   }, []);
 
 
-  const handleProfileClick = async () => {
-    const userType = await getUserType();
-    if (userType === 'student') {
-      navigate('/student-profile-page');
-    } else if (userType === 'teacher') {
-      navigate('/teacher-profile-page');
-    } else {
-      navigate('/profile-page');
-    }
-  };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
@@ -84,6 +71,17 @@ const RequestApproval: React.FC = () => {
   };
 
   const requestApprovalHandler = async () => {
+    // Validate required fields
+    if (!role.trim()) {
+      toast.error('Please enter your role in event or in school');
+      return;
+    }
+
+    if (!evidenceDocs.trim()) {
+      toast.error('Please upload evidence documents');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const response = await requestApprovalApi(school, locality, role, evidenceDocs);
@@ -105,44 +103,7 @@ const RequestApproval: React.FC = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Header Section */}
-      <div className="bg-white shadow-sm">
-        <div
-          className="mx-auto px-6 py-4"
-          style={{ maxWidth: "88rem" }}
-        >
-          <div className="flex items-center justify-between">
-            {/* Logo */}
-            <div className="flex-shrink-0">
-              <Logo size="medium" />
-            </div>
-
-            {/* Navigation Icons */}
-            <div className="flex items-center space-x-8">
-              {/* Home Icon */}
-              <div className="flex flex-col items-center cursor-pointer" onClick={() => navigate('/home')}>
-                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-1">
-                  <img src={HomeIcon} alt="Home" className="w-6 h-6" />
-                </div>
-                <span className="text-xs text-gray-600 font-medium">Home</span>
-              </div>
-
-              {/* Notification Icon */}
-              <div className="flex flex-col items-center cursor-pointer">
-                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-1">
-                  <img src={NotificationIcon} alt="Notification" className="w-6 h-6" />
-                </div>
-                <span className="text-xs text-gray-600 font-medium">Notification</span>
-              </div>
-
-              {/* Profile Icon */}
-              <div className="flex flex-col items-center cursor-pointer" onClick={handleProfileClick}>
-                <Avatar size="medium" className="mb-1" />
-                <span className="text-xs text-gray-600 font-medium">Profile</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <Header />
 
       {/* Main Content */}
       <div className="max-w-[62rem] mx-auto px-6 py-12">
@@ -174,7 +135,7 @@ const RequestApproval: React.FC = () => {
                 type="text"
                 disabled
                 value={school}
-                className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
+                className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#607DA3] focus:border-transparent"
                 placeholder="Enter school name"
               />
             </div>
@@ -197,7 +158,7 @@ const RequestApproval: React.FC = () => {
                 type="text"
                 disabled
                 value={locality}
-                className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
+                className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#607DA3] focus:border-transparent"
                 placeholder="Enter locality"
               />
             </div>
@@ -220,7 +181,7 @@ const RequestApproval: React.FC = () => {
                 type="text"
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
-                className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
+                className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#607DA3] focus:border-transparent"
                 placeholder="Enter your role"
               />
             </div>
@@ -246,12 +207,12 @@ const RequestApproval: React.FC = () => {
               <input
                 type="text"
                 placeholder="E.g. Letter from School or / and ID"
-                className="w-[350px] px-4 py-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
+                className="w-[350px] px-4 py-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-[#607DA3] focus:border-transparent"
                 readOnly
               />
               <label className={`px-4 py-3 rounded-r-lg transition-colors duration-200 ${isUploadingDocs
                 ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-[#1E395D] text-white cursor-pointer hover:bg-[#1a2f4a]'
+                : 'bg-[#607DA3] text-white cursor-pointer hover:bg-[#1a2f4a]'
                 }`}>
                 {isUploadingDocs ? (
                   <LoadingSpinner size="small" text="" />
@@ -316,13 +277,15 @@ const RequestApproval: React.FC = () => {
               alignItems: 'center',
               gap: '10px',
               borderRadius: '30px',
-              backgroundColor: '#C2A46D',
+              backgroundColor: '#D9C7A1',
               color: 'white',
               fontWeight: 500,
               transition: 'background-color 0.2s',
               opacity: isSubmitting ? 0.5 : 1,
               cursor: isSubmitting ? 'not-allowed' : 'pointer',
             }}
+            onMouseOver={e => (e.currentTarget.style.background = '#B8945F')}
+            onMouseOut={e => (e.currentTarget.style.background = '#C2A46D')}
           >
             {isSubmitting ? 'Submitting...' : 'Submit'}
           </button>

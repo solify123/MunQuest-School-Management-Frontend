@@ -1,13 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Logo, Avatar, LoadingSpinner, DateRangePicker } from '../components/ui';
-import HomeIcon from '../assets/home_icon.svg';
-import NotificationIcon from '../assets/notification_icon.svg';
+import { LoadingSpinner, DateRangePicker, Header } from '../components/ui';
 import EditIcon from '../assets/edit_icon.svg';
 import { createEventApi, eventImagefileUploadApi } from '../apis/Events';
 import { getUserByIdApi } from '../apis/Users';
 import { toast } from 'sonner';
-import { getUserType } from '../utils/avatarUtils';
 
 const EventCreate: React.FC = () => {
   const navigate = useNavigate();
@@ -38,16 +35,6 @@ const EventCreate: React.FC = () => {
     { id: 3, name: 'Event Links', active: currentStep === 3 }
   ];
 
-  const handleProfileClick = async () => {
-    const userType = await getUserType();
-    if (userType === 'student') {
-      navigate('/student-profile-page');
-    } else if (userType === 'teacher') {
-      navigate('/teacher-profile-page');
-    } else {
-      navigate('/profile-page');
-    }
-  };
 
   useEffect(() => {
     async function getUserById() {
@@ -68,7 +55,7 @@ const EventCreate: React.FC = () => {
         setLocality("Umm Al Quwain");
       } else if (user.data.school_location === "AIN") {
         setLocality("Al Ain");
-      }else{
+      } else {
         setLocality(user.data.school_location);
       }
     }
@@ -232,7 +219,7 @@ const EventCreate: React.FC = () => {
     if (hasNonNumeric) {
       toast.error('Only numbers are allowed in this field');
     }
-    
+
     // Remove any non-numeric characters
     const numericValue = value.replace(/[^0-9]/g, '');
     setter(numericValue);
@@ -318,7 +305,7 @@ const EventCreate: React.FC = () => {
               </div>
             )}
           </div>
-          <label className={`absolute bottom-0 bg-white rounded-full p-2 shadow-md ${isUploadingCoverImage ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-gray-50'}`} style={{ right: '-3rem' }}>
+          <label className={`absolute bottom-0 bg-white rounded-full p-2 shadow-md ${isUploadingCoverImage ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-gray-50'}`} style={{ right: '-2rem' }}>
             <img src={EditIcon} alt="Edit" className="w-4 h-4" />
             <input
               type="file"
@@ -362,7 +349,7 @@ const EventCreate: React.FC = () => {
                 </div>
               )}
             </div>
-            <label className={`absolute bottom-0 bg-white rounded-full p-2 shadow-md ${isUploadingEventLogo ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-gray-50'}`} style={{ right: '-3rem' }}>
+            <label className={`absolute bottom-0 bg-white rounded-full p-2 shadow-md ${isUploadingEventLogo ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-gray-50'}`} style={{ right: '-2rem' }}>
               <img src={EditIcon} alt="Edit" className="w-4 h-4" />
               <input
                 type="file"
@@ -410,7 +397,7 @@ const EventCreate: React.FC = () => {
             setEventName(e.target.value);
             clearValidationError('eventName');
           }}
-          placeholder="E.g. Global Vision MtUN 2025"
+          placeholder="E.g. Global Vision MUN 2025"
           style={{
             display: 'flex',
             width: '400px',
@@ -838,52 +825,7 @@ const EventCreate: React.FC = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Header Section */}
-      <div className="bg-white shadow-sm">
-        <div className="mx-auto px-6 py-4" style={{ maxWidth: "87rem" }}>
-          <div className="flex items-center justify-between">
-            {/* Logo */}
-            <div className="flex-shrink-0">
-              <Logo size="medium" />
-            </div>
-
-            {/* Navigation Icons */}
-            <div className="flex items-center space-x-8">
-              {/* Home Icon */}
-              <div className="flex flex-col items-center cursor-pointer" onClick={() => navigate('/home')}>
-                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-1">
-                  <img src={HomeIcon} alt="Home" className="w-6 h-6" />
-                </div>
-                <span className="text-xs text-gray-600 font-medium">Home</span>
-              </div>
-
-              {/* Notification Icon */}
-              <div className="flex flex-col items-center cursor-pointer">
-                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-1">
-                  <img src={NotificationIcon} alt="Notification" className="w-6 h-6" />
-                </div>
-                <span className="text-xs text-gray-600 font-medium">Notification</span>
-              </div>
-
-              {/* Organiser Icon */}
-              <div className="flex flex-col items-center cursor-pointer">
-                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-1">
-                  <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </div>
-                <span className="text-xs text-gray-600 font-medium">Organiser</span>
-              </div>
-
-              {/* Profile Icon */}
-              <div className="flex flex-col items-center cursor-pointer" onClick={handleProfileClick}>
-                <Avatar size="medium" className="mb-1" />
-                <span className="text-xs text-gray-600 font-medium">Profile</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <Header />
 
       {/* Breadcrumb */}
       <div className="py-3">

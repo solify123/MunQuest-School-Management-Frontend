@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Logo, Avatar, LoadingSpinner } from '../components/ui';
-import HomeIcon from '../assets/home_icon.svg';
-import NotificationIcon from '../assets/notification_icon.svg';
+import { LoadingSpinner, Header } from '../components/ui';
 import { getCurrentEventsApi } from '../apis/Events';
-import { getUserType } from '../utils/avatarUtils';
 
 
 const Dashboard: React.FC = () => {
@@ -40,16 +37,6 @@ const Dashboard: React.FC = () => {
     checkEvents();
   }, [navigate]);
 
-  const handleProfileClick = async () => {
-    const userType = await getUserType();
-    if (userType === 'student') {
-      navigate('/student-profile-page');
-    } else if (userType === 'teacher') {
-      navigate('/teacher-profile-page');
-    } else {
-      navigate('/profile-page');
-    }
-  };
 
   const handleCreateEvent = () => {
     navigate('/request-approval');
@@ -75,41 +62,11 @@ const Dashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Header Section */}
-      <div className="bg-white shadow-sm">
+      <Header />
+      
+      {/* Create Event Button */}
+      <div className="bg-white">
         <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            {/* Logo */}
-            <div className="flex-shrink-0">
-              <Logo size="medium" />
-            </div>
-
-            {/* Navigation Icons */}
-            <div className="flex items-center space-x-8">
-              {/* Home Icon */}
-              <div className="flex flex-col items-center cursor-pointer" onClick={() => navigate('/home')}>
-                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-1">
-                  <img src={HomeIcon} alt="Home" className="w-6 h-6" />
-                </div>
-                <span className="text-xs text-gray-600 font-medium">Home</span>
-              </div>
-
-              {/* Notification Icon */}
-              <div className="flex flex-col items-center cursor-pointer">
-                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-1">
-                  <img src={NotificationIcon} alt="Notification" className="w-6 h-6" />
-                </div>
-                <span className="text-xs text-gray-600 font-medium">Notification</span>
-              </div>
-
-              {/* Profile Icon */}
-              <div className="flex flex-col items-center cursor-pointer" onClick={handleProfileClick}>
-                <Avatar size="medium" className="mb-1" />
-                <span className="text-xs text-gray-600 font-medium">Profile</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Create Event Button */}
           <div className="mt-6 flex justify-end">
             <button
               onClick={handleCreateEvent}
@@ -118,7 +75,7 @@ const Dashboard: React.FC = () => {
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              + Create Event
+              Create Event
             </button>
           </div>
         </div>

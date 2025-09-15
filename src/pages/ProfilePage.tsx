@@ -1,14 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 // Import icons
 import EditIcon from '../assets/edit_icon.svg';
-import HomeIcon from '../assets/home_icon.svg';
-import NotificationIcon from '../assets/notification_icon.svg';
 import { changePasswordApi, getUserByIdApi, updateUserProfileApi, uploadAvatarApi } from '../apis/Users';
 import { generateUsername } from '../utils/usernameGenerator';
-import { Avatar, LoadingSpinner } from '../components/ui';
+import { Avatar, LoadingSpinner, Header } from '../components/ui';
 import { clearUserAvatar } from '../utils/avatarUtils';
 
 // Import default avatars
@@ -49,7 +46,6 @@ interface ProfilePageProps {
 }
 
 const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
-  const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -304,7 +300,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
           clearUserAvatar();
           // Store new avatar in localStorage
           localStorage.setItem('userAvatar', response.avatarUrl);
-          
+
           // Dispatch custom event to notify all Avatar components to refresh
           // Use setTimeout to ensure localStorage is updated before dispatching
           setTimeout(() => {
@@ -404,9 +400,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
       setFilteredSchools(filtered);
     }
   };
-
-
-
 
   const renderGenderField = (label: string, field: keyof ProfileData, value: any) => {
     const isEditingThisField = editingField === field;
@@ -528,9 +521,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
         setTempValue(selectedValue.label);
       } else {
         setLocality(selectedValue.label);
-        // Clear school data when locality changes
-        // setSchoolName('');
-        // setSchoolSearchTerm('');
       }
       if (selectedValue.value) {
         loadSchoolData(selectedValue.value);
@@ -717,21 +707,21 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
     const isEditingThisField = editingField === field;
     const displayValue = isEditingThisField ? tempValue : value;
 
-  const handlePhoneChange = (newValue: string) => {
-    // Check if user tried to enter invalid characters
-    const hasInvalidChars = /[^0-9\s]/.test(newValue);
-    if (hasInvalidChars) {
-      toast.error('Only numbers and spaces are allowed in phone number');
-    }
-    
-    // Remove any non-numeric characters except spaces
-    const phoneValue = newValue.replace(/[^0-9\s]/g, '');
-    if (isEditingThisField) {
-      setTempValue(phoneValue);
-    } else {
-      setPhone(phoneValue);
-    }
-  };
+    const handlePhoneChange = (newValue: string) => {
+      // Check if user tried to enter invalid characters
+      const hasInvalidChars = /[^0-9\s]/.test(newValue);
+      if (hasInvalidChars) {
+        toast.error('Only numbers and spaces are allowed in phone number');
+      }
+
+      // Remove any non-numeric characters except spaces
+      const phoneValue = newValue.replace(/[^0-9\s]/g, '');
+      if (isEditingThisField) {
+        setTempValue(phoneValue);
+      } else {
+        setPhone(phoneValue);
+      }
+    };
 
     const handleCountryCodeChange = (newCode: string) => {
       if (isEditingThisField) {
@@ -863,7 +853,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
                 if (hasNonNumeric) {
                   toast.error('Only numbers are allowed in this field');
                 }
-                
+
                 // Remove any non-numeric characters for number fields
                 const numericValue = e.target.value.replace(/[^0-9]/g, '');
                 setTempValue(numericValue);
@@ -1008,32 +998,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="shadow-sm">
-        <div className="mx-auto py-4" style={{ maxWidth: "85rem" }}>
-          <div className="flex items-center justify-between">
-            <div className="text-2xl font-bold text-[#1E395D]">
-              MunQuest
-            </div>
-            <div className="flex items-center space-x-6">
-              <button
-                onClick={() => navigate('/home')}
-                className="flex flex-col items-center space-y-1 text-gray-600 hover:text-[#1E395D] transition-colors"
-              >
-                <img src={HomeIcon} alt="Home" className="w-6 h-6" />
-                <span className="text-xs">Home</span>
-              </button>
-              <button className="flex flex-col items-center space-y-1 text-gray-600 hover:text-[#1E395D] transition-colors">
-                <img src={NotificationIcon} alt="Notification" className="w-6 h-6" />
-                <span className="text-xs">Notification</span>
-              </button>
-              <button className="flex flex-col items-center space-y-1 text-[#1E395D]">
-                <Avatar size="small" />
-                <span className="text-xs">Profile</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <Header />
 
       {/* Main Content */}
       <div className="mx-auto py-8" style={{ maxWidth: "65rem" }}>
@@ -1054,12 +1019,11 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
             <button
               onClick={() => !isUploadingAvatar && fileInputRef.current?.click()}
               disabled={isUploadingAvatar}
-              className={`absolute bottom-2 right-2 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-                isUploadingAvatar 
-                  ? 'bg-gray-300 cursor-not-allowed opacity-50' 
+              className={`absolute bottom-2 right-2 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${isUploadingAvatar
+                  ? 'bg-gray-300 cursor-not-allowed opacity-50'
                   : 'hover:bg-gray-300'
-              }`}
-              style={{ right: '-2.5rem', bottom: '-0.5rem' }}
+                }`}
+              style={{ right: '-1.5rem', bottom: '-0.5rem' }}
             >
               <img src={EditIcon} alt="Edit Avatar" className="w-4 h-4" />
             </button>
@@ -1216,7 +1180,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
                 <div className="flex space-x-2">
                   <button
                     onClick={handlePasswordChange}
-                    className="px-4 py-2 bg-[#1E395D] text-white rounded-lg text-sm hover:bg-[#0f2a47] transition-colors"
+                    className="px-4 py-2 bg-[#D9C7A1] text-white rounded-lg text-sm hover:bg-[#C2A46D] transition-colors"
                   >
                     Save Password
                   </button>
@@ -1241,7 +1205,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
               onClick={() => {
                 profileDataHandlerEdit();
               }}
-              className={`text-white font-medium transition-all ${newPassword ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-[#C2A46D] hover:bg-[#B8945A]'
+              className={`text-white bg-[#D9C7A1] font-medium transition-all ${newPassword ? 'hover:bg-[#C2A46D]' : 'bg-[#D9C7A1]  hover:bg-[#C2A46D]'
                 }`}
               style={{
                 display: 'flex',

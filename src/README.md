@@ -36,8 +36,26 @@ src/
 
 ### Component Structure
 - **UI Components**: Basic, reusable components in `components/ui/`
+- **Shared Components**: Common components like `Header` in `components/`
 - **Page Components**: Full page components in `pages/`
 - **Feature Components**: Grouped by feature (student/, teacher/)
+
+### Header Component Usage
+```typescript
+import { Header } from '../components/ui';
+
+// Basic usage
+<Header />
+
+// With custom max width
+<Header maxWidth="max-w-[88rem]" />
+
+// Without navigation (logo only)
+<Header showNavigation={false} />
+
+// With custom styling
+<Header className="custom-header-class" />
+```
 
 ## 📝 Code Standards
 

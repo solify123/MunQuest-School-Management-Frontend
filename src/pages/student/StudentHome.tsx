@@ -1,17 +1,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Logo } from '../../components/ui';
+import { Header } from '../../components/ui';
 
 const StudentHome: React.FC = () => {
     const navigate = useNavigate();
 
     return <div className="min-h-screen" style={{ backgroundColor: '#F8F8F8' }}>
         {/* Header */}
-        <div className="shadow-sm">
-            <div className="max-w-4xl px-6 py-4">
-                <Logo size="medium" />
-            </div>
-        </div>
+        <Header showNavigation={false} />
 
         {/* Main Content */}
         <div className="flex items-center justify-center flex-1" style={{ height: '80vh' }}>
@@ -27,11 +23,20 @@ const StudentHome: React.FC = () => {
                         onClick={() => {
                             navigate('/home');
                         }}
-                        className="flex items-center px-6 py-3 rounded-lg font-medium transition-all"
+                        className="flex items-center font-medium transition-all"
                         style={{
+                            width: '140px',
+                            height: '60px',
+                            borderRadius: '30px',
+                            opacity: 1,
+                            gap: '10px',
+                            borderWidth: '1px',
+                            borderStyle: 'solid',
+                            borderColor: '#C2A46D',
+                            padding: '23px',
                             backgroundColor: '#C2A46D',
-                            color: '#8B6F47'
-                        }}
+                            color: '#F7F7F7'
+                            }}
                     >
                         <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -42,10 +47,19 @@ const StudentHome: React.FC = () => {
                     {/* Profile Button */}
                     <button
                         onClick={() => navigate('/student-profile-page')}
-                        className="flex items-center px-6 py-3 rounded-lg font-medium transition-all"
+                        className="flex items-center font-medium transition-all"
                         style={{
+                            width: '140px',
+                            height: '60px',
+                            borderRadius: '30px',
+                            opacity: 1,
+                            gap: '10px',
+                            borderWidth: '1px',
+                            borderStyle: 'solid',
+                            borderColor: '#C2A46D',
+                            padding: '23px',
                             backgroundColor: '#C2A46D',
-                            color: '#8B6F47'
+                            color: '#F7F7F7'
                         }}
                     >
                         <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

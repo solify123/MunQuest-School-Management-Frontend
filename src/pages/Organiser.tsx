@@ -1,28 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Logo, Avatar } from '../components/ui';
-import HomeIcon from '../assets/home_icon.svg';
-import NotificationIcon from '../assets/notification_icon.svg';
-import OrganiserIcon from '../assets/organiser_icon.svg';
+import { Header } from '../components/ui';
 import { toast } from 'sonner';
 import { getCurrentEventsApi } from '../apis/Events';
-import { getUserType } from '../utils/avatarUtils';
 
 const Organiser: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('Current');
   const [currentEvents, setCurrentEvents] = useState([]);
 
-  const handleProfileClick = async () => {
-    const userType = await getUserType();
-    if (userType === 'student') {
-      navigate('/student-profile-page');
-    } else if (userType === 'teacher') {
-      navigate('/teacher-profile-page');
-    } else {
-      navigate('/profile-page');
-    }
-  };
 
 
   useEffect(() => {
@@ -97,49 +83,7 @@ const Organiser: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header Section */}
-      <div className="bg-white shadow-sm">
-        <div className="mx-auto px-6 py-4" style={{ maxWidth: "88rem" }}>
-          <div className="flex items-center justify-between">
-            {/* Logo */}
-            <div className="flex-shrink-0">
-              <Logo size="medium" />
-            </div>
-
-            {/* Navigation Icons */}
-            <div className="flex items-center space-x-8">
-              {/* Home Icon */}
-              <div className="flex flex-col items-center cursor-pointer" onClick={() => navigate('/home')}>
-                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-1">
-                  <img src={HomeIcon} alt="Home" className="w-6 h-6" />
-                </div>
-                <span className="text-xs text-gray-600 font-medium">Home</span>
-              </div>
-
-              {/* Notification Icon */}
-              <div className="flex flex-col items-center cursor-pointer">
-                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-1">
-                  <img src={NotificationIcon} alt="Notification" className="w-6 h-6" />
-                </div>
-                <span className="text-xs text-gray-600 font-medium">Notification</span>
-              </div>
-
-              {/* Organiser Icon - Active */}
-              <div className="flex flex-col items-center cursor-pointer">
-                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-1">
-                  <img src={OrganiserIcon} alt="Organiser" className="w-6 h-6" />
-                </div>
-                <span className="text-xs text-[#C2A46D] font-medium">Organiser</span>
-              </div>
-
-              {/* Profile Icon */}
-              <div className="flex flex-col items-center cursor-pointer" onClick={handleProfileClick}>
-                <Avatar size="medium" className="mb-1" />
-                <span className="text-xs text-gray-600 font-medium">Profile</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <Header maxWidth="max-w-[88rem]" />
 
       {/* Main Content */}
       <div className="max-w-[85rem] mx-auto px-6 py-8" style={{ paddingLeft: '10.5rem' }}>

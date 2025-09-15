@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Logo } from '../../components/ui';
+import { Header } from '../../components/ui';
 import { useNavigate } from 'react-router-dom';
 import { studentProfileApi } from '../../apis/Users';
 import { toast } from 'sonner';
@@ -108,7 +108,7 @@ const StudentProfile: React.FC = () => {
     if (searchTerm.trim() === '') {
       setFilteredSchools(schools);
     } else {
-      const filtered = schools.filter(school => 
+      const filtered = schools.filter(school =>
         school.school_label?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         school.school_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         school.school_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -153,7 +153,7 @@ const StudentProfile: React.FC = () => {
         {steps.map((step, index) => (
           <React.Fragment key={step.key}>
             <button
-              className={`flex items-center justify-center w-[200px] h-[58px] p-[5px] rounded-lg text-sm font-medium transition-all ${currentStep === step.key
+              className={`flex items-center justify-center w-[200px] h-[58px] p-[5px] rounded-[20px] text-sm font-medium transition-all ${currentStep === step.key
                 ? 'bg-[#1E395D] text-white'
                 : 'bg-white text-gray-600 border border-gray-300'
                 }`}
@@ -187,7 +187,7 @@ const StudentProfile: React.FC = () => {
             }`}
         />
         {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name}</p>}
-        
+
         {/* Generated Username Display */}
         {generatedUsername && (
           <div className="mt-2 p-3 bg-gray-50 border border-gray-200 rounded-lg">
@@ -246,7 +246,7 @@ const StudentProfile: React.FC = () => {
               type="button"
               onClick={() => handleGenderSelect(genderOption)}
               className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all flex items-center justify-center w-[200px] ${gender === genderOption
-                ? 'bg-[#1E395D] text-white border-[#1E395D]'
+                ? 'bg-[#D9C7A1] text-black border-[#D9C7A1]'
                 : 'bg-white text-gray-700 border-gray-300 hover:border-gray-400'
                 }`}
             >
@@ -326,7 +326,7 @@ const StudentProfile: React.FC = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
-          
+
           {/* School Dropdown */}
           {showSchoolDropdown && locality && filteredSchools.length > 0 && (
             <div className="absolute top-full left-0 z-10 w-[400px] mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
@@ -498,7 +498,7 @@ const StudentProfile: React.FC = () => {
                 if (hasInvalidChars) {
                   toast.error('Only numbers and spaces are allowed in phone number');
                 }
-                
+
                 // Remove any non-numeric characters except spaces
                 const phoneValue = e.target.value.replace(/[^0-9\s]/g, '');
                 setPhone(phoneValue);
@@ -550,11 +550,7 @@ const StudentProfile: React.FC = () => {
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#F8F8F8' }}>
       {/* Header */}
-      <div className="shadow-sm">
-        <div className="max-w-4xl px-6 py-4">
-          <Logo size="medium" />
-        </div>
-      </div>
+      <Header />
 
       {/* Main Content */}
       <div className="max-w-4xl mx-auto px-6 py-8">
@@ -598,14 +594,17 @@ const StudentProfile: React.FC = () => {
               padding: '10px',
               justifyContent: 'center',
               alignItems: 'center',
-              gap: '10px'
+              gap: '10px',
+              transition: 'background-color 0.2s',
             }}
+            onMouseOver={e => (e.currentTarget.style.backgroundColor = '#C2A46D')}
+            onMouseOut={e => (e.currentTarget.style.backgroundColor = '#D9C7A1')}
           >
             Continue
           </button>
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 

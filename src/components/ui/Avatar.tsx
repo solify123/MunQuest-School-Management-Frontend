@@ -117,7 +117,7 @@ const Avatar: React.FC<AvatarProps> = ({
 
   return (
     <div 
-      className={`${sizeClasses[size]} bg-gradient-to-br from-orange-400 to-pink-500 rounded-full flex items-center justify-center cursor-pointer ${borderClasses} ${className}`}
+      className={`${sizeClasses[size]}  rounded-full flex items-center justify-center cursor-pointer ${borderClasses} ${className}`}
       onClick={onClick}
     >
       <img
