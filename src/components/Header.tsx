@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { Logo, Avatar } from './ui';
 import HomeIcon from '../assets/home_icon.svg';
 import NotificationIcon from '../assets/notification_icon.svg';
+import OrganiserIcon from '../assets/organiser_icon.svg';
 import { getUserType } from '../utils/avatarUtils';
+import { verifyOrganiserApi } from '../apis/Organisers';
 
 interface HeaderProps {
   showNavigation?: boolean;
@@ -14,7 +16,24 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({
   showNavigation = true,
 }) => {
+
   const navigate = useNavigate();
+
+  const [isOrganiser, setIsOrganiser] = useState<boolean>(false);
+  const checkUserType = async () => {
+    const response = await verifyOrganiserApi()
+    if (response.success) {
+      setIsOrganiser(true);
+    }
+    else {
+      setIsOrganiser(false);
+    }
+  };
+
+  useEffect(() => {
+    checkUserType();
+  }, []);
+
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -25,6 +44,8 @@ const Header: React.FC<HeaderProps> = ({
       navigate('/student-profile-page');
     } else if (userType === 'teacher') {
       navigate('/teacher-profile-page');
+    } else if (userType === 'organizer') {
+      navigate('/organiser');
     } else {
       navigate('/profile-page');
     }
@@ -32,6 +53,10 @@ const Header: React.FC<HeaderProps> = ({
 
   const handleHomeClick = () => {
     navigate('/home');
+  };
+
+  const handleOrganiserClick = () => {
+    navigate('/organiser');
   };
 
   const toggleDropdown = () => {
@@ -66,9 +91,9 @@ const Header: React.FC<HeaderProps> = ({
 
   return (
     <div className={`bg-white shadow-sm`} style={{ height: "100px" }}>
-      <div 
+      <div
         className={`mx-auto px-6 py-4`}
-        style={{ maxWidth: "88rem" , height: "100%" }}
+        style={{ maxWidth: "88rem", height: "100%" }}
       >
         <div className="flex items-center justify-between" style={{ height: "100%" }}>
           {/* Logo */}
@@ -95,18 +120,27 @@ const Header: React.FC<HeaderProps> = ({
                 <span className="text-xs text-gray-600 font-medium">Notification</span>
               </div>
 
+              {/* Organiser Icon */}
+              {isOrganiser && <div className="flex flex-col items-center cursor-pointer">
+                <div onClick={handleOrganiserClick} className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-1">
+                  <img src={OrganiserIcon} alt="Organiser" className="w-6 h-6" />
+                </div>
+                <span className="text-xs text-gray-600 font-medium">Organiser</span>
+              </div>
+              }
+
               {/* Profile Icon with Dropdown */}
               <div className="relative" ref={dropdownRef}>
                 <div className="flex flex-col items-center cursor-pointer" onClick={toggleDropdown}>
                   <Avatar size="medium" className="mb-1" />
                   <span className="text-xs text-gray-600 font-medium">Profile</span>
                 </div>
-                
+
                 {/* Dropdown Menu */}
                 {isDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50">
                     {/* Show Profile Option */}
-                    <div 
+                    <div
                       className="px-4 py-3 cursor-pointer hover:bg-[#D9C7A1] transition-colors duration-200 flex items-center"
                       onClick={handleShowProfile}
                     >
@@ -118,12 +152,12 @@ const Header: React.FC<HeaderProps> = ({
                       </div>
                       <span className="text-gray-900 font-medium">Show Profile</span>
                     </div>
-                    
+
                     {/* Separator */}
                     <div className="border-t border-gray-200"></div>
-                    
+
                     {/* Log Out Option */}
-                    <div 
+                    <div
                       className="px-4 py-3 cursor-pointer hover:bg-[#D9C7A1] transition-colors duration-200 flex items-center"
                       onClick={handleLogout}
                     >

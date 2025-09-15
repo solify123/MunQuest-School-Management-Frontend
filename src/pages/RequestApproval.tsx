@@ -213,7 +213,9 @@ const RequestApproval: React.FC = () => {
               <label className={`px-4 py-3 rounded-r-lg transition-colors duration-200 ${isUploadingDocs
                 ? 'bg-gray-400 cursor-not-allowed'
                 : 'bg-[#607DA3] text-white cursor-pointer hover:bg-[#1a2f4a]'
-                }`}>
+                }`}
+                style={{ height: "50px", display: "flex", alignItems: "center", justifyContent: "center" }}
+                >
                 {isUploadingDocs ? (
                   <LoadingSpinner size="small" text="" />
                 ) : (

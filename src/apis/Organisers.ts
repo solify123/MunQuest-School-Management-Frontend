@@ -18,7 +18,6 @@ export const edviceDocsfileUploadApi = async (file: File) => {
     }
 };
 
-
 export const requestApprovalApi = async (schoolName: string, locality: string, role: string, evidenceDocs: string) => {
     try {
         const token = localStorage.getItem('token');
@@ -29,6 +28,21 @@ export const requestApprovalApi = async (schoolName: string, locality: string, r
             evidenceDocs
         }, {
             headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+}
+
+export const verifyOrganiserApi = async () => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${backendUrl}/api/v1/organisers/verify-organiser`, {
+            headers: {
+                'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             }
         });
