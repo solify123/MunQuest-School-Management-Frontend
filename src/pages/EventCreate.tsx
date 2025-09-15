@@ -204,6 +204,20 @@ const EventCreate: React.FC = () => {
     return /^@[a-zA-Z0-9._]+$/.test(handle);
   };
 
+  const handleNumberInput = (value: string, setter: (value: string) => void, errorKey: string) => {
+    // Check if user tried to enter non-numeric characters
+    const hasNonNumeric = /[^0-9]/.test(value);
+    if (hasNonNumeric) {
+      toast.error('Only numbers are allowed in this field');
+    }
+    
+    // Remove any non-numeric characters
+    const numericValue = value.replace(/[^0-9]/g, '');
+    setter(numericValue);
+    clearValidationError(errorKey);
+  };
+
+
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, imageType: 'cover' | 'logo') => {
     try {
       const files = event.target.files;
@@ -582,11 +596,14 @@ const EventCreate: React.FC = () => {
         </label>
         <input
           type="number"
+          inputMode="numeric"
+          pattern="[0-9]*"
           value={numberOfSeats}
           onChange={(e) => {
-            setNumberOfSeats(e.target.value);
-            clearValidationError('numberOfSeats');
-            calculateTotalRevenue(e.target.value, feesPerDelegate);
+            handleNumberInput(e.target.value, (value) => {
+              setNumberOfSeats(value);
+              calculateTotalRevenue(value, feesPerDelegate);
+            }, 'numberOfSeats');
           }}
           placeholder="E.g. 400"
           style={{
@@ -635,11 +652,14 @@ const EventCreate: React.FC = () => {
           </span>
           <input
             type="number"
+            inputMode="numeric"
+            pattern="[0-9]*"
             value={feesPerDelegate}
             onChange={(e) => {
-              setFeesPerDelegate(e.target.value);
-              clearValidationError('feesPerDelegate');
-              calculateTotalRevenue(numberOfSeats, e.target.value);
+              handleNumberInput(e.target.value, (value) => {
+                setFeesPerDelegate(value);
+                calculateTotalRevenue(numberOfSeats, value);
+              }, 'feesPerDelegate');
             }}
             placeholder="200"
             style={{
@@ -688,7 +708,9 @@ const EventCreate: React.FC = () => {
             AED
           </span>
           <input
-            type="text"
+            type="number"
+            inputMode="numeric"
+            pattern="[0-9]*"
             value={totalRevenue}
             readOnly
             placeholder='80000'

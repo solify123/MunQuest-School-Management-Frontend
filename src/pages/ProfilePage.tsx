@@ -707,13 +707,21 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
     const isEditingThisField = editingField === field;
     const displayValue = isEditingThisField ? tempValue : value;
 
-    const handlePhoneChange = (newValue: string) => {
-      if (isEditingThisField) {
-        setTempValue(newValue);
-      } else {
-        setPhone(newValue);
-      }
-    };
+  const handlePhoneChange = (newValue: string) => {
+    // Check if user tried to enter invalid characters
+    const hasInvalidChars = /[^0-9\s]/.test(newValue);
+    if (hasInvalidChars) {
+      toast.error('Only numbers and spaces are allowed in phone number');
+    }
+    
+    // Remove any non-numeric characters except spaces
+    const phoneValue = newValue.replace(/[^0-9\s]/g, '');
+    if (isEditingThisField) {
+      setTempValue(phoneValue);
+    } else {
+      setPhone(phoneValue);
+    }
+  };
 
     const handleCountryCodeChange = (newCode: string) => {
       if (isEditingThisField) {
@@ -746,6 +754,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
             {/* Phone Number Input */}
             <input
               type="tel"
+              inputMode="numeric"
+              pattern="[0-9\s]*"
               name="phone"
               placeholder="50 6362040"
               value={displayValue}
@@ -804,11 +814,15 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
     );
   };
 
-  const renderField = (label: string, field: keyof ProfileData, value: string, type: 'text' | 'date' | 'email' | 'tel' = 'text') => {
+  const renderField = (label: string, field: keyof ProfileData, value: string, type: 'text' | 'date' | 'email' | 'tel' | 'number' = 'text') => {
     const isEditingThisField = editingField === field;
     const displayValue = isEditingThisField ? tempValue : value;
 
-
+    // Determine if this field should be number-only for mobile
+    const isNumberField = field === 'year_of_work_experience';
+    const inputType = isNumberField ? 'number' : type;
+    const inputMode = isNumberField ? 'numeric' : undefined;
+    const pattern = isNumberField ? '[0-9]*' : undefined;
 
     return (
       <div className="mb-6">
@@ -828,9 +842,25 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
         </label>
         <div className="relative">
           <input
-            type={type}
+            type={inputType}
+            inputMode={inputMode}
+            pattern={pattern}
             value={displayValue}
-            onChange={(e) => setTempValue(e.target.value)}
+            onChange={(e) => {
+              if (isNumberField) {
+                // Check if user tried to enter non-numeric characters
+                const hasNonNumeric = /[^0-9]/.test(e.target.value);
+                if (hasNonNumeric) {
+                  toast.error('Only numbers are allowed in this field');
+                }
+                
+                // Remove any non-numeric characters for number fields
+                const numericValue = e.target.value.replace(/[^0-9]/g, '');
+                setTempValue(numericValue);
+              } else {
+                setTempValue(e.target.value);
+              }
+            }}
             disabled={!isEditingThisField}
             style={{
               display: 'flex',
@@ -1092,7 +1122,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
               'Years of Work Experience',
               'year_of_work_experience',
               yearOfWorkExperience,
-              'text'
+              'number'
             )
           )}
 

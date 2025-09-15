@@ -355,11 +355,23 @@ const TeacherProfile: React.FC = () => {
         </label>
         <div className="relative">
           <input
-            type="text"
+            type="number"
+            inputMode="numeric"
+            pattern="[0-9]*"
             name="yearsOfWorkExperience"
             placeholder="E.g. 20"
             value={yearsOfWorkExperience}
-            onChange={(e) => setYearsOfWorkExperience(e.target.value)}
+            onChange={(e) => {
+              // Check if user tried to enter non-numeric characters
+              const hasNonNumeric = /[^0-9]/.test(e.target.value);
+              if (hasNonNumeric) {
+                toast.error('Only numbers are allowed in this field');
+              }
+              
+              // Remove any non-numeric characters
+              const numericValue = e.target.value.replace(/[^0-9]/g, '');
+              setYearsOfWorkExperience(numericValue);
+            }}
             className={`w-[400px] px-4 py-4 pl-12 border rounded-lg text-sm bg-white placeholder-gray-500 focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors.yearsOfWorkExperience ? 'border-red-500' : 'border-gray-300'
               }`}
           />
@@ -399,10 +411,22 @@ const TeacherProfile: React.FC = () => {
             {/* Phone Number Input */}
             <input
               type="tel"
+              inputMode="numeric"
+              pattern="[0-9\s]*"
               name="phone"
               placeholder="50 6362040"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={(e) => {
+              // Check if user tried to enter invalid characters
+              const hasInvalidChars = /[^0-9\s]/.test(e.target.value);
+              if (hasInvalidChars) {
+                toast.error('Only numbers and spaces are allowed in phone number');
+              }
+              
+              // Remove any non-numeric characters except spaces
+              const phoneValue = e.target.value.replace(/[^0-9\s]/g, '');
+              setPhone(phoneValue);
+            }}
               className={`flex-1 px-4 py-4 text-sm bg-white placeholder-gray-500 focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors.phone ? 'border-red-500' : 'border-gray-300'
                 }`}
             />
