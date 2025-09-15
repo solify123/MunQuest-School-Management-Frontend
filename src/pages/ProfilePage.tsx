@@ -8,6 +8,8 @@ import HomeIcon from '../assets/home_icon.svg';
 import NotificationIcon from '../assets/notification_icon.svg';
 import { changePasswordApi, getUserByIdApi, updateUserProfileApi, uploadAvatarApi } from '../apis/userApi';
 import { generateUsername } from '../utils/usernameGenerator';
+import { Avatar } from '../components/ui';
+import { clearUserAvatar } from '../utils/avatarUtils';
 
 // Import default avatars
 import StudentAvatar from '../assets/student.png';
@@ -84,9 +86,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
       setPhone(userData.phone_number);
       setCountryCode(userData.country_code || '+971');
       setEmail(userData.email);
-      setAvatar(userData.avatar);
-
-      console.log('Loaded user data:', userData);
+      // Avatar is now managed by Avatar component
     };
     getUserById();
   }, [userType]);
@@ -145,7 +145,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
   const [phone, setPhone] = useState<string>('');
   const [countryCode, setCountryCode] = useState<string>('+971');
   const [email, setEmail] = useState<string>('');
-  const [avatar, setAvatar] = useState<string>(userType === 'student' ? StudentAvatar : TeacherAvatar);
+  // Avatar state removed - now using Avatar component which manages its own state
 
   const localityOptions = [
     { value: 'AD', label: 'Abu Dhabi' },
@@ -234,7 +234,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
   // Save field edit
   const handleSaveField = () => {
     if (editingField) {
-      console.log(editingField, schoolName)
       // Update the corresponding useState variable based on the field
       switch (editingField) {
         case 'fullname':
@@ -274,7 +273,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
           setEmail(tempValue);
           break;
         case 'avatar':
-          setAvatar(tempValue);
+          // Avatar is now managed by Avatar component
           break;
         default:
           break;
@@ -298,11 +297,15 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
         // Upload avatar to backend
         const response = await uploadAvatarApi(file);
 
-        console.log("avatar uploaded", response);
         if (response.success) {
-          // Set the avatar URL returned from backend
+          // Clear avatar cache so it refreshes in all components
+          clearUserAvatar();
+          // Store new avatar in localStorage
+          localStorage.setItem('userAvatar', response.avatarUrl);
+          // Dispatch custom event to notify all Avatar components to refresh
+          window.dispatchEvent(new CustomEvent('avatarUpdated'));
+          // Show success message
           toast.success(response.message);
-          setAvatar(response.avatarUrl);
         } else {
           toast.error('Failed to upload avatar: ' + response.message);
         }
@@ -358,10 +361,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
 
   // School data functions
   const loadSchoolData = async (cityCode: string) => {
-    console.log(cityCode)
     try {
-
-      console.log(cityCode, 'cityCode');
       const response = await fetch(`/school_list/${cityCode}.json`);
       if (response.ok) {
         const schoolData = await response.json();
@@ -605,10 +605,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
     };
 
     const handleSchoolSelect = (school: any) => {
-      console.log(school, isEditingThisField)
       if (isEditingThisField) {
         const schoolLabel = school.school_label || school.school_name;
-        console.log(schoolLabel, 'schoolLabel')
         setSchoolName(schoolLabel);
         setSchoolSearchTerm(schoolLabel);
         setShowSchoolDropdown(true);
@@ -979,20 +977,18 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
 
   const profileDataHandlerEdit = async () => {
     try {
-      // Only send avatar if it's not the default avatar
-      const defaultAvatar = userType === 'student' ? StudentAvatar : TeacherAvatar;
-      const avatarToSend = avatar === defaultAvatar ? undefined : avatar;
+      // Get avatar from localStorage, if it exists
+      const storedAvatar = localStorage.getItem('userAvatar');
+      const avatarToSend = storedAvatar || undefined;
 
       const response = await updateUserProfileApi(fullname, username, birthday, gender, locality, schoolName, grade, yearOfWorkExperience, phone, email, avatarToSend, countryCode);
       if (response.success) {
         toast.success(response.message);
       } else {
         toast.error('Failed to update profile: ' + response.message);
-        console.log(response, 'response');
       }
     } catch (error: any) {
       toast.error('Failed to update profile: ' + error.data.message);
-      console.log(error, 'error');
     }
   }
 
@@ -1019,9 +1015,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
                 <span className="text-xs">Notification</span>
               </button>
               <button className="flex flex-col items-center space-y-1 text-[#1E395D]">
-                <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-pink-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm font-bold">P</span>
-                </div>
+                <Avatar size="small" />
                 <span className="text-xs">Profile</span>
               </button>
             </div>
@@ -1034,10 +1028,10 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
         {/* Profile Header */}
         <div className="text-left mb-8">
           <div className="relative inline-block">
-            <img
-              src={avatar || (userType === 'student' ? StudentAvatar : TeacherAvatar)}
-              alt="Profile"
-              className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
+            <Avatar
+              size="large"
+              className="w-32 h-32 border-4 border-white shadow-lg"
+              showBorder={true}
             />
             <button
               onClick={() => fileInputRef.current?.click()}

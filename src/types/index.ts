@@ -4,6 +4,7 @@ export interface User {
   role: 'student' | 'teacher';
   firstName?: string;
   lastName?: string;
+  avatar?: string;
   createdAt: Date;
   updatedAt: Date;
 }

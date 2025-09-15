@@ -47,7 +47,6 @@ export const teacherProfileApi = async (fullname: string, username: string, birt
 export const studentProfileApi = async (fullname: string, username: string, birthday: string, gender: string, locality: string, schoolName: string, gradeType: string, grade: string, phone: string, countryCode: string) => {
     try {
         const token = localStorage.getItem('token');
-        console.log(token);
         const response = await axios.post(`${backendUrl}/api/v1/users/student-profile`, {
             fullname,
             username,
