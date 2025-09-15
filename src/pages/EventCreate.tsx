@@ -63,6 +63,8 @@ const EventCreate: React.FC = () => {
         setLocality("Umm Al Quwain");
       } else if (user.data.school_location === "AIN") {
         setLocality("Al Ain");
+      }else{
+        setLocality(user.data.school_location);
       }
     }
     getUserById();
@@ -868,7 +870,7 @@ const EventCreate: React.FC = () => {
       </div>
 
       {/* Breadcrumb */}
-      <div className="bg-gray-50 py-3">
+      <div className="py-3">
         <div className="mx-auto px-6" style={{ maxWidth: '65rem' }}>
           <div className="flex items-center text-sm text-gray-600">
             <span
@@ -903,7 +905,7 @@ const EventCreate: React.FC = () => {
       </div>
 
       {/* Step Navigation */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-white">
         <div className="mx-auto px-6" style={{ maxWidth: '65rem' }}>
           <div className="flex items-center space-x-4">
             {steps.map((step, index) => (
