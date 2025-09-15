@@ -4,7 +4,8 @@ import { Logo, Avatar, LoadingSpinner, DateRangePicker } from '../components/ui'
 import HomeIcon from '../assets/home_icon.svg';
 import NotificationIcon from '../assets/notification_icon.svg';
 import EditIcon from '../assets/edit_icon.svg';
-import { createEventApi, eventImagefileUploadApi, getUserByIdApi } from '../apis/userApi';
+import { createEventApi, eventImagefileUploadApi } from '../apis/Events';
+import { getUserByIdApi } from '../apis/Users';
 import { toast } from 'sonner';
 import { getUserType } from '../utils/avatarUtils';
 

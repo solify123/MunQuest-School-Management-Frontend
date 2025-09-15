@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button, Input, PasswordInput, Logo } from '../components/ui';
 import type { AuthFormData } from '../types';
-import { signupApi } from '../apis/userApi';
+import { signupApi } from '../apis/Users';
 import { toast } from 'sonner';
 
 const SignUp: React.FC = () => {

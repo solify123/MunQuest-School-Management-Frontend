@@ -1,4 +1,4 @@
-import { getUserByIdApi } from '../apis/userApi';
+import { getUserByIdApi } from '../apis/Users';
 
 export const checkUserProfileExists = async (): Promise<boolean> => {
   try {

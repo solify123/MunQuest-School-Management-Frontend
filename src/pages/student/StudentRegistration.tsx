@@ -5,7 +5,7 @@ import HomeIcon from '../../assets/home_icon.svg';
 import NotificationIcon from '../../assets/notification_icon.svg';
 import EditIcon from '../../assets/edit_icon.svg';
 import { toast } from 'sonner';
-import { getUserByIdApi, uploadAvatarApi } from '../../apis/userApi';
+import { getUserByIdApi, uploadAvatarApi } from '../../apis/Users';
 
 type Step = 'personal' | 'mun' | 'food' | 'emergency';
 

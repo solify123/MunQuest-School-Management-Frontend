@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Logo } from '../../components/ui';
 import { toast } from 'sonner';
-import { teacherProfileApi } from '../../apis/userApi';
+import { teacherProfileApi } from '../../apis/Users';
 import { useNavigate } from 'react-router-dom';
 import { generateUsername } from '../../utils/usernameGenerator';
 

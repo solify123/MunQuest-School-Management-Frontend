@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { Logo, Avatar } from '../components/ui';
 import HomeIcon from '../assets/home_icon.svg';
 import NotificationIcon from '../assets/notification_icon.svg';
+import { getUserType } from '../utils/avatarUtils';
 
 const RequestUnderVerification: React.FC = () => {
   const navigate = useNavigate();
 
-  const handleProfileClick = () => {
-    const userType = localStorage.getItem('userType');
+  const handleProfileClick = async () => {
+    const userType = await getUserType();
     if (userType === 'student') {
       navigate('/student-profile-page');
     } else if (userType === 'teacher') {
@@ -125,14 +126,14 @@ const RequestUnderVerification: React.FC = () => {
               e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
             }}
           >
-            <svg 
-              width="20" 
-              height="20" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="white" 
-              strokeWidth="2" 
-              strokeLinecap="round" 
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              strokeWidth="2"
+              strokeLinecap="round"
               strokeLinejoin="round"
             >
               <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />

@@ -1,12 +1,13 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Logo, Avatar } from '../components/ui';
+import { getUserType } from '../utils/avatarUtils';
 
 const EventCreateSuccess: React.FC = () => {
   const navigate = useNavigate();
 
-  const handleProfileClick = () => {
-    const userType = localStorage.getItem('userType');
+  const handleProfileClick = async () => {
+    const userType = await getUserType();
     if (userType === 'student') {
       navigate('/student-profile-page');
     } else if (userType === 'teacher') {

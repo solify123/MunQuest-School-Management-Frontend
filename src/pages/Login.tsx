@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button, Input, PasswordInput, Logo } from '../components/ui';
   import type { AuthFormData, CustomJwtPayload } from '../types';
 import { toast } from 'sonner';
-import { loginApi } from '../apis/userApi';
+import { loginApi } from '../apis/Users';
 import { checkUserProfileExists } from '../utils/profileCheck';
 import { jwtDecode } from 'jwt-decode';
 const Login: React.FC = () => {

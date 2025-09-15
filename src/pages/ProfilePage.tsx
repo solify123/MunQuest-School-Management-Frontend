@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import EditIcon from '../assets/edit_icon.svg';
 import HomeIcon from '../assets/home_icon.svg';
 import NotificationIcon from '../assets/notification_icon.svg';
-import { changePasswordApi, getUserByIdApi, updateUserProfileApi, uploadAvatarApi } from '../apis/userApi';
+import { changePasswordApi, getUserByIdApi, updateUserProfileApi, uploadAvatarApi } from '../apis/Users';
 import { generateUsername } from '../utils/usernameGenerator';
 import { Avatar, LoadingSpinner } from '../components/ui';
 import { clearUserAvatar } from '../utils/avatarUtils';

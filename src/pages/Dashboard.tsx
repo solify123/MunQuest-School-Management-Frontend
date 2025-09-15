@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Logo, Avatar, LoadingSpinner } from '../components/ui';
 import HomeIcon from '../assets/home_icon.svg';
 import NotificationIcon from '../assets/notification_icon.svg';
-import { getCurrentEventsApi } from '../apis/userApi';
+import { getCurrentEventsApi } from '../apis/Events';
+import { getUserType } from '../utils/avatarUtils';
 
 
 const Dashboard: React.FC = () => {
@@ -17,7 +18,7 @@ const Dashboard: React.FC = () => {
       try {
         const response = await getCurrentEventsApi();
         console.log('Dashboard events check response:', response);
-        
+
         if (response.success && response.data && response.data.length > 0) {
           // If events exist, use them
           setEvents(response.data);
@@ -39,8 +40,8 @@ const Dashboard: React.FC = () => {
     checkEvents();
   }, [navigate]);
 
-  const handleProfileClick = () => {
-    const userType = localStorage.getItem('userType');
+  const handleProfileClick = async () => {
+    const userType = await getUserType();
     if (userType === 'student') {
       navigate('/student-profile-page');
     } else if (userType === 'teacher') {
@@ -131,11 +132,10 @@ const Dashboard: React.FC = () => {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`py-4 px-1 text-sm font-medium border-b-2 transition-colors duration-200 ${
-                  activeTab === tab
+                className={`py-4 px-1 text-sm font-medium border-b-2 transition-colors duration-200 ${activeTab === tab
                     ? 'border-[#1E395D] text-[#1E395D]'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                  }`}
               >
                 {tab}
               </button>

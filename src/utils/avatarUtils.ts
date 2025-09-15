@@ -1,6 +1,6 @@
 import { jwtDecode } from 'jwt-decode';
 import type { CustomJwtPayload } from '../types';
-import { getUserByIdApi } from '../apis/userApi';
+import { getUserByIdApi } from '../apis/Users';
 
 // Import default avatars
 import StudentAvatar from '../assets/student.png';

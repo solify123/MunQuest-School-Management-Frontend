@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { Logo, Avatar } from '../components/ui';
 import HomeIcon from '../assets/home_icon.svg';
 import NotificationIcon from '../assets/notification_icon.svg';
-import OrganiserIcon from '../assets/orgainser_icon.svg';
+import OrganiserIcon from '../assets/organiser_icon.svg';
 import { toast } from 'sonner';
-import { getCurrentEventsApi } from '../apis/userApi';
+import { getCurrentEventsApi } from '../apis/Events';
 import { getUserType } from '../utils/avatarUtils';
 
 const Organiser: React.FC = () => {

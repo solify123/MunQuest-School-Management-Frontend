@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Logo, Avatar, LoadingSpinner } from '../components/ui';
 import HomeIcon from '../assets/home_icon.svg';
 import NotificationIcon from '../assets/notification_icon.svg';
-import { getCurrentEventsApi } from '../apis/userApi';
+import { getCurrentEventsApi } from '../apis/Events';
+import { getUserType } from '../utils/avatarUtils';
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ const HomePage: React.FC = () => {
       try {
         const response = await getCurrentEventsApi();
         console.log('Events check response:', response);
-        
+
         if (response.success && response.data && response.data.length > 0) {
           // If events exist, redirect to dashboard
           navigate('/dashboard');
@@ -31,9 +32,8 @@ const HomePage: React.FC = () => {
     checkEvents();
   }, [navigate]);
 
-  const handleProfileClick = () => {
-    // Check user type and navigate accordingly
-    const userType = localStorage.getItem('userType');
+  const handleProfileClick = async () => {
+    const userType = await getUserType();
     if (userType === 'student') {
       navigate('/student-profile-page');
     } else if (userType === 'teacher') {

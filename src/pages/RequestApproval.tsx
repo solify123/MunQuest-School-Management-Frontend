@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Logo, Avatar, LoadingSpinner } from '../components/ui';
 import HomeIcon from '../assets/home_icon.svg';
 import NotificationIcon from '../assets/notification_icon.svg';
-import { edviceDocsfileUploadApi, getUserByIdApi, requestApprovalApi } from '../apis/userApi';
+import { edviceDocsfileUploadApi, requestApprovalApi } from '../apis/Organisers';
+import { getUserByIdApi } from '../apis/Users';
 import { toast } from 'sonner';
 import { getUserType } from '../utils/avatarUtils';
 
@@ -248,11 +249,10 @@ const RequestApproval: React.FC = () => {
                 className="w-[350px] px-4 py-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
                 readOnly
               />
-              <label className={`px-4 py-3 rounded-r-lg transition-colors duration-200 ${
-                isUploadingDocs 
-                  ? 'bg-gray-400 cursor-not-allowed' 
-                  : 'bg-[#1E395D] text-white cursor-pointer hover:bg-[#1a2f4a]'
-              }`}>
+              <label className={`px-4 py-3 rounded-r-lg transition-colors duration-200 ${isUploadingDocs
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-[#1E395D] text-white cursor-pointer hover:bg-[#1a2f4a]'
+                }`}>
                 {isUploadingDocs ? (
                   <LoadingSpinner size="small" text="" />
                 ) : (
