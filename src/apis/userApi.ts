@@ -227,3 +227,19 @@ export const createEventApi = async (eventName: string,locality: string,school: 
         throw new Error(error.response.data.message);
     }
 };
+
+
+export const getCurrentEventsApi = async () => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${backendUrl}/api/v1/event/get-events`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+}
