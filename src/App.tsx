@@ -17,6 +17,7 @@ import StudentHome from './pages/student/StudentHome';
 import TeacherHome from './pages/teacher/TeacherHome';
 import StudentRegistration from './pages/student/StudentRegistration';
 import StudentRegistrationSuccess from './pages/student/StudentRegistrationSuccess';
+import StudentDelegatePage from './pages/student/StudentDelegatePage';
 import TeacherRegistration from './pages/teacher/TeacherRegistration';
 import TeacherRegistrationSuccess from './pages/teacher/TeacherRegistrationSuccess';
 
@@ -40,6 +41,7 @@ function App() {
           <Route path="/student-home" element={<StudentHome />} />
           <Route path="/student-registration" element={<StudentRegistration />} />
           <Route path="/student-registration-success" element={<StudentRegistrationSuccess />} />
+          <Route path="/student-delegate-page" element={<StudentDelegatePage />} />
           <Route path="/teacher-profile" element={<TeacherProfile />} />
           <Route path="/teacher-profile-page" element={<TeacherProfilePage />} />
           <Route path="/teacher-home" element={<TeacherHome />} />

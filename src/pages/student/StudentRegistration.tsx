@@ -20,7 +20,6 @@ const StudentRegistration: React.FC = () => {
   // Form data states
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [username, setUsername] = useState<string>('@samm1234');
-  const [avatar, setAvatar] = useState<string>('');
   const [name, setName] = useState<string>('Sam Morgan Lee');
   const [dateOfBirth, setDateOfBirth] = useState<string>('5 Oct 2008');
   const [gender, setGender] = useState<string>('Male');
@@ -81,15 +80,14 @@ const StudentRegistration: React.FC = () => {
         const response = await getUserByIdApi();
         console.log(response);
         if (response.success) {
-          setUsername(response.data.username);
-          setName(response.data.fullname);
-          setDateOfBirth(response.data.birthday);
-          setGender(response.data.gender);
-          setSchoolName(response.data.school_name);
-          setGradeOrYear(response.data.grade);
-          setEmail(response.data.email);
-          setMobile(response.data.phone_number);
-          setAvatar(response.data.avatar);
+          setUsername(response.data.username || '');
+          setName(response.data.fullname || '');
+          setDateOfBirth(response.data.birthday || '');
+          setGender(response.data.gender || '');
+          setSchoolName(response.data.school_name || '');
+          setGradeOrYear(response.data.grade || '');
+          setEmail(response.data.email || '');
+          setMobile(response.data.phone_number || '');
           if(response.data.school_location === "AD") {
             setPlaceOfSchool("Abu Dhabi");
           } else if(response.data.school_location === "DU") {
@@ -528,6 +526,7 @@ const StudentRegistration: React.FC = () => {
           }}>Username</label>
           <input
             type="text"
+            disabled
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
@@ -542,7 +541,8 @@ const StudentRegistration: React.FC = () => {
           <div className="relative">
             <input
               type="text"
-              value={name}
+              disabled
+              value={name || ''}
               onChange={(e) => setName(e.target.value)}
               className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent pr-10"
               placeholder="Enter your name"
@@ -556,6 +556,7 @@ const StudentRegistration: React.FC = () => {
           <div className="relative">
             <input
               type="text"
+              disabled
               value={dateOfBirth}
               onChange={(e) => setDateOfBirth(e.target.value)}
               className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent pr-10"
@@ -568,7 +569,7 @@ const StudentRegistration: React.FC = () => {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
           <div className="flex space-x-4">
-            {['Male', 'Female', 'Other'].map((option) => (
+            {['male', 'female', 'other'].map((option) => (
               <button
                 key={option}
                 onClick={() => setGender(option)}
@@ -592,6 +593,7 @@ const StudentRegistration: React.FC = () => {
           <div className="relative">
             <input
               type="text"
+              disabled
               value={placeOfSchool}
               onChange={(e) => setPlaceOfSchool(e.target.value)}
               className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent pr-10"
@@ -606,6 +608,7 @@ const StudentRegistration: React.FC = () => {
           <div className="relative">
             <input
               type="text"
+              disabled
               value={schoolName}
               onChange={(e) => setSchoolName(e.target.value)}
               className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent pr-10"
@@ -620,7 +623,8 @@ const StudentRegistration: React.FC = () => {
           <div className="relative">
             <input
               type="text"
-              value={gradeOrYear}
+              disabled
+              value={gradeOrYear || ''}
               onChange={(e) => setGradeOrYear(e.target.value)}
               className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent pr-10"
               placeholder="Enter grade or year"
@@ -634,7 +638,8 @@ const StudentRegistration: React.FC = () => {
           <div className="relative">
             <input
               type="email"
-              value={email}
+              disabled
+              value={email || ''}
               onChange={(e) => setEmail(e.target.value)}
               className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent pr-10"
               placeholder="Enter email address"
@@ -648,7 +653,8 @@ const StudentRegistration: React.FC = () => {
           <div className="relative">
             <input
               type="tel"
-              value={mobile}
+              disabled
+              value={mobile || ''}
               onChange={(e) => setMobile(e.target.value)}
               className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent pr-10"
               placeholder="Enter mobile number"

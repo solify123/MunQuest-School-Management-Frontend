@@ -1,11 +1,35 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Logo, Avatar } from '../components/ui';
+import { Logo, Avatar, LoadingSpinner } from '../components/ui';
 import HomeIcon from '../assets/home_icon.svg';
 import NotificationIcon from '../assets/notification_icon.svg';
+import { getCurrentEventsApi } from '../apis/userApi';
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const checkEvents = async () => {
+      try {
+        const response = await getCurrentEventsApi();
+        console.log('Events check response:', response);
+        
+        if (response.success && response.data && response.data.length > 0) {
+          // If events exist, redirect to dashboard
+          navigate('/dashboard');
+          return;
+        }
+      } catch (error) {
+        console.error('Error checking events:', error);
+        // On error, stay on home page
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkEvents();
+  }, [navigate]);
 
   const handleProfileClick = () => {
     // Check user type and navigate accordingly
@@ -22,6 +46,15 @@ const HomePage: React.FC = () => {
   const handleCreateEvent = () => {
     navigate('/request-approval');
   };
+
+  // Show loading spinner while checking events
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <LoadingSpinner size="large" text="Loading events..." />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white">

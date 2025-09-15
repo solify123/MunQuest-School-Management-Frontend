@@ -1,70 +1,43 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Logo, Avatar } from '../components/ui';
+import { Logo, Avatar, LoadingSpinner } from '../components/ui';
 import HomeIcon from '../assets/home_icon.svg';
 import NotificationIcon from '../assets/notification_icon.svg';
+import { getCurrentEventsApi } from '../apis/userApi';
 
-// Mock event data - in a real app, this would come from an API
-const mockEvents = [
-  {
-    id: 1,
-    title: 'GMA MUN',
-    date: '10-12 Oct 2025',
-    location: 'Dubai',
-    price: 'AED 150',
-    image: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop',
-    description: 'Global Model United Nations Conference'
-  },
-  {
-    id: 2,
-    title: 'Repton MUN',
-    date: '24-26 Oct 2025',
-    location: 'Dubai',
-    price: 'AED 180',
-    image: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop',
-    description: 'Repton School Model United Nations'
-  },
-  {
-    id: 3,
-    title: 'Jumeirah College MUN',
-    date: '7-9 Nov 2025',
-    location: 'Dubai',
-    price: 'AED 140',
-    image: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop',
-    description: 'Jumeirah College Model United Nations'
-  },
-  {
-    id: 4,
-    title: 'GEMS Wellington MUN',
-    date: '15-17 Nov 2025',
-    location: 'Dubai',
-    price: 'AED 160',
-    image: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop',
-    description: 'GEMS Wellington Model United Nations'
-  },
-  {
-    id: 5,
-    title: 'GEMS Dubai American MUN',
-    date: '22-24 Nov 2025',
-    location: 'Dubai',
-    price: 'AED 170',
-    image: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop',
-    description: 'GEMS Dubai American School MUN'
-  },
-  {
-    id: 6,
-    title: 'GEMS Modern Academy MUN',
-    date: '29 Nov - 1 Dec 2025',
-    location: 'Dubai',
-    price: 'AED 155',
-    image: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop',
-    description: 'GEMS Modern Academy Model United Nations'
-  }
-];
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('Upcoming');
+  const [isLoading, setIsLoading] = useState(true);
+  const [events, setEvents] = useState<any[]>([]);
+
+  useEffect(() => {
+    const checkEvents = async () => {
+      try {
+        const response = await getCurrentEventsApi();
+        console.log('Dashboard events check response:', response);
+        
+        if (response.success && response.data && response.data.length > 0) {
+          // If events exist, use them
+          setEvents(response.data);
+        } else {
+          // If no events, redirect to home page
+          navigate('/home');
+          return;
+        }
+      } catch (error) {
+        console.error('Error checking events:', error);
+        // On error, redirect to home page
+        navigate('/home');
+        return;
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkEvents();
+  }, [navigate]);
 
   const handleProfileClick = () => {
     const userType = localStorage.getItem('userType');
@@ -83,7 +56,18 @@ const Dashboard: React.FC = () => {
 
   const handleRegister = (eventId: number) => {
     console.log('Register for event:', eventId);
+    // Navigate to student delegate page for the specific event
+    navigate('/student-delegate-page');
   };
+
+  // Show loading spinner while checking events
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <LoadingSpinner size="large" text="Loading events..." />
+      </div>
+    );
+  }
 
   const tabs = ['Upcoming', 'Registered', 'Past', 'Cancelled'];
 
@@ -164,39 +148,39 @@ const Dashboard: React.FC = () => {
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Events Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {mockEvents.map((event) => (
+          {events.map((event) => (
             <div key={event.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-200">
               {/* Event Image */}
               <div className="h-48 bg-gray-200 overflow-hidden">
                 <img
-                  src={event.image}
-                  alt={event.title}
+                  src={event.cover_image || 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop'}
+                  alt={event.name}
                   className="w-full h-full object-cover"
                 />
               </div>
 
               {/* Event Details */}
               <div className="p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-2">{event.title}</h3>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">{event.name}</h3>
                 <div className="space-y-2 mb-4">
                   <div className="flex items-center text-sm text-gray-600">
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    {event.date}
+                    {event.start_date}
                   </div>
                   <div className="flex items-center text-sm text-gray-600">
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                    {event.location}
+                    {event.locality}
                   </div>
                   <div className="flex items-center text-sm text-gray-600">
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                     </svg>
-                    {event.price}
+                    {event.fees_per_delegate}
                   </div>
                 </div>
 

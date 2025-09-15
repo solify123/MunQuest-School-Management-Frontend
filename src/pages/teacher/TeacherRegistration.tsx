@@ -19,7 +19,6 @@ const TeacherRegistration: React.FC = () => {
   // Form data states
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [username, setUsername] = useState<string>('@samm1234');
-  const [avatar, setAvatar] = useState<string>('');
   const [name, setName] = useState<string>('Sam Morgan Lee');
   const [dateOfBirth, setDateOfBirth] = useState<string>('5 Oct 2008');
   const [gender, setGender] = useState<string>('Male');
@@ -48,7 +47,6 @@ const TeacherRegistration: React.FC = () => {
           setYearsOfWorkExperience(response.data.year_of_work_experience);
           setEmail(response.data.email);
           setMobile(response.data.phone_number);
-          setAvatar(response.data.avatar);
           if (response.data.school_location === "AD") {
             setPlaceOfSchool("Abu Dhabi");
           } else if (response.data.school_location === "DU") {
@@ -297,7 +295,7 @@ const TeacherRegistration: React.FC = () => {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
           <div className="flex space-x-4">
-            {['Male', 'Female', 'Other'].map((option) => (
+            {['male', 'female', 'other'].map((option) => (
               <button
                 key={option}
                 onClick={() => setGender(option)}
