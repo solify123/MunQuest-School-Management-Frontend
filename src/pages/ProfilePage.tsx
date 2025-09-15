@@ -8,7 +8,7 @@ import HomeIcon from '../assets/home_icon.svg';
 import NotificationIcon from '../assets/notification_icon.svg';
 import { changePasswordApi, getUserByIdApi, updateUserProfileApi, uploadAvatarApi } from '../apis/userApi';
 import { generateUsername } from '../utils/usernameGenerator';
-import { Avatar } from '../components/ui';
+import { Avatar, LoadingSpinner } from '../components/ui';
 import { clearUserAvatar } from '../utils/avatarUtils';
 
 // Import default avatars
@@ -146,6 +146,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
   const [countryCode, setCountryCode] = useState<string>('+971');
   const [email, setEmail] = useState<string>('');
   // Avatar state removed - now using Avatar component which manages its own state
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState<boolean>(false);
 
   const localityOptions = [
     { value: 'AD', label: 'Abu Dhabi' },
@@ -294,6 +295,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
     const file = event.target.files?.[0];
     if (file) {
       try {
+        setIsUploadingAvatar(true);
         // Upload avatar to backend
         const response = await uploadAvatarApi(file);
 
@@ -311,6 +313,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
         }
       } catch (error: any) {
         toast.error('Failed to upload avatar: ' + error.message);
+      } finally {
+        setIsUploadingAvatar(false);
       }
     }
   };
@@ -1028,14 +1032,25 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
         {/* Profile Header */}
         <div className="text-left mb-8">
           <div className="relative inline-block">
-            <Avatar
-              size="large"
-              className="w-32 h-32 border-4 border-white shadow-lg"
-              showBorder={true}
-            />
+            {isUploadingAvatar ? (
+              <div className="w-32 h-32 border-4 border-white shadow-lg rounded-full flex items-center justify-center bg-gray-100">
+                <LoadingSpinner size="large" text="Uploading..." />
+              </div>
+            ) : (
+              <Avatar
+                size="large"
+                className="w-32 h-32 border-4 border-white shadow-lg"
+                showBorder={true}
+              />
+            )}
             <button
-              onClick={() => fileInputRef.current?.click()}
-              className="absolute bottom-2 right-2 w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors"
+              onClick={() => !isUploadingAvatar && fileInputRef.current?.click()}
+              disabled={isUploadingAvatar}
+              className={`absolute bottom-2 right-2 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                isUploadingAvatar 
+                  ? 'bg-gray-300 cursor-not-allowed opacity-50' 
+                  : 'hover:bg-gray-300'
+              }`}
               style={{ right: '-2.5rem', bottom: '-0.5rem' }}
             >
               <img src={EditIcon} alt="Edit Avatar" className="w-4 h-4" />
@@ -1045,6 +1060,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
               type="file"
               accept="image/*"
               onChange={handleAvatarUpload}
+              disabled={isUploadingAvatar}
               className="hidden"
             />
           </div>

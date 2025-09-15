@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Logo, Avatar } from '../components/ui';
+import { Logo, Avatar, LoadingSpinner } from '../components/ui';
 import HomeIcon from '../assets/home_icon.svg';
 import NotificationIcon from '../assets/notification_icon.svg';
 import { edviceDocsfileUploadApi, getUserByIdApi, requestApprovalApi } from '../apis/userApi';
@@ -16,6 +16,7 @@ const RequestApproval: React.FC = () => {
 
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploadingDocs, setIsUploadingDocs] = useState(false);
 
   useEffect(() => {
     async function getUserById() {
@@ -59,21 +60,21 @@ const RequestApproval: React.FC = () => {
     try {
       const files = event.target.files;
       if (files) {
+        setIsUploadingDocs(true);
         const newFiles = Array.from(files).map(file => file.name);
         const response = await edviceDocsfileUploadApi(files[0] as File);
         if (response.success) {
           toast.success(response.message);
           setUploadedFiles(prev => [...prev, ...newFiles]);
+          setEvidenceDocs(response.documentUrl);
         } else {
           toast.error(response.message);
         }
-        setEvidenceDocs(response.documentUrl);
       }
     } catch (error: any) {
       toast.error(error.message);
-      setIsSubmitting(false);
     } finally {
-      setIsSubmitting(false);
+      setIsUploadingDocs(false);
     }
   }
 
@@ -247,14 +248,23 @@ const RequestApproval: React.FC = () => {
                 className="w-[350px] px-4 py-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
                 readOnly
               />
-              <label className="bg-[#1E395D] text-white px-4 py-3 rounded-r-lg cursor-pointer hover:bg-[#1a2f4a] transition-colors duration-200">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
+              <label className={`px-4 py-3 rounded-r-lg transition-colors duration-200 ${
+                isUploadingDocs 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : 'bg-[#1E395D] text-white cursor-pointer hover:bg-[#1a2f4a]'
+              }`}>
+                {isUploadingDocs ? (
+                  <LoadingSpinner size="small" text="" />
+                ) : (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                )}
                 <input
                   type="file"
                   multiple
                   onChange={handleFileUpload}
+                  disabled={isUploadingDocs}
                   className="hidden"
                 />
               </label>

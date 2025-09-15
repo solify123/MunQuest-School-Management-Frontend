@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Logo, Avatar } from '../components/ui';
+import { Logo, Avatar, LoadingSpinner } from '../components/ui';
 import HomeIcon from '../assets/home_icon.svg';
 import NotificationIcon from '../assets/notification_icon.svg';
 import EditIcon from '../assets/edit_icon.svg';
@@ -25,6 +25,8 @@ const EventCreate: React.FC = () => {
   const [website, setWebsite] = useState('');
   const [instagram, setInstagram] = useState('');
   const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>({});
+  const [isUploadingCoverImage, setIsUploadingCoverImage] = useState(false);
+  const [isUploadingEventLogo, setIsUploadingEventLogo] = useState(false);
 
 
 
@@ -225,6 +227,13 @@ const EventCreate: React.FC = () => {
     try {
       const files = event.target.files;
       if (files) {
+        // Set loading state based on image type
+        if (imageType === 'cover') {
+          setIsUploadingCoverImage(true);
+        } else {
+          setIsUploadingEventLogo(true);
+        }
+
         const response = await eventImagefileUploadApi(files[0] as File);
         if (response.success) {
           toast.success(response.message);
@@ -241,6 +250,13 @@ const EventCreate: React.FC = () => {
       }
     } catch (error: any) {
       toast.error(error.message);
+    } finally {
+      // Clear loading state
+      if (imageType === 'cover') {
+        setIsUploadingCoverImage(false);
+      } else {
+        setIsUploadingEventLogo(false);
+      }
     }
   }
 
@@ -266,7 +282,9 @@ const EventCreate: React.FC = () => {
               borderColor: validationErrors.coverImage ? '#ef4444' : '#d1d5db',
             }}
           >
-            {coverImage ? (
+            {isUploadingCoverImage ? (
+              <LoadingSpinner size="large" text="Uploading..." />
+            ) : coverImage ? (
               <img
                 src={typeof coverImage === 'string' ? coverImage : URL.createObjectURL(coverImage)}
                 alt="Event Cover"
@@ -283,12 +301,13 @@ const EventCreate: React.FC = () => {
               </div>
             )}
           </div>
-          <label className="absolute bottom-0 bg-white rounded-full p-2 shadow-md cursor-pointer hover:bg-gray-50" style={{ right: '-3rem' }}>
+          <label className={`absolute bottom-0 bg-white rounded-full p-2 shadow-md ${isUploadingCoverImage ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-gray-50'}`} style={{ right: '-3rem' }}>
             <img src={EditIcon} alt="Edit" className="w-4 h-4" />
             <input
               type="file"
               accept="image/*"
               onChange={(e) => e.target.files?.[0] && handleFileUpload(e, 'cover')}
+              disabled={isUploadingCoverImage}
               className="hidden"
             />
           </label>
@@ -307,7 +326,9 @@ const EventCreate: React.FC = () => {
                 borderColor: validationErrors.eventLogo ? '#ef4444' : '#d1d5db',
               }}
             >
-              {eventLogo ? (
+              {isUploadingEventLogo ? (
+                <LoadingSpinner size="medium" text="Uploading..." />
+              ) : eventLogo ? (
                 <img
                   src={typeof eventLogo === 'string' ? eventLogo : URL.createObjectURL(eventLogo)}
                   alt="Event Logo"
@@ -324,12 +345,13 @@ const EventCreate: React.FC = () => {
                 </div>
               )}
             </div>
-            <label className="absolute bottom-0 bg-white rounded-full p-2 shadow-md cursor-pointer hover:bg-gray-50" style={{ right: '-3rem' }}>
+            <label className={`absolute bottom-0 bg-white rounded-full p-2 shadow-md ${isUploadingEventLogo ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:bg-gray-50'}`} style={{ right: '-3rem' }}>
               <img src={EditIcon} alt="Edit" className="w-4 h-4" />
               <input
                 type="file"
                 accept="image/*"
                 onChange={(e) => e.target.files?.[0] && handleFileUpload(e, 'logo')}
+                disabled={isUploadingEventLogo}
                 className="hidden"
               />
             </label>
