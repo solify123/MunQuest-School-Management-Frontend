@@ -45,8 +45,9 @@ const Header: React.FC<HeaderProps> = ({
 
   const handleLogout = () => {
     setIsDropdownOpen(false);
-    // Add logout logic here
-    console.log('Logout clicked');
+    localStorage.removeItem('token');
+    localStorage.removeItem('userAvatar');
+    navigate('/login');
   };
 
   // Close dropdown when clicking outside

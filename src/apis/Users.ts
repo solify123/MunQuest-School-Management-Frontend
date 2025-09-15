@@ -87,7 +87,7 @@ export const getUserByIdApi = async () => {
 export const updateUserProfileApi = async (fullname: string, username: string, birthday: string, gender: string, locality: string, schoolName: string, grade: string, yearOfWorkExperience: string, phone: string, email: string, avatar?: string, countryCode?: string) => {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.post(`${backendUrl}/api/v1/users/user-profile-update`, {
+        const response = await axios.patch(`${backendUrl}/api/v1/users/user-profile-update`, {
             fullname,
             username,
             birthday,
@@ -132,7 +132,7 @@ export const uploadAvatarApi = async (avatarFile: File) => {
 export const changePasswordApi = async (newPassword: string) => {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.post(`${backendUrl}/api/v1/users/change-password`, { newPassword }, {
+        const response = await axios.patch(`${backendUrl}/api/v1/users/change-password`, { newPassword }, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
