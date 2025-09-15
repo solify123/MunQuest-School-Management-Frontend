@@ -1,0 +1,756 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Logo, Avatar, LoadingSpinner } from '../../components/ui';
+import HomeIcon from '../../assets/home_icon.svg';
+import NotificationIcon from '../../assets/notification_icon.svg';
+import EditIcon from '../../assets/edit_icon.svg';
+import { toast } from 'sonner';
+import { getUserByIdApi, uploadAvatarApi } from '../../apis/userApi';
+
+type Step = 'personal' | 'mun' | 'food' | 'emergency';
+
+const StudentRegistration: React.FC = () => {
+  const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const emergencyDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Current step state
+  const [currentStep, setCurrentStep] = useState<Step>('personal');
+
+  // Form data states
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [username, setUsername] = useState<string>('@samm1234');
+  const [avatar, setAvatar] = useState<string>('');
+  const [name, setName] = useState<string>('Sam Morgan Lee');
+  const [dateOfBirth, setDateOfBirth] = useState<string>('5 Oct 2008');
+  const [gender, setGender] = useState<string>('Male');
+  const [placeOfSchool, setPlaceOfSchool] = useState<string>('Dubai');
+  const [schoolName, setSchoolName] = useState<string>('Oasis World School');
+  const [gradeOrYear, setGradeOrYear] = useState<string>('IB DP 2');
+  const [email, setEmail] = useState<string>('samlee@gmail.com');
+  const [mobile, setMobile] = useState<string>('+971 50 6362040');
+
+  // MUN Info states
+  const [munExperience, setMunExperience] = useState<string>('');
+  const [preferredCommittee1, setPreferredCommittee1] = useState<string>('');
+  const [preferredCommittee2, setPreferredCommittee2] = useState<string>('');
+  const [preferredCommittee3, setPreferredCommittee3] = useState<string>('');
+
+  // Food Info states
+  const [foodPreference, setFoodPreference] = useState<string>('');
+  const [foodAllergies, setFoodAllergies] = useState<string>('');
+
+  // Emergency Info states
+  const [emergencyContactName, setEmergencyContactName] = useState<string>('');
+  const [emergencyCountryCode, setEmergencyCountryCode] = useState<string>('UAE');
+  const [emergencyMobileNumber, setEmergencyMobileNumber] = useState<string>('');
+  const [showEmergencyCountryDropdown, setShowEmergencyCountryDropdown] = useState(false);
+
+  // Country codes for emergency contact
+  const countryCodes = [
+    { code: '+971', country: 'UAE', flag: '🇦🇪' },
+    { code: '+1', country: 'USA', flag: '🇺🇸' },
+    { code: '+44', country: 'UK', flag: '🇬🇧' },
+    { code: '+33', country: 'France', flag: '🇫🇷' },
+    { code: '+49', country: 'Germany', flag: '🇩🇪' },
+    { code: '+81', country: 'Japan', flag: '🇯🇵' },
+    { code: '+86', country: 'China', flag: '🇨🇳' },
+    { code: '+91', country: 'India', flag: '🇮🇳' },
+    { code: '+966', country: 'Saudi Arabia', flag: '🇸🇦' },
+    { code: '+965', country: 'Kuwait', flag: '🇰🇼' },
+    { code: '+973', country: 'Bahrain', flag: '🇧🇭' },
+    { code: '+974', country: 'Qatar', flag: '🇶🇦' },
+    { code: '+968', country: 'Oman', flag: '🇴🇲' },
+    { code: '+20', country: 'Egypt', flag: '🇪🇬' },
+    { code: '+90', country: 'Turkey', flag: '🇹🇷' },
+    { code: '+7', country: 'Russia', flag: '🇷🇺' },
+    { code: '+55', country: 'Brazil', flag: '🇧🇷' },
+    { code: '+61', country: 'Australia', flag: '🇦🇺' },
+    { code: '+64', country: 'New Zealand', flag: '🇳🇿' },
+    { code: '+27', country: 'South Africa', flag: '🇿🇦' }
+  ];
+
+  const handleEmergencyCountryCodeSelect = (code: string) => {
+    setEmergencyCountryCode(code);
+    setShowEmergencyCountryDropdown(false);
+  };
+
+  useEffect(() => {
+    const getUserById = async () => {
+      try {
+        const response = await getUserByIdApi();
+        console.log(response);
+        if (response.success) {
+          setUsername(response.data.username);
+          setName(response.data.fullname);
+          setDateOfBirth(response.data.birthday);
+          setGender(response.data.gender);
+          setSchoolName(response.data.school_name);
+          setGradeOrYear(response.data.grade);
+          setEmail(response.data.email);
+          setMobile(response.data.phone_number);
+          setAvatar(response.data.avatar);
+          if(response.data.school_location === "AD") {
+            setPlaceOfSchool("Abu Dhabi");
+          } else if(response.data.school_location === "DU") {
+            setPlaceOfSchool("Dubai");
+          } else if(response.data.school_location === "SH") {
+            setPlaceOfSchool("Sharjah");
+          } else if(response.data.school_location === "AJ") {
+            setPlaceOfSchool("Ajman");
+          } else if(response.data.school_location === "RAK") {
+            setPlaceOfSchool("Ras Al Khaimah");
+          } else if(response.data.school_location === "UAQ") {
+            setPlaceOfSchool("Umm Al Quwain");
+          } else if(response.data.school_location === "AIN") {
+            setPlaceOfSchool("Al Ain");
+          } else {
+            setPlaceOfSchool(response.data.school_location);
+          }
+        }
+        else {
+          toast.error('Failed to get user by id: ' + response.message);
+        }
+      } catch (error: any) {
+        toast.error('Failed to get user by id: ' + error.message);
+      }
+    };
+    getUserById();
+  }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (emergencyDropdownRef.current && !emergencyDropdownRef.current.contains(event.target as Node)) {
+        setShowEmergencyCountryDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Step configuration
+  const steps = [
+    { id: 'personal', name: 'Personal Info', active: currentStep === 'personal' },
+    { id: 'mun', name: 'MUN Info', active: currentStep === 'mun' },
+    { id: 'food', name: 'Food Info', active: currentStep === 'food' },
+    { id: 'emergency', name: 'Emergency Info', active: currentStep === 'emergency' }
+  ];
+
+  // Handle avatar upload
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      try {
+        setIsUploadingAvatar(true);
+        const response = await uploadAvatarApi(file);
+        if (response.success) {
+          toast.success('Avatar uploaded successfully');
+        } else {
+          toast.error('Failed to upload avatar: ' + response.message);
+        }
+      } catch (error: any) {
+        toast.error('Failed to upload avatar: ' + error.message);
+      } finally {
+        setIsUploadingAvatar(false);
+      }
+    }
+  };
+
+  // Handle continue button
+  const handleContinue = () => {
+    switch (currentStep) {
+      case 'personal':
+        setCurrentStep('mun');
+        break;
+      case 'mun':
+        setCurrentStep('food');
+        break;
+      case 'food':
+        setCurrentStep('emergency');
+        break;
+      case 'emergency':
+        // Handle final submission
+        toast.success('Registration completed successfully!');
+        navigate('/student-registration-success');
+        break;
+      default:
+        break;
+    }
+  };
+
+  // Render progress indicator
+  const renderProgressIndicator = () => (
+    <div className="flex items-center justify-left mb-8">
+      {steps.map((step, index) => (
+        <React.Fragment key={step.id}>
+          <div
+            onClick={() => setCurrentStep(step.id as Step)}
+            style={{
+              display: 'flex',
+              width: '200px',
+              height: '58px',
+              padding: '5px',
+              justifyContent: 'center',
+              alignItems: 'center',
+              borderRadius: '20px',
+              background: step.active ? '#395579' : '#fff',
+              border: '1px solid #000',
+            }}
+            className={`text-sm font-medium transition-colors ${step.active ? 'text-white' : 'text-gray-700'}`}
+          >
+            {step.name}
+          </div>
+          {index < steps.length - 1 && (
+            <div className="mx-2 text-gray-400">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          )}
+        </React.Fragment>
+      ))}
+    </div>
+  );
+
+  // Render MUN info step
+  const renderMunInfo = () => (
+    <div className="space-y-6">
+      {/* MUN Experience in Years */}
+      <div>
+        <label
+          className="block text-sm font-medium text-gray-700 mb-2"
+          style={{
+            color: '#000',
+            fontSize: '16px',
+            fontStyle: 'normal',
+            fontWeight: 700,
+            lineHeight: '150%',
+          }}
+        >
+          MUN Experience in Years
+        </label>
+        <div className="flex items-center space-x-4">
+          <input
+            type="text"
+            value={munExperience}
+            onChange={(e) => setMunExperience(e.target.value)}
+            className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
+            placeholder="E.g. 5"
+          />
+        </div>
+      </div>
+
+      {/* Preferred Committees */}
+      <div className="space-y-4">
+        <div className="flex-1">
+          <label className="block text-sm font-medium text-gray-700 mb-2" style={{
+            color: '#000',
+            fontSize: '16px',
+            fontStyle: 'normal',
+            fontWeight: 700,
+            lineHeight: '150%',
+          }}>Preferred Committee - Choice 1</label>
+          <div className="relative">
+            <select
+              value={preferredCommittee1}
+              onChange={(e) => setPreferredCommittee1(e.target.value)}
+              className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent appearance-none bg-white pr-10"
+            >
+              <option value="">Select</option>
+              <option value="UNSC">UN Security Council</option>
+              <option value="UNGA">UN General Assembly</option>
+              <option value="ECOSOC">Economic and Social Council</option>
+              <option value="UNHRC">UN Human Rights Council</option>
+              <option value="UNEP">UN Environment Programme</option>
+            </select>
+            <div className="absolute" style={{ right: "17.75rem", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
+              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex-1">
+          <label className="block text-sm font-medium text-gray-700 mb-2" style={{
+            color: '#000',
+            fontSize: '16px',
+            fontStyle: 'normal',
+            fontWeight: 700,
+            lineHeight: '150%',
+          }}>Preferred Committee - Choice 2</label>
+          <div className="relative">
+            <select
+              value={preferredCommittee2}
+              onChange={(e) => setPreferredCommittee2(e.target.value)}
+              className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent appearance-none bg-white pr-10"
+            >
+              <option value="">Select</option>
+              <option value="UNSC">UN Security Council</option>
+              <option value="UNGA">UN General Assembly</option>
+              <option value="ECOSOC">Economic and Social Council</option>
+              <option value="UNHRC">UN Human Rights Council</option>
+              <option value="UNEP">UN Environment Programme</option>
+            </select>
+            <div className="absolute" style={{ right: "17.75rem", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
+              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div className="flex-1">
+          <label className="block text-sm font-medium text-gray-700 mb-2" style={{
+            color: '#000',
+            fontSize: '16px',
+            fontStyle: 'normal',
+            fontWeight: 700,
+            lineHeight: '150%',
+          }}>Preferred Committee - Choice 3</label>
+          <div className="relative">
+            <select
+              value={preferredCommittee3}
+              onChange={(e) => setPreferredCommittee3(e.target.value)}
+              className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent appearance-none bg-white pr-10"
+            >
+              <option value="">Select</option>
+              <option value="UNSC">UN Security Council</option>
+              <option value="UNGA">UN General Assembly</option>
+              <option value="ECOSOC">Economic and Social Council</option>
+              <option value="UNHRC">UN Human Rights Council</option>
+              <option value="UNEP">UN Environment Programme</option>
+            </select>
+            <div className="absolute" style={{ right: "17.75rem", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
+              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Render food info step
+  const renderFoodInfo = () => (
+    <div className="space-y-6">
+      {/* Food Preference */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2" style={{
+          color: '#000',
+          fontSize: '16px',
+          fontStyle: 'normal',
+          fontWeight: 700,
+          lineHeight: '150%',
+        }}>
+          Food Preference
+        </label>
+        <div className="flex space-x-4">
+          {['Vegetarian', 'Non-Vegetarian'].map((option) => (
+            <button
+              key={option}
+              onClick={() => setFoodPreference(option)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${foodPreference === option
+                ? 'bg-[#C2A46D] text-white'
+                : 'text-gray-700 hover:bg-gray-300'
+                }`}
+              style={{
+                border: '1px solid #000',
+              }}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Food Allergies */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2" style={{
+          color: '#000',
+          fontSize: '16px',
+          fontStyle: 'normal',
+          fontWeight: 700,
+          lineHeight: '150%',
+        }}>
+          Food Allergies
+        </label>
+        <input
+          type="text"
+          value={foodAllergies}
+          onChange={(e) => setFoodAllergies(e.target.value)}
+          className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
+          placeholder="E.g. Peanut"
+        />
+      </div>
+    </div>
+  );
+
+  // Render emergency info step
+  const renderEmergencyInfo = () => (
+    <div className="space-y-6">
+      {/* Emergency Contact Name */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2" style={{
+          color: '#000',
+          fontSize: '16px',
+          fontStyle: 'normal',
+          fontWeight: 700,
+          lineHeight: '150%',
+        }}>
+          Emergency Contact Name
+        </label>
+        <input
+          type="text"
+          value={emergencyContactName}
+          onChange={(e) => setEmergencyContactName(e.target.value)}
+          className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
+          placeholder="E.g. Alice Lee"
+        />
+      </div>
+
+      {/* Emergency Mobile Number */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2" style={{
+          color: '#000',
+          fontSize: '16px',
+          fontStyle: 'normal',
+          fontWeight: 700,
+          lineHeight: '150%',
+        }}>
+          Emergency Mobile Number
+        </label>
+        <div className="relative w-[400px]" ref={emergencyDropdownRef}>
+          <div className="flex border border-gray-300 rounded-lg bg-white">
+            {/* Country Code Selector */}
+            <div
+              className="flex items-center px-4 py-3 border-r border-gray-300 cursor-pointer hover:bg-gray-50"
+              onClick={() => setShowEmergencyCountryDropdown(!showEmergencyCountryDropdown)}
+            >
+              <span className="text-sm text-gray-600 mr-2">{emergencyCountryCode}</span>
+              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+            {/* Phone Number Input */}
+            <input
+              type="tel"
+              inputMode="numeric"
+              pattern="[0-9\s]*"
+              placeholder="50 650 5005"
+              value={emergencyMobileNumber}
+              onChange={e => {
+                // Check if user tried to enter invalid characters
+                const hasInvalidChars = /[^0-9\s]/.test(e.target.value);
+                if (hasInvalidChars) {
+                  toast.error('Only numbers and spaces are allowed in phone number');
+                }
+                
+                // Remove any non-numeric characters except spaces
+                const phoneValue = e.target.value.replace(/[^0-9\s]/g, '');
+                setEmergencyMobileNumber(phoneValue);
+              }}
+              className="flex-1 px-4 py-3 text-sm bg-white placeholder-gray-500 focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200"
+            />
+          </div>
+
+          {/* Country Code Dropdown */}
+          {showEmergencyCountryDropdown && (
+            <div className="absolute top-full left-0 z-10 w-64 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              {countryCodes.map((country) => (
+                <div
+                  key={country.code}
+                  className="flex items-center px-4 py-3 hover:bg-gray-50 cursor-pointer"
+                  onClick={() => handleEmergencyCountryCodeSelect(country.code)}
+                >
+                  <span className="text-lg mr-3">{country.flag}</span>
+                  <span className="text-sm text-gray-600 mr-2">{country.code}</span>
+                  <span className="text-sm text-gray-800">{country.country}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  // Render personal info step
+  const renderPersonalInfo = () => (
+    <div className="space-y-6">
+      {/* Avatar Section */}
+      <div className="flex justify-left mb-8">
+        <div className="relative">
+          {isUploadingAvatar ? (
+            <div className="w-32 h-32 border-4 border-white shadow-lg rounded-full flex items-center justify-center bg-gray-100">
+              <LoadingSpinner size="large" text="Uploading..." />
+            </div>
+          ) : (
+            <Avatar
+              size="large"
+              className="w-32 h-32 border-4 border-white shadow-lg"
+              showBorder={true}
+            />
+          )}
+          <button
+            onClick={() => !isUploadingAvatar && fileInputRef.current?.click()}
+            disabled={isUploadingAvatar}
+            className="absolute bottom-0 w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors bg-white shadow-md"
+            style={{ right: '-2.5rem' }}
+          >
+            <img src={EditIcon} alt="Edit Avatar" className="w-4 h-4" />
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleAvatarUpload}
+            disabled={isUploadingAvatar}
+            className="hidden"
+          />
+        </div>
+      </div>
+
+      {/* Form Fields */}
+      <div className="space-y-4">
+        {/* Username */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2" style={{
+            color: '#000',
+            fontSize: '16px',
+            fontStyle: 'normal',
+            fontWeight: 700,
+            lineHeight: '150%',
+          }}>Username</label>
+          <input
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
+            placeholder="Enter username"
+          />
+          <p className="text-xs text-gray-500 mt-1">Username is system generated</p>
+        </div>
+
+        {/* Name */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
+          <div className="relative">
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent pr-10"
+              placeholder="Enter your name"
+            />
+          </div>
+        </div>
+
+        {/* Date of Birth */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Date of Birth</label>
+          <div className="relative">
+            <input
+              type="text"
+              value={dateOfBirth}
+              onChange={(e) => setDateOfBirth(e.target.value)}
+              className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent pr-10"
+              placeholder="Enter date of birth"
+            />
+          </div>
+        </div>
+
+        {/* Gender */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
+          <div className="flex space-x-4">
+            {['Male', 'Female', 'Other'].map((option) => (
+              <button
+                key={option}
+                onClick={() => setGender(option)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${gender === option
+                  ? 'bg-[#C2A46D] text-white'
+                  : ' text-gray-700 hover:bg-gray-300'
+                  }`}
+                style={{
+                  border: '1px solid #000',
+                }}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Place of School */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Place of School</label>
+          <div className="relative">
+            <input
+              type="text"
+              value={placeOfSchool}
+              onChange={(e) => setPlaceOfSchool(e.target.value)}
+              className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent pr-10"
+              placeholder="Enter place of school"
+            />
+          </div>
+        </div>
+
+        {/* School Name */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">School Name</label>
+          <div className="relative">
+            <input
+              type="text"
+              value={schoolName}
+              onChange={(e) => setSchoolName(e.target.value)}
+              className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent pr-10"
+              placeholder="Enter school name"
+            />
+          </div>
+        </div>
+
+        {/* Grade or Year */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Grade or Year</label>
+          <div className="relative">
+            <input
+              type="text"
+              value={gradeOrYear}
+              onChange={(e) => setGradeOrYear(e.target.value)}
+              className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent pr-10"
+              placeholder="Enter grade or year"
+            />
+          </div>
+        </div>
+
+        {/* Email */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+          <div className="relative">
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent pr-10"
+              placeholder="Enter email address"
+            />
+          </div>
+        </div>
+
+        {/* Mobile */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Mobile</label>
+          <div className="relative">
+            <input
+              type="tel"
+              value={mobile}
+              onChange={(e) => setMobile(e.target.value)}
+              className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent pr-10"
+              placeholder="Enter mobile number"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header Section */}
+      <div className="bg-white shadow-sm">
+        <div className="mx-auto px-6 py-4" style={{ maxWidth: "88rem" }}>
+          <div className="flex items-center justify-between">
+            {/* Logo */}
+            <div className="flex-shrink-0">
+              <Logo size="medium" />
+            </div>
+
+            {/* Navigation Icons */}
+            <div className="flex items-center space-x-8">
+              {/* Home Icon */}
+              <div className="flex flex-col items-center cursor-pointer" onClick={() => navigate('/home')}>
+                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-1">
+                  <img src={HomeIcon} alt="Home" className="w-6 h-6" />
+                </div>
+                <span className="text-xs text-gray-600 font-medium">Home</span>
+              </div>
+
+              {/* Notification Icon */}
+              <div className="flex flex-col items-center cursor-pointer">
+                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-1">
+                  <img src={NotificationIcon} alt="Notification" className="w-6 h-6" />
+                </div>
+                <span className="text-xs text-gray-600 font-medium">Notification</span>
+              </div>
+
+              {/* Profile Icon */}
+              <div className="flex flex-col items-center cursor-pointer" onClick={() => navigate('/student-profile-page')}>
+                <Avatar size="medium" className="mb-1" />
+                <span className="text-xs text-gray-600 font-medium">Profile</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-[85rem] mx-auto px-6 py-8" style={{ paddingLeft: '10.5rem' }}>
+        {/* Page Title */}
+        <div className="mb-8">
+          <h1
+            className="mb-6"
+            style={{
+              color: '#000',
+              fontSize: '18px',
+              fontStyle: 'normal',
+              fontWeight: 700,
+              lineHeight: '150%',
+            }}
+          >
+            Review Info
+          </h1>
+
+          {/* Progress Indicator */}
+          {renderProgressIndicator()}
+        </div>
+
+        {/* Form Content */}
+        <div className="max-w-2xl">
+          {currentStep === 'personal' && renderPersonalInfo()}
+          {currentStep === 'mun' && renderMunInfo()}
+          {currentStep === 'food' && renderFoodInfo()}
+          {currentStep === 'emergency' && renderEmergencyInfo()}
+        </div>
+
+        {/* Continue/Register Button */}
+        <div className="flex justify-left mt-8">
+          <button
+            onClick={handleContinue}
+            className="font-medium text-white transition-all hover:opacity-90"
+            style={{
+              backgroundColor: '#C2A46D',
+              borderRadius: '30px',
+              display: 'flex',
+              width: '160px',
+              height: '50px',
+              padding: '10px',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: '10px',
+              fontSize: '16px'
+            }}
+          >
+           Continue
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default StudentRegistration;

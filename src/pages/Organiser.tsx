@@ -29,13 +29,19 @@ const Organiser: React.FC = () => {
     const getCurrentEvents = async () => {
       try {
         const response = await getCurrentEventsApi();
+        console.log('API Response:', response);
         if (response.success) {
+          console.log('Events data:', response.data);
+          if (response.data && response.data.length > 0) {
+            console.log('First event structure:', response.data[0]);
+          }
           setCurrentEvents(response.data);
         }
         else {
           toast.error(response.message);
         }
       } catch (error: any) {
+        console.error('Error fetching events:', error);
         toast.error(error.message);
       }
     };
@@ -50,28 +56,42 @@ const Organiser: React.FC = () => {
 
   const getCurrentEvents = () => {
     const now = new Date();
+    console.log('Filtering events for tab:', activeTab);
+    console.log('Current time:', now);
+    console.log('Total events:', currentEvents.length);
 
+    let filteredEvents: any[] = [];
     switch (activeTab) {
       case 'Current':
-        // Show events that are currently ongoing (started but not ended)
-        return currentEvents.filter((event: any) => {
-          const startDate = new Date(event.start_date);
+        // Show events that are upcoming or in progress (not finished and not cancelled)
+        filteredEvents = currentEvents.filter((event: any) => {
           const endDate = new Date(event.end_date);
-          return startDate <= now && endDate >= now;
+          const isNotEnded = endDate >= now;
+          const isNotCancelled = !event.status || event.status !== 'cancelled';
+          return isNotEnded && isNotCancelled;
         });
+        break;
       case 'Completed':
-        // Show events that have ended
-        return currentEvents.filter((event: any) => {
+        // Show events that have ended normally (not cancelled)
+        filteredEvents = currentEvents.filter((event: any) => {
           const endDate = new Date(event.end_date);
-          return endDate < now;
+          const isEnded = endDate < now;
+          const isNotCancelled = !event.status || event.status !== 'cancelled';
+          return isEnded && isNotCancelled;
         });
+        break;
       case 'Cancelled':
-        // For now, return empty array as we don't have a cancelled status field
-        // This would need to be implemented based on your backend data structure
-        return [];
+        // Show events that have been cancelled
+        filteredEvents = currentEvents.filter((event: any) => {
+          const isCancelled = event.status === 'cancelled';
+          return isCancelled;
+        });
+        break;
       default:
-        return [];
+        filteredEvents = [];
     }
+    
+    return filteredEvents;
   };
 
   return (

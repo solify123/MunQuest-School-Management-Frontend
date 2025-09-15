@@ -304,8 +304,16 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
           clearUserAvatar();
           // Store new avatar in localStorage
           localStorage.setItem('userAvatar', response.avatarUrl);
+          
           // Dispatch custom event to notify all Avatar components to refresh
-          window.dispatchEvent(new CustomEvent('avatarUpdated'));
+          // Use setTimeout to ensure localStorage is updated before dispatching
+          setTimeout(() => {
+            const avatarUpdatedEvent = new CustomEvent('avatarUpdated', {
+              detail: { avatarUrl: response.avatarUrl }
+            });
+            console.log('ProfilePage: Dispatching avatarUpdated event', response.avatarUrl);
+            window.dispatchEvent(avatarUpdatedEvent);
+          }, 100);
           // Show success message
           toast.success(response.message);
         } else {

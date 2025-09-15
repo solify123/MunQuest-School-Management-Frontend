@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Logo, Avatar, LoadingSpinner } from '../components/ui';
+import { Logo, Avatar, LoadingSpinner, DateRangePicker } from '../components/ui';
 import HomeIcon from '../assets/home_icon.svg';
 import NotificationIcon from '../assets/notification_icon.svg';
 import EditIcon from '../assets/edit_icon.svg';
@@ -27,6 +27,7 @@ const EventCreate: React.FC = () => {
   const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>({});
   const [isUploadingCoverImage, setIsUploadingCoverImage] = useState(false);
   const [isUploadingEventLogo, setIsUploadingEventLogo] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
 
 
@@ -184,6 +185,21 @@ const EventCreate: React.FC = () => {
         return newErrors;
       });
     }
+  };
+
+  const handleDateRangeChange = (startDate: string, endDate: string) => {
+    setEventStartDate(startDate);
+    setEventEndDate(endDate);
+    clearValidationError('eventStartDate');
+    clearValidationError('eventEndDate');
+  };
+
+  const handleDatePickerToggle = () => {
+    setShowDatePicker(!showDatePicker);
+  };
+
+  const handleDatePickerClose = () => {
+    setShowDatePicker(false);
   };
 
   const calculateTotalRevenue = (seats: string, fees: string) => {
@@ -466,65 +482,45 @@ const EventCreate: React.FC = () => {
         >
           Event Dates
         </label>
-        <div className="flex gap-4">
-          {/* Start Date */}
-          <div className="relative">
-            <input
-              type="date"
-              value={eventStartDate}
-              onChange={(e) => {
-                setEventStartDate(e.target.value);
-                clearValidationError('eventStartDate');
-              }}
-              style={{
-                display: 'flex',
-                width: '190px',
-                height: '40px',
-                padding: '7px 14px',
-                alignItems: 'flex-start',
-                gap: '10px',
-                borderRadius: '5px',
-                border: validationErrors.eventStartDate ? '1px solid #ef4444' : '1px solid #9CA3AF',
-                outline: 'none',
-                backgroundColor: 'white',
-                fontSize: '16px',
-                fontFamily: 'inherit',
-                color: eventStartDate ? '#000' : '#9CA3AF',
-              }}
-            />
+        <div className="relative">
+          {/* Date Range Input Field */}
+          <div
+            onClick={handleDatePickerToggle}
+            className="flex items-center justify-between w-[400px] px-4 py-3 border border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 transition-colors"
+            style={{
+              border: validationErrors.eventStartDate || validationErrors.eventEndDate ? '1px solid #ef4444' : '1px solid #9CA3AF',
+            }}
+          >
+            <div className="flex items-center gap-4">
+              <div className="flex flex-col">
+                <span className="text-xs text-gray-500">Start Date</span>
+                <span className="text-sm font-medium">
+                  {eventStartDate ? new Date(eventStartDate).toLocaleDateString('en-GB') : 'DD / MM / YYYY'}
+                </span>
+              </div>
+              <div className="text-gray-400">to</div>
+              <div className="flex flex-col">
+                <span className="text-xs text-gray-500">End Date</span>
+                <span className="text-sm font-medium">
+                  {eventEndDate ? new Date(eventEndDate).toLocaleDateString('en-GB') : 'DD / MM / YYYY'}
+                </span>
+              </div>
+            </div>
+            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
           </div>
 
-          {/* To Text */}
-          <div className="flex items-center text-gray-500 font-medium">
-            to
-          </div>
-
-          {/* End Date */}
-          <div className="relative">
-            <input
-              type="date"
-              value={eventEndDate}
-              onChange={(e) => {
-                setEventEndDate(e.target.value);
-                clearValidationError('eventEndDate');
-              }}
-              style={{
-                display: 'flex',
-                width: '190px',
-                height: '40px',
-                padding: '7px 14px',
-                alignItems: 'flex-start',
-                gap: '10px',
-                borderRadius: '5px',
-                border: validationErrors.eventEndDate ? '1px solid #ef4444' : '1px solid #9CA3AF',
-                outline: 'none',
-                backgroundColor: 'white',
-                fontSize: '16px',
-                fontFamily: 'inherit',
-                color: eventEndDate ? '#000' : '#9CA3AF',
-              }}
+          {/* Date Range Picker */}
+          {showDatePicker && (
+            <DateRangePicker
+              startDate={eventStartDate}
+              endDate={eventEndDate}
+              onDateRangeChange={handleDateRangeChange}
+              onClose={handleDatePickerClose}
+              maxDays={7}
             />
-          </div>
+          )}
         </div>
         <div className="text-sm text-gray-500 mt-1">
           Select the start and end dates for your event

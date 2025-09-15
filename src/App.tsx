@@ -15,6 +15,10 @@ import StudentProfilePage from './pages/student/StudentProfilePage';
 import TeacherProfilePage from './pages/teacher/TeacherProfilePage';
 import StudentHome from './pages/student/StudentHome';
 import TeacherHome from './pages/teacher/TeacherHome';
+import StudentRegistration from './pages/student/StudentRegistration';
+import StudentRegistrationSuccess from './pages/student/StudentRegistrationSuccess';
+import TeacherRegistration from './pages/teacher/TeacherRegistration';
+import TeacherRegistrationSuccess from './pages/teacher/TeacherRegistrationSuccess';
 
 function App() {
   return (
@@ -33,10 +37,14 @@ function App() {
           <Route path="/organiser" element={<Organiser />} />
           <Route path="/student-profile" element={<StudentProfile />} />
           <Route path="/student-profile-page" element={<StudentProfilePage />} />
-          <Route path="/student-home" element={<StudentHome />} />  
+          <Route path="/student-home" element={<StudentHome />} />
+          <Route path="/student-registration" element={<StudentRegistration />} />
+          <Route path="/student-registration-success" element={<StudentRegistrationSuccess />} />
           <Route path="/teacher-profile" element={<TeacherProfile />} />
           <Route path="/teacher-profile-page" element={<TeacherProfilePage />} />
           <Route path="/teacher-home" element={<TeacherHome />} />
+          <Route path="/teacher-registration" element={<TeacherRegistration />} />
+          <Route path="/teacher-registration-success" element={<TeacherRegistrationSuccess />} />
         </Routes>
         <Toaster position="top-right" richColors />
       </div>

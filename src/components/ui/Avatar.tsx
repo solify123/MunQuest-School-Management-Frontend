@@ -18,17 +18,20 @@ const Avatar: React.FC<AvatarProps> = ({
 }) => {
   const [avatarUrl, setAvatarUrl] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
+  const [lastAvatarCheck, setLastAvatarCheck] = useState<number>(Date.now());
 
   const loadAvatar = async () => {
     try {
       setIsLoading(true);
       const avatar = await getUserAvatar();
       setAvatarUrl(avatar);
+      setLastAvatarCheck(Date.now());
     } catch (error) {
       console.error('Error loading avatar:', error);
       // Fallback to default avatar
       const userType = getUserType();
       setAvatarUrl(getDefaultAvatar(userType));
+      setLastAvatarCheck(Date.now());
     } finally {
       setIsLoading(false);
     }
@@ -41,6 +44,16 @@ const Avatar: React.FC<AvatarProps> = ({
   // Listen for changes in localStorage to refresh avatar
   useEffect(() => {
     const handleStorageChange = () => {
+      console.log('Avatar: Storage change detected, reloading avatar');
+      setLastAvatarCheck(Date.now());
+      loadAvatar();
+    };
+
+    const handleAvatarUpdated = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      console.log('Avatar: avatarUpdated event received', customEvent.detail);
+      // Force reload avatar immediately
+      setLastAvatarCheck(Date.now());
       loadAvatar();
     };
 
@@ -48,11 +61,11 @@ const Avatar: React.FC<AvatarProps> = ({
     window.addEventListener('storage', handleStorageChange);
     
     // Also listen for custom avatar update events
-    window.addEventListener('avatarUpdated', handleStorageChange);
+    window.addEventListener('avatarUpdated', handleAvatarUpdated);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('avatarUpdated', handleStorageChange);
+      window.removeEventListener('avatarUpdated', handleAvatarUpdated);
     };
   }, []);
 
@@ -62,6 +75,24 @@ const Avatar: React.FC<AvatarProps> = ({
       loadAvatar();
     }
   }, [forceRefresh]);
+
+  // Periodic check for avatar changes as a fallback
+  useEffect(() => {
+    const checkInterval = setInterval(() => {
+      const currentTime = Date.now();
+      // Check every 2 seconds if there's a new avatar
+      if (currentTime - lastAvatarCheck > 2000) {
+        const storedAvatar = localStorage.getItem('userAvatar');
+        if (storedAvatar && storedAvatar !== avatarUrl) {
+          console.log('Avatar: Periodic check detected new avatar, reloading');
+          loadAvatar();
+        }
+        setLastAvatarCheck(currentTime);
+      }
+    }, 2000);
+
+    return () => clearInterval(checkInterval);
+  }, [avatarUrl, lastAvatarCheck]);
 
   const sizeClasses = {
     small: 'w-8 h-8',
