@@ -20,6 +20,7 @@ const RequestApproval: React.FC = () => {
     async function getUserById() {
       const user = await getUserByIdApi();
 
+      console.log("user",user);
       setSchool(user.data.school_name);
       if (user.data.school_location === "AD") {
         setLocality("Abu Dhabi");
@@ -35,6 +36,8 @@ const RequestApproval: React.FC = () => {
         setLocality("Umm Al Quwain");
       } else if (user.data.school_location === "AIN") {
         setLocality("Al Ain");
+      }else{
+        setLocality(user.data.school_location);
       }
     }
     getUserById();
