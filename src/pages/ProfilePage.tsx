@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 // Import icons
 import EditIcon from '../assets/edit_icon.svg';
-import { changePasswordApi, getUserByIdApi, updateUserProfileApi, uploadAvatarApi } from '../apis/Users';
+import { changePasswordApi, deleteAccountApi, getUserByIdApi, updateUserProfileApi, uploadAvatarApi } from '../apis/Users';
 import { generateUsername } from '../utils/usernameGenerator';
-import { Avatar, LoadingSpinner, Header } from '../components/ui';
+import { Avatar, LoadingSpinner, Header, ConfirmationModal } from '../components/ui';
 import { clearUserAvatar } from '../utils/avatarUtils';
 import PageLoader from '../components/PageLoader';
 
@@ -144,6 +145,9 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
   const [email, setEmail] = useState<string>('');
   // Avatar state removed - now using Avatar component which manages its own state
   const [isUploadingAvatar, setIsUploadingAvatar] = useState<boolean>(false);
+  
+  // Delete confirmation modal state
+  const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
 
   const localityOptions = [
     { value: 'AD', label: 'Abu Dhabi' },
@@ -229,60 +233,97 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
     setTempValue(currentValue);
   };
 
-  // Save field edit
-  const handleSaveField = () => {
-    if (editingField) {
-      // Update the corresponding useState variable based on the field
-      switch (editingField) {
-        case 'fullname':
-          setFullname(tempValue);
-          // Generate new username when fullname changes
-          const newUsername = generateUsername(tempValue);
-          setUsername(newUsername);
-          break;
-        case 'username':
-          setUsername(tempValue);
-          break;
-        case 'birthday':
-          setBirthday(tempValue);
-          break;
-        case 'gender':
-          setGender(tempValue);
-          break;
-        case 'school_location':
-          setLocality(tempValue);
-          break;
-        case 'school_name':
-          setSchoolName(schoolName);
-          break;
-        case 'grade':
-          setGrade(tempValue);
-          break;
-        case 'gradeType':
-          setGradeType(tempValue);
-          break;
-        case 'year_of_work_experience':
-          setYearOfWorkExperience(tempValue);
-          break;
-        case 'phone_number':
-          setPhone(tempValue);
-          break;
-        case 'email':
-          setEmail(tempValue);
-          break;
-        case 'avatar':
-          // Avatar is now managed by Avatar component
-          break;
-        default:
-          break;
-      }
-      setEditingField(null);
-      setTempValue('');
+  // Auto-save field edit when value changes
+  const handleFieldChange = (field: string, value: string) => {
+    setTempValue(value);
+
+    // Update the corresponding useState variable based on the field
+    switch (field) {
+      case 'fullname':
+        setFullname(value);
+        // Generate new username when fullname changes
+        const newUsername = generateUsername(value);
+        setUsername(newUsername);
+        break;
+      case 'username':
+        setUsername(value);
+        break;
+      case 'birthday':
+        setBirthday(value);
+        break;
+      case 'gender':
+        setGender(value);
+        break;
+      case 'school_location':
+        setLocality(value);
+        break;
+      case 'school_name':
+        setSchoolName(value);
+        break;
+      case 'grade':
+        setGrade(value);
+        break;
+      case 'gradeType':
+        setGradeType(value);
+        break;
+      case 'year_of_work_experience':
+        setYearOfWorkExperience(value);
+        break;
+      case 'phone_number':
+        setPhone(value);
+        break;
+      case 'email':
+        setEmail(value);
+        break;
+      case 'avatar':
+        // Avatar is now managed by Avatar component
+        break;
+      default:
+        break;
     }
   };
 
   // Cancel field edit
   const handleCancelEdit = () => {
+    if (editingField) {
+      // Reset the field value to its original state
+      switch (editingField) {
+        case 'fullname':
+          setFullname(profileData.fullname);
+          setUsername(profileData.username);
+          break;
+        case 'username':
+          setUsername(profileData.username);
+          break;
+        case 'birthday':
+          setBirthday(profileData.birthday);
+          break;
+        case 'gender':
+          setGender(profileData.gender);
+          break;
+        case 'school_location':
+          setLocality(profileData.school_location);
+          break;
+        case 'school_name':
+          setSchoolName(profileData.school_name);
+          break;
+        case 'grade':
+          setGrade(profileData.grade);
+          setGradeType(profileData.grade_year_programme || '');
+          break;
+        case 'year_of_work_experience':
+          setYearOfWorkExperience(String(profileData.year_of_work_experience || ''));
+          break;
+        case 'phone_number':
+          setPhone(profileData.phone_number);
+          break;
+        case 'email':
+          setEmail(profileData.email);
+          break;
+        default:
+          break;
+      }
+    }
     setEditingField(null);
     setTempValue('');
   };
@@ -344,6 +385,37 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
     } else {
       toast.error(response.message);
     }
+  };
+
+  const navigate = useNavigate();
+  
+  const handleDeleteAccountClick = () => {
+    setShowDeleteModal(true);
+  };
+
+  const deleteAccount = async () => {
+    try {
+      const response = await deleteAccountApi();
+      if (response.success) {
+        toast.success(response.message);
+        localStorage.removeItem('token');
+        localStorage.removeItem('userAvatar');
+        navigate('/login');
+      } else {
+        toast.error(response.message);
+      }
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
+  const handleDeleteConfirm = () => {
+    setShowDeleteModal(false);
+    deleteAccount();
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteModal(false);
   };
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -407,11 +479,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
     const displayValue = isEditingThisField ? tempValue : value;
 
     const handleGenderSelect = (selectedGender: 'male' | 'female' | 'other') => {
-      if (isEditingThisField) {
-        setTempValue(selectedGender);
-      } else {
-        setGender(selectedGender);
-      }
+      handleFieldChange(field, selectedGender);
     };
 
     return (
@@ -452,7 +520,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
           <input
             type="text"
             value={displayValue}
-            onChange={(e) => setTempValue(e.target.value)}
+            onChange={(e) => handleFieldChange(field, e.target.value)}
             disabled={!isEditingThisField}
             className={`w-[400px] px-4 py-3 border rounded-lg text-sm bg-white focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${isEditingThisField ? 'border-[#1E395D]' : 'border-gray-300 bg-gray-50'
               }`}
@@ -469,12 +537,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
           )}
           {isEditingThisField && (
             <div className="absolute top-1/2 transform -translate-y-1/2 flex space-x-2" style={{ right: '35rem' }}>
-              <button
-                onClick={handleSaveField}
-                className="text-green-600 hover:text-green-800 text-sm font-medium mr-2"
-              >
-                ✓
-              </button>
               <button
                 onClick={handleCancelEdit}
                 className="text-red-600 hover:text-red-800 text-sm font-medium mr-2"
@@ -493,16 +555,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
                 <span className="text-sm text-gray-600">Generated Username:</span>
                 <span className="ml-2 font-mono text-sm font-medium text-[#1E395D]">{generatedUsername}</span>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  const newGenerated = generateUsername(tempValue);
-                  setUsername(newGenerated);
-                }}
-                className="text-xs text-[#1E395D] hover:text-[#0f2a47] underline"
-              >
-                Regenerate
-              </button>
             </div>
           </div>
         )}
@@ -518,11 +570,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
     })();
 
     const handleLocalityChange = (selectedValue: any) => {
-      if (isEditingThisField) {
-        setTempValue(selectedValue.label);
-      } else {
-        setLocality(selectedValue.label);
-      }
+      handleFieldChange(field, selectedValue.label);
       if (selectedValue.value) {
         loadSchoolData(selectedValue.value);
       } else {
@@ -578,12 +626,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
           {isEditingThisField && (
             <div className="absolute top-1/2 transform -translate-y-1/2 flex space-x-2" style={{ right: '35rem' }}>
               <button
-                onClick={handleSaveField}
-                className="text-green-600 hover:text-green-800 text-sm font-medium mr-2"
-              >
-                ✓
-              </button>
-              <button
                 onClick={handleCancelEdit}
                 className="text-red-600 hover:text-red-800 text-sm font-medium mr-2"
               >
@@ -610,7 +652,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
     const handleSchoolSelect = (school: any) => {
       if (isEditingThisField) {
         const schoolLabel = school.school_label || school.school_name;
-        setSchoolName(schoolLabel);
+        handleFieldChange(field, schoolLabel);
         setSchoolSearchTerm(schoolLabel);
         setShowSchoolDropdown(true);
       }
@@ -675,6 +717,14 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
                   )}
                 </div>
               ))}
+              <div
+                className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                onClick={() => handleSchoolSelect({ school_name: 'Unlisted / Not in the list / Other', school_label: 'Unlisted / Not in the list / Other', school_code: 'UNLISTED' })}
+              >
+                <div className="font-medium text-sm text-gray-900">
+                  Unlisted / Not in the list / Other
+                </div>
+              </div>
               {filteredSchools.length === 0 && schoolSearchTerm && (
                 <div className="px-4 py-3 text-sm text-gray-500">
                   No schools found matching "{schoolSearchTerm}"
@@ -685,12 +735,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
 
           {isEditingThisField && (
             <div className="absolute top-1/2 transform -translate-y-1/2 flex space-x-2" style={{ right: '35rem' }}>
-              <button
-                onClick={handleSaveField}
-                className="text-green-600 hover:text-green-800 text-sm font-medium mr-2"
-              >
-                ✓
-              </button>
               <button
                 onClick={handleCancelEdit}
                 className="text-red-600 hover:text-red-800 text-sm font-medium mr-2"
@@ -717,21 +761,12 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
 
       // Remove any non-numeric characters except spaces
       const phoneValue = newValue.replace(/[^0-9\s]/g, '');
-      if (isEditingThisField) {
-        setTempValue(phoneValue);
-      } else {
-        setPhone(phoneValue);
-      }
+      handleFieldChange(field, phoneValue);
     };
 
     const handleCountryCodeChange = (newCode: string) => {
-      if (isEditingThisField) {
-        setCountryCode(newCode);
-        setShowCountryDropdown(false); // Close dropdown after selection
-      } else {
-        setCountryCode(newCode);
-        setShowCountryDropdown(false); // Close dropdown after selection
-      }
+      setCountryCode(newCode);
+      setShowCountryDropdown(false); // Close dropdown after selection
     };
 
     return (
@@ -797,12 +832,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
           {isEditingThisField && (
             <div className="absolute top-1/2 transform -translate-y-1/2 flex space-x-2" style={{ right: '35rem' }}>
               <button
-                onClick={handleSaveField}
-                className="text-green-600 hover:text-green-800 text-sm font-medium mr-2"
-              >
-                ✓
-              </button>
-              <button
                 onClick={handleCancelEdit}
                 className="text-red-600 hover:text-red-800 text-sm font-medium mr-2"
               >
@@ -857,9 +886,9 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
 
                 // Remove any non-numeric characters for number fields
                 const numericValue = e.target.value.replace(/[^0-9]/g, '');
-                setTempValue(numericValue);
+                handleFieldChange(field, numericValue);
               } else {
-                setTempValue(e.target.value);
+                handleFieldChange(field, e.target.value);
               }
             }}
             disabled={!isEditingThisField}
@@ -888,12 +917,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
           {isEditingThisField && (
             <div className="absolute top-1/2 transform -translate-y-1/2 flex space-x-2" style={{ right: '35rem' }}>
               <button
-                onClick={handleSaveField}
-                className="text-green-600 hover:text-green-800 text-sm font-medium mr-2"
-              >
-                ✓
-              </button>
-              <button
                 onClick={handleCancelEdit}
                 className="text-red-600 hover:text-red-800 text-sm font-medium mr-2"
               >
@@ -906,7 +929,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
       </div>
     );
   };
-  const renderGradeField = (label: string, _field: keyof ProfileData, value: string) => {
+  const renderGradeField = (label: string, field: keyof ProfileData, value: string) => {
+    const isEditingThisField = editingField === field;
     const currentGradeType = gradeType;
     const currentGrade = value;
 
@@ -918,12 +942,12 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
     };
 
     const handleGradeChange = (newValue: string) => {
-      setGrade(newValue);
+      handleFieldChange('grade', newValue);
     };
 
     const handleGradeTypeChange = (type: 'grade' | 'year' | 'programme' | 'other') => {
-      setGradeType(type);
-      setGrade(''); // Reset grade when type changes
+      handleFieldChange('gradeType', type);
+      handleFieldChange('grade', ''); // Reset grade when type changes
     };
 
     return (
@@ -933,7 +957,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
         </label>
 
         {/* Radio Button Selection */}
-        <div className="w-[400px] border border-gray-300 rounded-lg p-4 mb-4">
+        <div className={`w-[400px] relative border rounded-lg p-4 mb-4 ${isEditingThisField ? 'border-[#1E395D]' : 'border-gray-300 bg-gray-50'}`}>
           <div className="flex gap-4 bg-white">
             {(['grade', 'year', 'programme', 'other'] as const).map((type) => (
               <label key={type} className="flex items-center">
@@ -943,6 +967,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
                   value={type}
                   checked={currentGradeType === type}
                   onChange={() => handleGradeTypeChange(type)}
+                  disabled={!isEditingThisField}
                   className="mr-3 w-5 h-5 text-[#1E395D] focus:ring-[#1E395D]"
                 />
                 <span className={`text-sm capitalize ${currentGradeType === type ? 'text-black' : 'text-gray-500'
@@ -950,6 +975,26 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
               </label>
             ))}
           </div>
+
+          {!isEditingThisField && (
+            <button
+              onClick={() => handleEditField(field, value)}
+              className="absolute top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600" style={{ right: '-1.25rem' }}
+            >
+              <img src={EditIcon} alt="Edit" className="w-4 h-4" />
+            </button>
+          )}
+
+          {isEditingThisField && (
+            <div className="absolute top-1/2 transform -translate-y-1/2 flex space-x-2" style={{ right: '-1.6rem' }}>
+              <button
+                onClick={handleCancelEdit}
+                className="text-red-600 hover:text-red-800 text-sm font-medium mr-2"
+              >
+                ✕
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Grade Selection Dropdown */}
@@ -958,8 +1003,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
             name="grade"
             value={currentGrade}
             onChange={(e) => handleGradeChange(e.target.value)}
-            disabled={!currentGradeType}
-            className={`w-[400px] px-4 py-4 pr-10 border rounded-lg text-sm bg-white focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 appearance-none ${!currentGradeType ? 'bg-gray-100 cursor-not-allowed' : 'border-gray-300'}`}
+            disabled={!isEditingThisField || !currentGradeType}
+            className={`w-[400px] px-4 py-4 pr-10 border rounded-lg text-sm bg-white focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 appearance-none ${!isEditingThisField || !currentGradeType ? 'bg-gray-100 cursor-not-allowed' : 'border-gray-300'}`}
           >
             <option value="">Select {currentGradeType || 'option'}</option>
             {getCurrentOptions().map((option) => (
@@ -1002,230 +1047,262 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
         {/* Header */}
         <Header />
 
-      {/* Main Content */}
-      <div className="mx-auto py-8" style={{ maxWidth: "65rem" }}>
-        {/* Profile Header */}
-        <div className="text-left mb-8">
-          <div className="relative inline-block">
-            {isUploadingAvatar ? (
-              <div className="w-32 h-32 border-4 border-white shadow-lg rounded-full flex items-center justify-center bg-gray-100">
-                <LoadingSpinner size="large" text="Uploading..." />
-              </div>
-            ) : (
-              <Avatar
-                size="large"
-                className="w-32 h-32 border-4 border-white shadow-lg"
-                showBorder={true}
-              />
-            )}
-            <button
-              onClick={() => !isUploadingAvatar && fileInputRef.current?.click()}
-              disabled={isUploadingAvatar}
-              className={`absolute bottom-2 right-2 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${isUploadingAvatar
+        {/* Main Content */}
+        <div className="mx-auto py-8" style={{ maxWidth: "65rem" }}>
+          {/* Profile Header */}
+          <div className="text-left mb-8">
+            <div className="relative inline-block">
+              {isUploadingAvatar ? (
+                <div className="w-32 h-32 border-4 border-white shadow-lg rounded-full flex items-center justify-center bg-gray-100">
+                  <LoadingSpinner size="large" text="Uploading..." />
+                </div>
+              ) : (
+                <Avatar
+                  size="large"
+                  className="w-32 h-32 border-4 border-white shadow-lg"
+                  showBorder={true}
+                />
+              )}
+              <button
+                onClick={() => !isUploadingAvatar && fileInputRef.current?.click()}
+                disabled={isUploadingAvatar}
+                className={`absolute bottom-2 right-2 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${isUploadingAvatar
                   ? 'bg-gray-300 cursor-not-allowed opacity-50'
                   : 'hover:bg-gray-300'
-                }`}
-              style={{ right: '-1.5rem', bottom: '-0.5rem' }}
-            >
-              <img src={EditIcon} alt="Edit Avatar" className="w-4 h-4" />
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleAvatarUpload}
-              disabled={isUploadingAvatar}
-              className="hidden"
-            />
-          </div>
-          <h1 className="font-bold text-gray-900 mt-4" style={{ fontSize: '30px' }}>
-            {userType === 'student' ? 'Student' : 'Teacher'} Profile
-          </h1>
-        </div>
-
-        {/* Profile Form */}
-        <div className="rounded-lg shadow-sm p-4">
-          {/* Username Field */}
-          <div className="mb-6">
-            <label
-              style={{
-                color: '#000',
-                fontSize: '16px',
-                fontStyle: 'normal',
-                fontWeight: 700,
-                lineHeight: '150%',
-                marginBottom: '0.5rem',
-                display: 'block'
-              }}
-            >
-              Username
-            </label>
-            <div className="relative">
+                  }`}
+                style={{ right: '-1.5rem', bottom: '-0.5rem' }}
+              >
+                <img src={EditIcon} alt="Edit Avatar" className="w-4 h-4" />
+              </button>
               <input
-                type="text"
-                value={profileData.username}
-                disabled
-                style={{
-                  display: 'flex',
-                  width: '400px',
-                  height: '40px',
-                  padding: '10px',
-                  alignItems: 'flex-start',
-                  gap: '10px'
-                }}
-                className="border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-500"
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarUpload}
+                disabled={isUploadingAvatar}
+                className="hidden"
               />
             </div>
-            <p className="mt-1 text-xs text-gray-500">Username is system generated</p>
+            <h1 className="font-bold text-gray-900 mt-4" style={{ fontSize: '30px' }}>
+              {userType === 'student' ? 'Student' : 'Teacher'} Profile
+            </h1>
           </div>
 
-          {/* Name Field */}
-          {renderFullnameField('Name', 'fullname', fullname)}
+          {/* Profile Form */}
+          <div className="rounded-lg shadow-sm p-4">
+            {/* Username Field */}
+            <div className="mb-6">
+              <label
+                style={{
+                  color: '#000',
+                  fontSize: '16px',
+                  fontStyle: 'normal',
+                  fontWeight: 700,
+                  lineHeight: '150%',
+                  marginBottom: '0.5rem',
+                  display: 'block'
+                }}
+              >
+                Username
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={profileData.username}
+                  disabled
+                  style={{
+                    display: 'flex',
+                    width: '400px',
+                    height: '40px',
+                    padding: '10px',
+                    alignItems: 'flex-start',
+                    gap: '10px'
+                  }}
+                  className="border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-500"
+                />
+              </div>
+              <p className="mt-1 text-xs text-gray-500">Username is system generated</p>
+            </div>
 
-          {/* Date of Birth Field */}
-          {renderField('Date of Birth', 'birthday', birthday, 'date')}
+            {/* Name Field */}
+            {renderFullnameField('Name', 'fullname', fullname)}
 
-          {/* Gender Field */}
-          {renderGenderField('Gender', 'gender', gender)}
+            {/* Date of Birth Field */}
+            {renderField('Date of Birth', 'birthday', birthday, 'date')}
 
-          {/* Locality Field */}
-          {renderLocalityField('Locality of School ', 'school_location', locality, localityOptions, showLocalityDropdown, setShowLocalityDropdown)}
+            {/* Gender Field */}
+            {renderGenderField('Gender', 'gender', gender)}
 
-          {/* School Name Field */}
-          {renderSchoolNameField('School Name', 'school_name', schoolName)}
+            {/* Locality Field */}
+            {renderLocalityField('Locality of School ', 'school_location', locality, localityOptions, showLocalityDropdown, setShowLocalityDropdown)}
 
-          {/* Grade/Year Field */}
-          {userType === 'student' ? (
-            renderGradeField(
-              'Grade or Year or Programme',
-              'grade',
-              grade
-            )
-          ) : (
-            renderField(
-              'Years of Work Experience',
-              'year_of_work_experience',
-              yearOfWorkExperience,
-              'number'
-            )
-          )}
+            {/* School Name Field */}
+            {renderSchoolNameField('School Name', 'school_name', schoolName)}
 
-          {/* Email Field */}
-          {renderField('Email', 'email', email, 'email')}
+            {/* Grade/Year Field */}
+            {userType === 'student' ? (
+              renderGradeField(
+                'Grade or Year or Programme',
+                'grade',
+                grade
+              )
+            ) : (
+              renderField(
+                'Years of Work Experience',
+                'year_of_work_experience',
+                yearOfWorkExperience,
+                'number'
+              )
+            )}
 
-          {/* Mobile Field */}
-          {renderPhoneField('Mobile', 'phone_number', phone)}
+            {/* Email Field */}
+            {renderField('Email', 'email', email, 'email')}
 
-          {/* Password Change Section */}
-          <div className="mb-6">
-            <label
-              className="mb-2"
-              style={{
-                color: '#000',
-                fontSize: '16px',
-                fontStyle: 'normal',
-                fontWeight: 700,
-                lineHeight: '150%',
-                marginBottom: '0.5rem',
-                display: 'block'
-              }}
-            >
-              Change Password
-            </label>
-            {!showPasswordFields ? (
+            {/* Mobile Field */}
+            {renderPhoneField('Mobile', 'phone_number', phone)}
+
+            {/* Password Change Section */}
+            <div className="mb-6">
+              <label
+                className="mb-2"
+                style={{
+                  color: '#000',
+                  fontSize: '16px',
+                  fontStyle: 'normal',
+                  fontWeight: 700,
+                  lineHeight: '150%',
+                  marginBottom: '0.5rem',
+                  display: 'block'
+                }}
+              >
+                Change Password
+              </label>
+              {!showPasswordFields ? (
+                <button
+                  onClick={() => setShowPasswordFields(true)}
+                  style={{
+                    display: 'flex',
+                    width: '400px',
+                    height: '40px',
+                    padding: '10px',
+                    alignItems: 'flex-start',
+                    gap: '10px'
+                  }}
+                  className="border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-500"
+                >
+                  Click to change password
+                </button>
+              ) : (
+                <div className="space-y-4">
+                  <input
+                    type="password"
+                    placeholder="New password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    style={{
+                      display: 'flex',
+                      width: '400px',
+                      height: '40px',
+                      padding: '10px',
+                      alignItems: 'flex-start',
+                      gap: '10px'
+                    }}
+                    className="border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-500"
+                  />
+                  <input
+                    type="password"
+                    placeholder="Confirm new password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    style={{
+                      display: 'flex',
+                      width: '400px',
+                      height: '40px',
+                      padding: '10px',
+                      alignItems: 'flex-start',
+                      gap: '10px'
+                    }}
+                    className="border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-500"
+                  />
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={handlePasswordChange}
+                      className="px-4 py-2 bg-[#D9C7A1] text-white rounded-lg text-sm hover:bg-[#C2A46D] transition-colors"
+                    >
+                      Save Password
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowPasswordFields(false);
+                        setNewPassword('');
+                        setConfirmPassword('');
+                      }}
+                      className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-400 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+
+            <div className="mb-6">
               <button
-                onClick={() => setShowPasswordFields(true)}
+                onClick={handleDeleteAccountClick}
+                className="mb-2 underline cursor-pointer"
+                style={{
+                  color: '#000',
+                  fontSize: '16px',
+                  fontStyle: 'normal',
+                  fontWeight: 700,
+                  lineHeight: '150%',
+                  marginBottom: '0.5rem',
+                  display: 'block'
+                }}
+              >
+                Delete Account
+              </button>
+            </div>
+
+
+            {/* Save Button */}
+            <div className="flex justify-left">
+              <button
+                onClick={() => {
+                  profileDataHandlerEdit();
+                }}
+                className={`text-white bg-[#D9C7A1] font-medium transition-all ${newPassword ? 'hover:bg-[#C2A46D]' : 'bg-[#D9C7A1]  hover:bg-[#C2A46D]'
+                  }`}
                 style={{
                   display: 'flex',
-                  width: '400px',
-                  height: '40px',
+                  width: '120px',
                   padding: '10px',
-                  alignItems: 'flex-start',
-                  gap: '10px'
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: '10px',
+                  borderRadius: '30px'
                 }}
-                className="border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-500"
               >
-                Click to change password
+                Save
               </button>
-            ) : (
-              <div className="space-y-4">
-                <input
-                  type="password"
-                  placeholder="New password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  style={{
-                    display: 'flex',
-                    width: '400px',
-                    height: '40px',
-                    padding: '10px',
-                    alignItems: 'flex-start',
-                    gap: '10px'
-                  }}
-                  className="border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-500"
-                />
-                <input
-                  type="password"
-                  placeholder="Confirm new password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  style={{
-                    display: 'flex',
-                    width: '400px',
-                    height: '40px',
-                    padding: '10px',
-                    alignItems: 'flex-start',
-                    gap: '10px'
-                  }}
-                  className="border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-500"
-                />
-                <div className="flex space-x-2">
-                  <button
-                    onClick={handlePasswordChange}
-                    className="px-4 py-2 bg-[#D9C7A1] text-white rounded-lg text-sm hover:bg-[#C2A46D] transition-colors"
-                  >
-                    Save Password
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowPasswordFields(false);
-                      setNewPassword('');
-                      setConfirmPassword('');
-                    }}
-                    className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-400 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+            </div>
 
-          {/* Save Button */}
-          <div className="flex justify-left">
-            <button
-              onClick={() => {
-                profileDataHandlerEdit();
-              }}
-              className={`text-white bg-[#D9C7A1] font-medium transition-all ${newPassword ? 'hover:bg-[#C2A46D]' : 'bg-[#D9C7A1]  hover:bg-[#C2A46D]'
-                }`}
-              style={{
-                display: 'flex',
-                width: '120px',
-                padding: '10px',
-                justifyContent: 'center',
-                alignItems: 'center',
-                gap: '10px',
-                borderRadius: '30px'
-              }}
-            >
-              Save
-            </button>
           </div>
-
         </div>
       </div>
-    </div>
+
+      {/* Delete Account Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title="Confirm Delete"
+        message="Deleting your account will remove all information. This cannot be undone."
+        confirmText="Yes"
+        cancelText="No"
+        confirmButtonColor="text-red-600"
+      />
     </PageLoader>
   );
 };

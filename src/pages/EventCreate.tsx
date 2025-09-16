@@ -27,6 +27,7 @@ const EventCreate: React.FC = () => {
   const [isUploadingCoverImage, setIsUploadingCoverImage] = useState(false);
   const [isUploadingEventLogo, setIsUploadingEventLogo] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
 
 
@@ -153,12 +154,19 @@ const EventCreate: React.FC = () => {
         return;
       }
 
-      const response = await createEventApi(eventName, locality, school, coverImage as string, eventLogo as string, eventDescription, eventStartDate, eventEndDate, numberOfSeats, feesPerDelegate, totalRevenue, website, instagram);
-      if (response.success) {
-        toast.success(response.message);
-        navigate('/event-create-success');
-      } else {
-        toast.error(response.message);
+      try {
+        setIsSubmitting(true);
+        const response = await createEventApi(eventName, locality, school, coverImage as string, eventLogo as string, eventDescription, eventStartDate, eventEndDate, numberOfSeats, feesPerDelegate, totalRevenue, website, instagram);
+        if (response.success) {
+          toast.success(response.message);
+          navigate('/event-create-success');
+        } else {
+          toast.error(response.message);
+        }
+      } catch (error: any) {
+        toast.error('Failed to create event: ' + (error.message || 'Unknown error'));
+      } finally {
+        setIsSubmitting(false);
       }
     } else {
       setCurrentStep(currentStep + 1);
@@ -920,6 +928,7 @@ const EventCreate: React.FC = () => {
                 setCurrentStep(currentStep + 1);
               }
             }}
+            disabled={isSubmitting}
             style={{
               display: 'flex',
               width: '120px',
@@ -928,18 +937,26 @@ const EventCreate: React.FC = () => {
               alignItems: 'center',
               gap: '10px',
               borderRadius: '30px',
-              background: '#C2A46D',
+              background: isSubmitting ? '#9CA3AF' : '#C2A46D',
               color: '#fff',
               fontWeight: 500,
               fontSize: '16px',
               border: 'none',
-              cursor: 'pointer',
+              cursor: isSubmitting ? 'not-allowed' : 'pointer',
               transition: 'background 0.2s',
+              opacity: isSubmitting ? 0.7 : 1,
             }}
-            onMouseOver={e => (e.currentTarget.style.background = '#B8945F')}
-            onMouseOut={e => (e.currentTarget.style.background = '#C2A46D')}
+            onMouseOver={e => !isSubmitting && (e.currentTarget.style.background = '#B8945F')}
+            onMouseOut={e => !isSubmitting && (e.currentTarget.style.background = '#C2A46D')}
           >
-            Continue
+            {isSubmitting ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>Creating...</span>
+              </div>
+            ) : (
+              'Continue'
+            )}
           </button>
         </div>
       </div>

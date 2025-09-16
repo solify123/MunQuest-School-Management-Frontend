@@ -197,16 +197,7 @@ const StudentProfile: React.FC = () => {
                 <span className="text-sm text-gray-600">Generated Username:</span>
                 <span className="ml-2 font-mono text-sm font-medium text-[#1E395D]">{generatedUsername}</span>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  const newGenerated = generateUsername(username);
-                  setGeneratedUsername(newGenerated);
-                }}
-                className="text-xs text-[#1E395D] hover:text-[#0f2a47] underline"
-              >
-                Regenerate
-              </button>
+              
             </div>
           </div>
         )}
@@ -355,6 +346,14 @@ const StudentProfile: React.FC = () => {
                   )}
                 </div>
               ))}
+              <div
+                className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                onClick={() => handleSchoolSelect({ school_name: 'Unlisted / Not in the list / Other', school_label: 'Unlisted / Not in the list / Other', school_code: 'UNLISTED' })}
+              >
+                <div className="font-medium text-sm text-gray-900">
+                  Unlisted / Not in the list / Other
+                </div>
+              </div>
               {filteredSchools.length === 0 && schoolSearchTerm && (
                 <div className="px-4 py-3 text-sm text-gray-500">
                   No schools found matching "{schoolSearchTerm}"

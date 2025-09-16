@@ -41,6 +41,7 @@ function App() {
           <Route path="/event-create" element={<PrivateRoute><EventCreate /></PrivateRoute>} />
           <Route path="/event-create-success" element={<PrivateRoute><EventCreateSuccess /></PrivateRoute>} />
           <Route path="/organiser" element={<PrivateRoute><Organiser /></PrivateRoute>} />
+          <Route path="/organiser/:step" element={<PrivateRoute><Organiser /></PrivateRoute>} />
 
           {/* Student Routes */}
           <Route path="/student-profile" element={<PrivateRoute><StudentProfile /></PrivateRoute>} />

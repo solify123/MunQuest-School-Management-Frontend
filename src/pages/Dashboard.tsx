@@ -10,7 +10,7 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('Upcoming');
   const [isLoading, setIsLoading] = useState(true);
-  const [events, setEvents] = useState<any[]>([]);
+  const [allEvents, setAllEvents] = useState<any[]>([]);
   useEffect(() => {
     const checkEvents = async () => {
       try {
@@ -18,8 +18,8 @@ const Dashboard: React.FC = () => {
         console.log('Dashboard events check response:', response);
 
         if (response.success && response.data && response.data.length > 0) {
-          // If events exist, use them
-          setEvents(response.data);
+          // Store all events
+          setAllEvents(response.data);
         } else {
           // If no events, redirect to home page
           navigate('/home');
@@ -51,6 +51,38 @@ const Dashboard: React.FC = () => {
       navigate(`/teacher-registration/${eventId}`);
     }
   };
+
+  // Filter events based on active tab
+  const getFilteredEvents = () => {
+    const currentDate = new Date();
+    
+    switch (activeTab) {
+      case 'Upcoming':
+        return allEvents.filter(event => {
+          const eventDate = new Date(event.start_date);
+          return eventDate > currentDate && event.status !== 'cancelled';
+        });
+      
+      case 'Registered':
+        // This would need to be filtered based on user's actual registrations
+        // For now, return empty array as we don't have registration data
+        return [];
+      
+      case 'Past':
+        return allEvents.filter(event => {
+          const eventDate = new Date(event.start_date);
+          return eventDate < currentDate && event.status !== 'cancelled';
+        });
+      
+      case 'Cancelled':
+        return allEvents.filter(event => event.status === 'cancelled');
+      
+      default:
+        return allEvents;
+    }
+  };
+
+  const filteredEvents = getFilteredEvents();
 
   // Show loading spinner while checking events
   if (isLoading) {
@@ -118,7 +150,7 @@ const Dashboard: React.FC = () => {
         <div className="max-w-7xl mx-auto px-6 py-8">
           {/* Events Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {events.map((event) => (
+            {filteredEvents.map((event) => (
               <div onClick={() => handleRegister(event.id)} key={event.id} className="border border-gray-800 bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-200">
                 {/* Event Image */}
                 <div className="h-48 bg-gray-200 overflow-hidden">
@@ -158,8 +190,8 @@ const Dashboard: React.FC = () => {
             ))}
           </div>
 
-          {/* Empty State for other tabs */}
-          {activeTab !== 'Upcoming' && (
+          {/* Empty State for tabs with no events */}
+          {filteredEvents.length === 0 && (
             <div className="text-center py-12">
               <div className="text-gray-400 mb-4">
                 <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">

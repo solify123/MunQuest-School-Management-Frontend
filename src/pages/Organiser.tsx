@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Header } from '../components/ui';
 import { toast } from 'sonner';
 import { getCurrentEventsOfOrganiserApi } from '../apis/Events';
@@ -7,9 +7,9 @@ import PageLoader from '../components/PageLoader';
 
 const Organiser: React.FC = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('Current');
-  const [currentEvents, setCurrentEvents] = useState([]);
-
+  const { step } = useParams<{ step?: string }>();
+  const [activeStep, setActiveStep] = useState(step || 'dashboard');
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
 
 
   useEffect(() => {
@@ -21,8 +21,8 @@ const Organiser: React.FC = () => {
           console.log('Events data:', response.data);
           if (response.data && response.data.length > 0) {
             console.log('First event structure:', response.data[0]);
+            setSelectedEvent(response.data[0]); // Set first event as default
           }
-          setCurrentEvents(response.data);
         }
         else {
           toast.error(response.message);
@@ -33,52 +33,191 @@ const Organiser: React.FC = () => {
       }
     };
     getCurrentEvents();
-  }, [activeTab]);
+  }, []);
 
   const handleCreateEvent = () => {
     navigate('/event-create');
   };
 
-  const tabs = ['Current', 'Completed', 'Cancelled'];
+  const handleStepChange = (step: string) => {
+    setActiveStep(step);
+    navigate(`/organiser/${step}`);
+  };
 
-  const getCurrentEvents = () => {
-    const now = new Date();
-    console.log('Filtering events for tab:', activeTab);
-    console.log('Current time:', now);
-    console.log('Total events:', currentEvents.length);
+  const steps = [
+    { id: 'dashboard', name: 'Dashboard', icon: '📊' },
+    { id: 'event-details', name: 'Event Details', icon: '📅' },
+    { id: 'leadership-roles', name: 'Leadership Roles', icon: '👥' },
+    { id: 'committees', name: 'Committees', icon: '🏛️' },
+    { id: 'agendas', name: 'Agendas', icon: '📋' },
+    { id: 'delegates', name: 'Delegates', icon: '🎓' },
+    { id: 'general-documents', name: 'General Documents', icon: '📄' }
+  ];
 
-    let filteredEvents: any[] = [];
-    switch (activeTab) {
-      case 'Current':
-        // Show events that are upcoming or in progress (not finished and not cancelled)
-        filteredEvents = currentEvents.filter((event: any) => {
-          const endDate = new Date(event.end_date);
-          const isNotEnded = endDate >= now;
-          const isNotCancelled = !event.status || event.status !== 'cancelled';
-          return isNotEnded && isNotCancelled;
-        });
-        break;
-      case 'Completed':
-        // Show events that have ended normally (not cancelled)
-        filteredEvents = currentEvents.filter((event: any) => {
-          const endDate = new Date(event.end_date);
-          const isEnded = endDate < now;
-          const isNotCancelled = !event.status || event.status !== 'cancelled';
-          return isEnded && isNotCancelled;
-        });
-        break;
-      case 'Cancelled':
-        // Show events that have been cancelled
-        filteredEvents = currentEvents.filter((event: any) => {
-          const isCancelled = event.status === 'cancelled';
-          return isCancelled;
-        });
-        break;
-      default:
-        filteredEvents = [];
+  const renderDashboard = () => {
+    if (!selectedEvent) {
+      return (
+        <div className="text-center py-12">
+          <div className="text-gray-400 mb-4">
+            <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No events available</h3>
+          <p className="text-gray-500">Please create an event to view the dashboard.</p>
+        </div>
+      );
     }
-    
-    return filteredEvents;
+
+    return (
+      <div className="space-y-8">
+        {/* Event Information */}
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Event Information</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-[#1E395D] text-white p-4 rounded-lg">
+              <div className="text-sm font-medium">Event</div>
+              <div className="text-lg font-bold">{selectedEvent.name}</div>
+            </div>
+            <div className="bg-[#1E395D] text-white p-4 rounded-lg">
+              <div className="text-sm font-medium">Date</div>
+              <div className="text-lg font-bold">{selectedEvent.start_date} - {selectedEvent.end_date}</div>
+            </div>
+            <div className="bg-[#1E395D] text-white p-4 rounded-lg">
+              <div className="text-sm font-medium">Locality</div>
+              <div className="text-lg font-bold">{selectedEvent.locality}</div>
+            </div>
+            <div className="bg-[#1E395D] text-white p-4 rounded-lg">
+              <div className="text-sm font-medium">Area</div>
+              <div className="text-lg font-bold">{selectedEvent.area || 'N/A'}</div>
+            </div>
+            <div className="bg-[#1E395D] text-white p-4 rounded-lg">
+              <div className="text-sm font-medium">Fees</div>
+              <div className="text-lg font-bold">{selectedEvent.fees_per_delegate}</div>
+            </div>
+            <div className="bg-[#1E395D] text-white p-4 rounded-lg">
+              <div className="text-sm font-medium">Delegates</div>
+              <div className="text-lg font-bold">50</div>
+            </div>
+            <div className="bg-[#1E395D] text-white p-4 rounded-lg">
+              <div className="text-sm font-medium">Schools</div>
+              <div className="text-lg font-bold">10</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Allocation Summary */}
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Allocation Summary</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-[#1E395D] text-white">
+                  <th className="px-4 py-3 text-left">Count</th>
+                  <th className="px-4 py-3 text-left">Seats</th>
+                  <th className="px-4 py-3 text-left">Allocated</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                <tr>
+                  <td className="px-4 py-3 font-medium">Total</td>
+                  <td className="px-4 py-3">360</td>
+                  <td className="px-4 py-3">202</td>
+                </tr>
+                <tr>
+                  <td className="px-4 py-3 font-medium">Country Committees</td>
+                  <td className="px-4 py-3">150</td>
+                  <td className="px-4 py-3">100</td>
+                </tr>
+                <tr>
+                  <td className="px-4 py-3 font-medium">Crisis Committees</td>
+                  <td className="px-4 py-3">120</td>
+                  <td className="px-4 py-3">35</td>
+                </tr>
+                <tr>
+                  <td className="px-4 py-3 font-medium">Role Committees</td>
+                  <td className="px-4 py-3">90</td>
+                  <td className="px-4 py-3">67</td>
+                </tr>
+                <tr>
+                  <td className="px-4 py-3 font-medium">Open Committees</td>
+                  <td className="px-4 py-3">0</td>
+                  <td className="px-4 py-3">0</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Allocation Status */}
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Allocation Status</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-[#1E395D] text-white">
+                  <th className="px-4 py-3 text-left">Committee Type</th>
+                  <th className="px-4 py-3 text-left">Committees</th>
+                  <th className="px-4 py-3 text-left">Seats Total</th>
+                  <th className="px-4 py-3 text-left">Seats Assigned</th>
+                  <th className="px-4 py-3 text-left">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                <tr>
+                  <td className="px-4 py-3">Country</td>
+                  <td className="px-4 py-3 font-medium">WHO</td>
+                  <td className="px-4 py-3">30</td>
+                  <td className="px-4 py-3">30</td>
+                  <td className="px-4 py-3">
+                    <span className="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">Full</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td className="px-4 py-3">Country</td>
+                  <td className="px-4 py-3 font-medium">UNGA</td>
+                  <td className="px-4 py-3">30</td>
+                  <td className="px-4 py-3">25</td>
+                  <td className="px-4 py-3">
+                    <span className="px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 rounded-full">Filling</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td className="px-4 py-3">Crisis</td>
+                  <td className="px-4 py-3 font-medium">CMC</td>
+                  <td className="px-4 py-3">30</td>
+                  <td className="px-4 py-3">10</td>
+                  <td className="px-4 py-3">
+                    <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">Open</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderStepContent = () => {
+    switch (activeStep) {
+      case 'dashboard':
+        return renderDashboard();
+      case 'event-details':
+        return <div className="text-center py-12"><h2 className="text-2xl font-bold text-gray-900">Event Details</h2><p className="text-gray-500 mt-2">Event details management coming soon...</p></div>;
+      case 'leadership-roles':
+        return <div className="text-center py-12"><h2 className="text-2xl font-bold text-gray-900">Leadership Roles</h2><p className="text-gray-500 mt-2">Leadership roles management coming soon...</p></div>;
+      case 'committees':
+        return <div className="text-center py-12"><h2 className="text-2xl font-bold text-gray-900">Committees</h2><p className="text-gray-500 mt-2">Committees management coming soon...</p></div>;
+      case 'agendas':
+        return <div className="text-center py-12"><h2 className="text-2xl font-bold text-gray-900">Agendas</h2><p className="text-gray-500 mt-2">Agendas management coming soon...</p></div>;
+      case 'delegates':
+        return <div className="text-center py-12"><h2 className="text-2xl font-bold text-gray-900">Delegates</h2><p className="text-gray-500 mt-2">Delegates management coming soon...</p></div>;
+      case 'general-documents':
+        return <div className="text-center py-12"><h2 className="text-2xl font-bold text-gray-900">General Documents</h2><p className="text-gray-500 mt-2">General documents management coming soon...</p></div>;
+      default:
+        return renderDashboard();
+    }
   };
 
   return (
@@ -92,27 +231,21 @@ const Organiser: React.FC = () => {
         {/* Page Title and Navigation */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-4xl font-medium text-[#C2A46D] mb-6">Organiser</h1>
+              <h1 className="text-4xl font-medium text-[#C2A46D] mb-6">Organiser &gt; Dashboard</h1>
 
-            {/* Tab Navigation */}
-            <div className="flex items-center space-x-8">
-              {tabs.map((tab) => (
+              {/* Step Navigation */}
+              <div className="flex items-center space-x-2">
+                {steps.map((step) => (
                 <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`pb-2 text-lg font-medium border-b-2 transition-colors duration-200 ${activeTab === tab
-                    ? 'border-[#1E395D] text-[#1E395D]'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    key={step.id}
+                    onClick={() => handleStepChange(step.id)}
+                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 ${
+                      activeStep === step.id
+                        ? 'bg-[#1E395D] text-white'
+                        : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
                     }`}
-                  style={{
-                    color: '#000',
-                    fontSize: '20px',
-                    fontStyle: 'normal',
-                    fontWeight: 700,
-                    lineHeight: '150%',
-                  }}
-                >
-                  {tab}
+                  >
+                    {step.icon} {step.name}
                 </button>
               ))}
             </div>
@@ -144,60 +277,8 @@ const Organiser: React.FC = () => {
           </button>
         </div>
 
-        {/* Events Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {getCurrentEvents().map((event: any) => (
-            <div key={event.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-200">
-              {/* Event Image */}
-              <div className="h-48 bg-gray-200 overflow-hidden">
-                <img
-                  src={event.cover_image}
-                  alt={event.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-
-              {/* Event Details */}
-              <div className="p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-2">{event.name}</h3>
-                <div className="space-y-2 mb-4">
-                  <div className="flex items-center text-sm text-gray-600">
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    {event.start_date}
-                  </div>
-                  <div className="flex items-center text-sm text-gray-600">
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    {event.locality}
-                  </div>
-                  <div className="flex items-center text-sm text-gray-600">
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                    </svg>
-                    {event.fees_per_delegate}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Empty State for other tabs */}
-        {getCurrentEvents().length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-gray-400 mb-4">
-              <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No {activeTab.toLowerCase()} events</h3>
-            <p className="text-gray-500">There are no {activeTab.toLowerCase()} events at the moment.</p>
-          </div>
-        )}
+          {/* Step Content */}
+          {renderStepContent()}
       </div>
     </div>
     </PageLoader>

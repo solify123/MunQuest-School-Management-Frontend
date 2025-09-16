@@ -180,16 +180,7 @@ const TeacherProfile: React.FC = () => {
                 <span className="text-sm text-gray-600">Generated Username:</span>
                 <span className="ml-2 font-mono text-sm font-medium text-[#1E395D]">{generatedUsername}</span>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  const newGenerated = generateUsername(fullname);
-                  setGeneratedUsername(newGenerated);
-                }}
-                className="text-xs text-[#1E395D] hover:text-[#0f2a47] underline"
-              >
-                Regenerate
-              </button>
+
             </div>
           </div>
         )}
@@ -317,7 +308,7 @@ const TeacherProfile: React.FC = () => {
               {filteredSchools.map((school, index) => (
                 <div
                   key={`${school.school_code}-${index}`}
-                  className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                  className="w-[400px] px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
                   onClick={() => handleSchoolSelect(school)}
                 >
                   <div className="font-medium text-sm text-gray-900">
@@ -337,7 +328,16 @@ const TeacherProfile: React.FC = () => {
                     </div>
                   )}
                 </div>
+
               ))}
+              <div
+                className="w-[400px] px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                onClick={() => handleSchoolSelect({ school_name: 'Unlisted / Not in the list / Other', school_label: 'Unlisted / Not in the list / Other', school_code: 'UNLISTED' })}
+              >
+                <div className="font-medium text-sm text-gray-900">
+                Unlisted / Not in the list / Other
+                </div>
+              </div>
               {filteredSchools.length === 0 && schoolSearchTerm && (
                 <div className="px-4 py-3 text-sm text-gray-500">
                   No schools found matching "{schoolSearchTerm}"
@@ -483,68 +483,68 @@ const TeacherProfile: React.FC = () => {
           </div>
         </div>
 
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-6 py-8">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6 text-left">Tracher Signup</h1>
-          {renderStepIndicator()}
-        </div>
+        {/* Main Content */}
+        <div className="max-w-4xl mx-auto px-6 py-8">
+          <div className="text-center mb-8">
+            <h1 className="text-2xl font-bold text-gray-900 mb-6 text-left">Teacher Signup</h1>
+            {renderStepIndicator()}
+          </div>
 
-        {/* Form Content */}
-        <div className="w-[400px] rounded-lg shadow-sm mb-8" style={{ padding: '2rem 0.5rem' }}>
-          {currentStep === 'personal' && renderPersonalInfo()}
-          {currentStep === 'school' && renderSchoolInfo()}
-          {currentStep === 'contact' && renderContactInfo()}
-        </div>
+          {/* Form Content */}
+          <div className="w-[400px] rounded-lg shadow-sm mb-8" style={{ padding: '2rem 0.5rem' }}>
+            {currentStep === 'personal' && renderPersonalInfo()}
+            {currentStep === 'school' && renderSchoolInfo()}
+            {currentStep === 'contact' && renderContactInfo()}
+          </div>
 
-        {/* Navigation Buttons */}
-        <div className="flex justify-start">
-          <button
-            type="button"
-            onClick={() => {
-              if (currentStep === 'personal') {
-                // Validate personal info
-                if (username && birthday && gender) {
-                  setCurrentStep('school');
-                } else {
-                  toast.error('Please fill in all personal information fields');
+          {/* Navigation Buttons */}
+          <div className="flex justify-start">
+            <button
+              type="button"
+              onClick={() => {
+                if (currentStep === 'personal') {
+                  // Validate personal info
+                  if (username && birthday && gender) {
+                    setCurrentStep('school');
+                  } else {
+                    toast.error('Please fill in all personal information fields');
+                  }
+                } else if (currentStep === 'school') {
+                  // Validate school info
+                  if (locality && schoolName && yearsOfWorkExperience) {
+                    setCurrentStep('contact');
+                  } else {
+                    toast.error('Please fill in all school information fields');
+                  }
+                } else if (currentStep === 'contact') {
+                  // Validate contact info and submit
+                  if (phone && countryCode) {
+                    TeacherProfileHandler(fullname, generatedUsername, birthday, gender, locality, schoolName, yearsOfWorkExperience, phone, countryCode);
+                  } else {
+                    toast.error('Please fill in all contact information fields');
+                  }
                 }
-              } else if (currentStep === 'school') {
-                // Validate school info
-                if (locality && schoolName && yearsOfWorkExperience) {
-                  setCurrentStep('contact');
-                } else {
-                  toast.error('Please fill in all school information fields');
-                }
-              } else if (currentStep === 'contact') {
-                // Validate contact info and submit
-                if (phone && countryCode) {
-                  TeacherProfileHandler(fullname, generatedUsername, birthday, gender, locality, schoolName, yearsOfWorkExperience, phone, countryCode);
-                } else {
-                  toast.error('Please fill in all contact information fields');
-                }
-              }
-            }}
-            className="font-medium text-white transition-all"
-            style={{
-              backgroundColor: '#D9C7A1',
-              borderRadius: '30px',
-              display: 'flex',
-              width: '120px',
-              padding: '10px',
-              justifyContent: 'center',
-              alignItems: 'center',
-              gap: '10px',
-              transition: 'background-color 0.2s',
-            }}
-            onMouseOver={e => (e.currentTarget.style.backgroundColor = '#C2A46D')}
-            onMouseOut={e => (e.currentTarget.style.backgroundColor = '#D9C7A1')}
-          >
-            Continue
-          </button>
+              }}
+              className="font-medium text-white transition-all"
+              style={{
+                backgroundColor: '#D9C7A1',
+                borderRadius: '30px',
+                display: 'flex',
+                width: '120px',
+                padding: '10px',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: '10px',
+                transition: 'background-color 0.2s',
+              }}
+              onMouseOver={e => (e.currentTarget.style.backgroundColor = '#C2A46D')}
+              onMouseOut={e => (e.currentTarget.style.backgroundColor = '#D9C7A1')}
+            >
+              Continue
+            </button>
+          </div>
         </div>
       </div>
-    </div>
     </PageLoader>
   );
 };

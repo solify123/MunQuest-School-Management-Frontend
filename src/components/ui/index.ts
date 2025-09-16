@@ -5,4 +5,5 @@ export { default as Logo } from './Logo';
 export { default as Avatar } from './Avatar';
 export { default as LoadingSpinner } from './LoadingSpinner';
 export { default as DateRangePicker } from './DateRangePicker';
+export { default as ConfirmationModal } from './ConfirmationModal';
 export { default as Header } from '../Header';

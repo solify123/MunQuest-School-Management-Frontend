@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Header, Avatar } from '../../components/ui';
 import { useParams } from 'react-router-dom';
-import { getEventByIdApi, getSupportContactApi, getParticipationInfoApi, getRegistrationInfoApi } from '../../apis/Events';
+import { getEventByIdApi } from '../../apis/Events';
 import { toast } from 'sonner';
 import DownloadIcon from '../../assets/download_icon.svg';
 import PageLoader from '../../components/PageLoader';
@@ -77,22 +77,17 @@ const StudentDelegatePage: React.FC = () => {
   useEffect(() => {
     const getSupportContact = async () => {
       try {
-        const response = await getSupportContactApi(eventId || '');
-        if (response.success) {
-          setSupportContacts(response.data || []);
-        } else {
-          // If no support contacts, show placeholder data
-          setSupportContacts([
-            {
-              abbr: 'DA',
-              role: 'Head of Delegate Affairs',
-              username: '@iman1234',
-              name: 'Iman Praveesh Hassan',
-              mobile: '971 506505125',
-              email: 'imanphassan@gmail.com'
-            }
-          ]);
-        }
+        // If no support contacts, show placeholder data
+        setSupportContacts([
+          {
+            abbr: 'DA',
+            role: 'Head of Delegate Affairs',
+            username: '@iman1234',
+            name: 'Iman Praveesh Hassan',
+            mobile: '971 506505125',
+            email: 'imanphassan@gmail.com'
+          }
+        ]);
       } catch (error: any) {
         console.log('Support contact API not available, using placeholder data');
         // Fallback to placeholder data if API is not available
@@ -114,28 +109,12 @@ const StudentDelegatePage: React.FC = () => {
   useEffect(() => {
     const getParticipationInfo = async () => {
       try {
-        const response = await getParticipationInfoApi(eventId || '');
-        if (response.success) {
-          setParticipationInfo(response.data || {
-            committee: '',
-            country: '',
-            generalDocuments: [],
-            committeeDocuments: []
-          });
-        } else {
-          // Fallback to placeholder data
-          setParticipationInfo({
-            committee: 'UNGA - United Nations General Assembly',
-            country: 'Australia',
-            generalDocuments: [
-              { name: 'MUN Handbook', url: '#' }
-            ],
-            committeeDocuments: [
-              { name: 'UNGA_Agenda', url: '#' },
-              { name: 'UNGA_Resolutions', url: '#' }
-            ]
-          });
-        }
+        setParticipationInfo({
+          committee: '',
+          country: '',
+          generalDocuments: [],
+          committeeDocuments: []
+        });
       } catch (error: any) {
         console.log('Participation info API not available, using placeholder data');
         // Fallback to placeholder data
@@ -158,51 +137,26 @@ const StudentDelegatePage: React.FC = () => {
   useEffect(() => {
     const getRegistrationInfo = async () => {
       try {
-        const response = await getRegistrationInfoApi(eventId || '');
-        if (response.success) {
-          setRegistrationInfo(response.data || {
-            registrationNo: '',
-            username: '',
-            name: '',
-            dateOfBirth: '',
-            gender: '',
-            schoolName: '',
-            localityOfSchool: '',
-            gradeOrYear: '',
-            email: '',
-            mobileNumber: '',
-            munExperience: '',
-            preferredCommittee1: '',
-            preferredCommittee2: '',
-            preferredCommittee3: '',
-            foodPreference: 'vegetarian',
-            foodAllergies: '',
-            emergencyContactName: '',
-            emergencyMobileNumber: ''
-          });
-        } else {
-          // Fallback to placeholder data
-          setRegistrationInfo({
-            registrationNo: '223344',
-            username: '@sommt234',
-            name: 'Sam Morgen Lee',
-            dateOfBirth: '5 Oct 2008',
-            gender: 'Male',
-            schoolName: 'Oasis World School',
-            localityOfSchool: 'Dubai',
-            gradeOrYear: 'IB DP 2',
-            email: 'somlee@gmail.com',
-            mobileNumber: '+971 50 6382040',
-            munExperience: '5',
-            preferredCommittee1: 'UNSC - United Nations Security Council',
-            preferredCommittee2: 'UNGA - United Nations General Assembly',
-            preferredCommittee3: 'WHO - World Health Organization',
-            foodPreference: 'vegetarian',
-            foodAllergies: 'Peanut',
-            emergencyContactName: 'Jim Morgan',
-            emergencyMobileNumber: '+971 655 3131'
-          });
-        }
+        setRegistrationInfo({
+          registrationNo: '',
+          username: '',
+          name: '',
+          dateOfBirth: '',
+          gender: '',
+          schoolName: '',
+          localityOfSchool: '',
+          gradeOrYear: '',
+          email: '',
+          mobileNumber: '',
+          munExperience: '',
+          preferredCommittee1: '',
+          preferredCommittee2: '',
+          preferredCommittee3: '',
+          foodPreference: 'vegetarian',
+          foodAllergies: '',
+          emergencyContactName: '',
+          emergencyMobileNumber: ''
+        });
       } catch (error: any) {
         console.log('Registration info API not available, using placeholder data');
         // Fallback to placeholder data
@@ -477,8 +431,8 @@ const StudentDelegatePage: React.FC = () => {
         {/* Avatar Section */}
         <div className="flex items-center gap-4 mb-8">
           <div style={{ width: '160px', height: '160px' }}>
-            <Avatar 
-              size="large" 
+            <Avatar
+              size="large"
               className="w-[160px] h-[160px]"
             />
           </div>
@@ -645,20 +599,18 @@ const StudentDelegatePage: React.FC = () => {
             <label className="block text-sm font-bold text-gray-700 mb-2">Food Preference</label>
             <div className="flex gap-3">
               <button
-                className={`px-6 py-3 rounded-full text-sm font-medium transition-colors ${
-                  registrationInfo.foodPreference === 'vegetarian'
-                    ? 'bg-[#D9C7A1] text-gray-900'
-                    : 'bg-white text-gray-600 border border-gray-300'
-                }`}
+                className={`px-6 py-3 rounded-full text-sm font-medium transition-colors ${registrationInfo.foodPreference === 'vegetarian'
+                  ? 'bg-[#D9C7A1] text-gray-900'
+                  : 'bg-white text-gray-600 border border-gray-300'
+                  }`}
               >
                 Vegetarian
               </button>
               <button
-                className={`px-6 py-3 rounded-full text-sm font-medium transition-colors ${
-                  registrationInfo.foodPreference === 'non-vegetarian'
-                    ? 'bg-[#D9C7A1] text-gray-900'
-                    : 'bg-white text-gray-600 border border-gray-300'
-                }`}
+                className={`px-6 py-3 rounded-full text-sm font-medium transition-colors ${registrationInfo.foodPreference === 'non-vegetarian'
+                  ? 'bg-[#D9C7A1] text-gray-900'
+                  : 'bg-white text-gray-600 border border-gray-300'
+                  }`}
               >
                 Non-Vegetarian
               </button>
@@ -759,33 +711,33 @@ const StudentDelegatePage: React.FC = () => {
       <div className="min-h-screen bg-gray-50">
         <Header />
 
-      <div className="max-w-[80rem] px-6 py-8 flex flex-col items-left" style={{ marginLeft: '13rem' }}>
-        <div className="flex items-center space-x-2 mb-8">
-          {tabs.map((tab, index) => (
-            <React.Fragment key={tab}>
-              <button
-                className={`flex items-center border border-gray-800 justify-center w-[200px] h-[58px] p-[5px] rounded-[20px] text-sm font-medium transition-all ${currentStep === tab
-                  ? 'bg-[#1E395D] text-white'
-                  : 'bg-white text-gray-600 border border-gray-300'
-                  }`}
-                onClick={() => setCurrentStep(tab)}
-              >
-                {tab}
-              </button>
-              {index < tabs.length - 1 && (
-                <span className="mx-3 text-gray-600 text-sm">&gt;</span>
-              )}
-            </React.Fragment>
-          ))}
-        </div>
+        <div className="max-w-[80rem] px-6 py-8 flex flex-col items-left" style={{ marginLeft: '13rem' }}>
+          <div className="flex items-center space-x-2 mb-8">
+            {tabs.map((tab, index) => (
+              <React.Fragment key={tab}>
+                <button
+                  className={`flex items-center border border-gray-800 justify-center w-[200px] h-[58px] p-[5px] rounded-[20px] text-sm font-medium transition-all ${currentStep === tab
+                    ? 'bg-[#1E395D] text-white'
+                    : 'bg-white text-gray-600 border border-gray-300'
+                    }`}
+                  onClick={() => setCurrentStep(tab)}
+                >
+                  {tab}
+                </button>
+                {index < tabs.length - 1 && (
+                  <span className="mx-3 text-gray-600 text-sm">&gt;</span>
+                )}
+              </React.Fragment>
+            ))}
+          </div>
 
-        <div className="">
-          <div >
-            {renderTabContent()}
+          <div className="">
+            <div >
+              {renderTabContent()}
+            </div>
           </div>
         </div>
       </div>
-    </div>
     </PageLoader>
   );
 };

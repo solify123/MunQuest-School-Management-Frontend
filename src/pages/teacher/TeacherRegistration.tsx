@@ -1,21 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Header, Avatar } from '../../components/ui';
 import { toast } from 'sonner';
 import { getUserByIdApi } from '../../apis/Users';
 import PageLoader from '../../components/PageLoader';
+import { eventRegistratTeacherApi } from '../../apis/Events';
 
 type Step = 'personal' | 'food';
 
 const TeacherRegistration: React.FC = () => {
   const navigate = useNavigate();
-
+  const { eventId } = useParams();
   // Current step state
   const [currentStep, setCurrentStep] = useState<Step>('personal');
 
   // Form data states
   const [username, setUsername] = useState<string>('@samm1234');
-  const [name, setName] = useState<string>('Sam Morgan Lee');
+  const [fullname, setFullname] = useState<string>('Sam Morgan Lee');
   const [dateOfBirth, setDateOfBirth] = useState<string>('5 Oct 2008');
   const [gender, setGender] = useState<string>('Male');
   const [placeOfSchool, setPlaceOfSchool] = useState<string>('Dubai');
@@ -36,7 +37,7 @@ const TeacherRegistration: React.FC = () => {
         console.log(response);
         if (response.success) {
           setUsername(response.data.username);
-          setName(response.data.fullname);
+          setFullname(response.data.fullname);
           setDateOfBirth(response.data.birthday);
           setGender(response.data.gender);
           setSchoolName(response.data.school_name);
@@ -84,9 +85,7 @@ const TeacherRegistration: React.FC = () => {
         setCurrentStep('food');
         break;
       case 'food':
-        // Handle final submission
-        toast.success('Registration completed successfully!');
-        navigate('/teacher-registration-success');
+        handleEventRegistration()
         break;
       default:
         break;
@@ -188,11 +187,11 @@ const TeacherRegistration: React.FC = () => {
       {/* Avatar Section */}
       <div className="flex justify-left mb-8">
         <div className="relative">
-            <Avatar
-              size="large"
-              className="w-32 h-32 border-4 border-white shadow-lg"
-              showBorder={true}
-            />
+          <Avatar
+            size="large"
+            className="w-32 h-32 border-4 border-white shadow-lg"
+            showBorder={true}
+          />
         </div>
       </div>
 
@@ -219,12 +218,18 @@ const TeacherRegistration: React.FC = () => {
 
         {/* Name */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2" style={{
+            color: '#000',
+            fontSize: '16px',
+            fontStyle: 'normal',
+            fontWeight: 700,
+            lineHeight: '150%',
+          }}  >Name</label>
           <div className="relative">
             <input
               type="text"
               disabled={true}
-              value={name}
+              value={fullname}
               className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent pr-10"
               placeholder="Enter your name"
             />
@@ -233,7 +238,13 @@ const TeacherRegistration: React.FC = () => {
 
         {/* Date of Birth */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Date of Birth</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2" style={{
+            color: '#000',
+            fontSize: '16px',
+            fontStyle: 'normal',
+            fontWeight: 700,
+            lineHeight: '150%',
+          }}>Date of Birth</label>
           <div className="relative">
             <input
               type="text"
@@ -247,7 +258,13 @@ const TeacherRegistration: React.FC = () => {
 
         {/* Gender */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2" style={{
+            color: '#000',
+            fontSize: '16px',
+            fontStyle: 'normal',
+            fontWeight: 700,
+            lineHeight: '150%',
+          }}>Gender</label>
           <div className="flex space-x-4">
             {['male', 'female', 'other'].map((option) => (
               <button
@@ -269,7 +286,13 @@ const TeacherRegistration: React.FC = () => {
 
         {/* Place of School */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Place of School</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2" style={{
+            color: '#000',
+            fontSize: '16px',
+            fontStyle: 'normal',
+            fontWeight: 700,
+            lineHeight: '150%',
+          }}>Place of School</label>
           <div className="relative">
             <input
               type="text"
@@ -283,7 +306,13 @@ const TeacherRegistration: React.FC = () => {
 
         {/* School Name */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">School Name</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2" style={{
+            color: '#000',
+            fontSize: '16px',
+            fontStyle: 'normal',
+            fontWeight: 700,
+            lineHeight: '150%',
+          }}>School Name</label>
           <div className="relative">
             <input
               type="text"
@@ -297,7 +326,13 @@ const TeacherRegistration: React.FC = () => {
 
         {/* Grade or Year */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Years of Work Experience</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2" style={{
+            color: '#000',
+            fontSize: '16px',
+            fontStyle: 'normal',
+            fontWeight: 700,
+            lineHeight: '150%',
+          }}>Years of Work Experience</label>
           <div className="relative">
             <input
               type="text"
@@ -311,7 +346,13 @@ const TeacherRegistration: React.FC = () => {
 
         {/* Email */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2" style={{
+            color: '#000',
+            fontSize: '16px',
+            fontStyle: 'normal',
+            fontWeight: 700,
+            lineHeight: '150%',
+          }}>Email</label>
           <div className="relative">
             <input
               type="email"
@@ -325,7 +366,13 @@ const TeacherRegistration: React.FC = () => {
 
         {/* Mobile */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Mobile</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2" style={{
+            color: '#000',
+            fontSize: '16px',
+            fontStyle: 'normal',
+            fontWeight: 700,
+            lineHeight: '150%',
+          }}>Mobile</label>
           <div className="relative">
             <input
               type="tel"
@@ -340,62 +387,76 @@ const TeacherRegistration: React.FC = () => {
     </div>
   );
 
+  const handleEventRegistration = async () => {
+    try {
+      const response = await eventRegistratTeacherApi(eventId as string, foodPreference, foodAllergies);
+      if (response.success) {
+        toast.success('Registration completed successfully!');
+        navigate('/teacher-registration-success');
+      } else {
+        toast.error('Failed to register for event: ' + response.message);
+      }
+    } catch (error: any) {
+      toast.error('Failed to register for event: ' + error.message);
+    }
+  }
+
   return (
     <PageLoader loadingText="Loading Teacher Registration...">
       <div className="min-h-screen bg-gray-50">
         {/* Header Section */}
         <Header />
 
-      {/* Main Content */}
-      <div className="max-w-[85rem] mx-auto px-6 py-8" style={{ paddingLeft: '10.5rem' }}>
-        {/* Page Title */}
-        <div className="mb-8">
-          <h1
-            className="mb-6"
-            style={{
-              color: '#000',
-              fontSize: '18px',
-              fontStyle: 'normal',
-              fontWeight: 700,
-              lineHeight: '150%',
-            }}
-          >
-            Review Info
-          </h1>
+        {/* Main Content */}
+        <div className="max-w-[85rem] mx-auto px-6 py-8" style={{ paddingLeft: '10.5rem' }}>
+          {/* Page Title */}
+          <div className="mb-8">
+            <h1
+              className="mb-6"
+              style={{
+                color: '#000',
+                fontSize: '18px',
+                fontStyle: 'normal',
+                fontWeight: 700,
+                lineHeight: '150%',
+              }}
+            >
+              Review Info
+            </h1>
 
-          {/* Progress Indicator */}
-          {renderProgressIndicator()}
-        </div>
+            {/* Progress Indicator */}
+            {renderProgressIndicator()}
+          </div>
 
-        {/* Form Content */}
-        <div className="max-w-2xl">
-          {currentStep === 'personal' && renderPersonalInfo()}
-          {currentStep === 'food' && renderFoodInfo()}
-        </div>
+          {/* Form Content */}
+          <div className="max-w-2xl">
+            {currentStep === 'personal' && renderPersonalInfo()}
+            {currentStep === 'food' && renderFoodInfo()}
+          </div>
 
-        {/* Continue/Register Button */}
-        <div className="flex justify-left mt-8">
-          <button
-            onClick={handleContinue}
-            className="font-medium text-white transition-all hover:opacity-90"
-            style={{
-              backgroundColor: '#C2A46D',
-              borderRadius: '30px',
-              display: 'flex',
-              width: '160px',
-              height: '50px',
-              padding: '10px',
-              justifyContent: 'center',
-              alignItems: 'center',
-              gap: '10px',
-              fontSize: '16px'
-            }}
-          >
-            Continue
-          </button>
+          {/* Continue/Register Button */}
+          <div className="flex justify-left mt-8">
+            <button
+              onClick={handleContinue}
+              className="font-medium text-white transition-all hover:opacity-90"
+              style={{
+                backgroundColor: '#C2A46D',
+                borderRadius: '30px',
+                display: 'flex',
+                width: '160px',
+                height: '50px',
+                padding: '10px',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: '10px',
+                fontSize: '16px'
+              }}
+            >
+              Continue
+            </button>
+          </div>
         </div>
       </div>
-    </div>
     </PageLoader>
   );
 };

@@ -1,16 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Header, Avatar } from '../../components/ui';
 import { toast } from 'sonner';
 import { getUserByIdApi } from '../../apis/Users';
 import PageLoader from '../../components/PageLoader';
+import { eventRegistratStudentApi } from '../../apis/Events';
 
 type Step = 'personal' | 'mun' | 'food' | 'emergency';
 
 const StudentRegistration: React.FC = () => {
   const navigate = useNavigate();
   const emergencyDropdownRef = useRef<HTMLDivElement>(null);
-
+  const { eventId } = useParams();
   // Current step state
   const [currentStep, setCurrentStep] = useState<Step>('personal');
 
@@ -148,8 +149,7 @@ const StudentRegistration: React.FC = () => {
         break;
       case 'emergency':
         // Handle final submission
-        toast.success('Registration completed successfully!');
-        navigate('/student-registration-success');
+        handleEventRegistration();
         break;
       default:
         break;
@@ -618,6 +618,20 @@ const StudentRegistration: React.FC = () => {
     </div>
   );
 
+
+  const handleEventRegistration = async () => {
+    try {
+      const response = await eventRegistratStudentApi(eventId as string, munExperience, preferredCommittee1, foodPreference, foodAllergies, emergencyContactName, emergencyMobileNumber);
+      if (response.success) {
+        toast.success('Registration completed successfully!');
+        navigate('/teacher-registration-success');
+      } else {
+        toast.error('Failed to register for event: ' + response.message);
+      }
+    } catch (error: any) {
+      toast.error('Failed to register for event: ' + error.message);
+    }
+  }
   return (
     <PageLoader loadingText="Loading Registration...">
       <div className="min-h-screen bg-gray-50">

@@ -10,10 +10,23 @@ export const signupApi = async (email: string, password: string, role: string) =
     }
 };
 
-
 export const loginApi = async (email: string, password: string) => {
     try {
         const response = await axios.post(`${backendUrl}/api/v1/users/login`, { email, password });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+};
+
+export const deleteAccountApi = async () => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.delete(`${backendUrl}/api/v1/users/delete-account`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
         return response.data;
     } catch (error: any) {
         throw new Error(error.response.data.message);

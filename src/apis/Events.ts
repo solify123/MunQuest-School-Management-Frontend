@@ -18,7 +18,7 @@ export const eventImagefileUploadApi = async (file: File) => {
     }
 };
 
-export const createEventApi = async (eventName: string,locality: string,school: string,coverImage: string,eventLogo: string,eventDescription: string,eventStartDate: string,eventEndDate: string,numberOfSeats: string,feesPerDelegate: string,totalRevenue: string,website: string,instagram: string) => {
+export const createEventApi = async (eventName: string, locality: string, school: string, coverImage: string, eventLogo: string, eventDescription: string, eventStartDate: string, eventEndDate: string, numberOfSeats: string, feesPerDelegate: string, totalRevenue: string, website: string, instagram: string) => {
     try {
         const token = localStorage.getItem('token');
         const response = await axios.post(`${backendUrl}/api/v1/events/create-event`, {
@@ -91,10 +91,13 @@ export const getEventByIdApi = async (eventId: string) => {
     }
 }
 
-export const getSupportContactApi = async (eventId: string) => {
+export const eventRegistratTeacherApi = async (eventId: string, foodPreference: string, foodAllergies: string) => {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.get(`${backendUrl}/api/v1/events/get-support-contact/${eventId}`, {
+        const response = await axios.post(`${backendUrl}/api/v1/events/event-registration-teacher/${eventId}`, {
+            foodPreference,
+            foodAllergies,
+        }, {
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
@@ -106,25 +109,17 @@ export const getSupportContactApi = async (eventId: string) => {
     }
 }
 
-export const getParticipationInfoApi = async (eventId: string) => {
+export const eventRegistratStudentApi = async (eventId: string, munExperience: string, preferredCommittee1: string, foodPreference: string, foodAllergies: string, emergencyContactName: string, emergencyMobileNumber: string) => {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.get(`${backendUrl}/api/v1/events/get-participation-info/${eventId}`, {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        return response.data;
-    } catch (error: any) {
-        throw new Error(error.response.data.message);
-    }
-}
-
-export const getRegistrationInfoApi = async (eventId: string) => {
-    try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get(`${backendUrl}/api/v1/events/get-registration-info/${eventId}`, {
+        const response = await axios.post(`${backendUrl}/api/v1/events/event-registration-student/${eventId}`, {
+            munExperience,
+            preferredCommittee1,
+            foodPreference,
+            foodAllergies,
+            emergencyContactName,
+            emergencyMobileNumber,
+        }, {
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
