@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { LoadingSpinner, Header } from '../components/ui';
 import { getCurrentEventsApi } from '../apis/Events';
 import PageLoader from '../components/PageLoader';
+import { getUserType } from '../utils/avatarUtils';
 
 
 const Dashboard: React.FC = () => {
@@ -10,7 +11,6 @@ const Dashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState('Upcoming');
   const [isLoading, setIsLoading] = useState(true);
   const [events, setEvents] = useState<any[]>([]);
-  const userType = localStorage.getItem('userType');
   useEffect(() => {
     const checkEvents = async () => {
       try {
@@ -43,7 +43,8 @@ const Dashboard: React.FC = () => {
     navigate('/request-approval');
   };
 
-  const handleRegister = (eventId: number) => {
+  const handleRegister = async (eventId: number) => {
+    const userType = await getUserType();
     if (userType === 'student') {
       navigate(`/student-registration/${eventId}`);
     } else {
