@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Logo, LoadingSpinner, Header } from '../components/ui';
 import { getCurrentEventsApi } from '../apis/Events';
+import PageLoader from '../components/PageLoader';
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -44,9 +45,10 @@ const HomePage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header Section */}
-      <Header />
+    <PageLoader loadingText="Loading Home...">
+      <div className="min-h-screen bg-white">
+        {/* Header Section */}
+        <Header />
       
       {/* Action Buttons */}
       <div className="bg-white">
@@ -96,6 +98,7 @@ const HomePage: React.FC = () => {
         </div>
       </div>
     </div>
+    </PageLoader>
   );
 };
 

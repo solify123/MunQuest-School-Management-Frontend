@@ -6,6 +6,8 @@ import NotificationIcon from '../assets/notification_icon.svg';
 import OrganiserIcon from '../assets/organiser_icon.svg';
 import { getUserType } from '../utils/avatarUtils';
 import { verifyOrganiserApi } from '../apis/Organisers';
+import ProfileIcon from '../assets/showprofile_icon.svg';
+import LogoutIcon from '../assets/logout_icon.svg';
 
 interface HeaderProps {
   showNavigation?: boolean;
@@ -146,9 +148,8 @@ const Header: React.FC<HeaderProps> = ({
                     >
                       <div className="flex items-center mr-3">
                         {/* User Profile Icon */}
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
+                        
+                        <img src={ProfileIcon} alt="Profile" />
                       </div>
                       <span className="text-gray-900 font-medium">Show Profile</span>
                     </div>
@@ -163,9 +164,7 @@ const Header: React.FC<HeaderProps> = ({
                     >
                       <div className="flex items-center mr-3">
                         {/* Logout Icon */}
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                        </svg>
+                        <img src={LogoutIcon} alt="Logout" />
                       </div>
                       <span className="text-gray-900 font-medium">Log Out</span>
                     </div>

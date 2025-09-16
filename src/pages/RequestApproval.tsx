@@ -4,6 +4,7 @@ import { Header, LoadingSpinner } from '../components/ui';
 import { edviceDocsfileUploadApi, requestApprovalApi } from '../apis/Organisers';
 import { getUserByIdApi } from '../apis/Users';
 import { toast } from 'sonner';
+import PageLoader from '../components/PageLoader';
 
 const RequestApproval: React.FC = () => {
   const navigate = useNavigate();
@@ -101,9 +102,10 @@ const RequestApproval: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header Section */}
-      <Header />
+    <PageLoader loadingText="Loading Request Approval...">
+      <div className="min-h-screen bg-white">
+        {/* Header Section */}
+        <Header />
 
       {/* Main Content */}
       <div className="max-w-[62rem] mx-auto px-6 py-12">
@@ -294,6 +296,7 @@ const RequestApproval: React.FC = () => {
         </div>
       </div>
     </div>
+    </PageLoader>
   );
 };
 

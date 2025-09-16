@@ -4,6 +4,7 @@ import { Header, LoadingSpinner, Avatar } from '../../components/ui';
 import EditIcon from '../../assets/edit_icon.svg';
 import { toast } from 'sonner';
 import { getUserByIdApi, uploadAvatarApi } from '../../apis/Users';
+import PageLoader from '../../components/PageLoader';
 
 type Step = 'personal' | 'food';
 
@@ -385,9 +386,10 @@ const TeacherRegistration: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header Section */}
-      <Header />
+    <PageLoader loadingText="Loading Teacher Registration...">
+      <div className="min-h-screen bg-gray-50">
+        {/* Header Section */}
+        <Header />
 
       {/* Main Content */}
       <div className="max-w-[85rem] mx-auto px-6 py-8" style={{ paddingLeft: '10.5rem' }}>
@@ -439,6 +441,7 @@ const TeacherRegistration: React.FC = () => {
         </div>
       </div>
     </div>
+    </PageLoader>
   );
 };
 

@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { teacherProfileApi } from '../../apis/Users';
 import { useNavigate } from 'react-router-dom';
 import { generateUsername } from '../../utils/usernameGenerator';
+import PageLoader from '../../components/PageLoader';
 
 type Step = 'personal' | 'school' | 'contact' | 'success';
 
@@ -473,13 +474,14 @@ const TeacherProfile: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#F8F8F8' }}>
-      {/* Header */}
-      <div className="shadow-sm">
-        <div className="max-w-4xl px-6 py-4">
-          <Logo size="medium" />
+    <PageLoader loadingText="Loading Teacher Profile...">
+      <div className="min-h-screen" style={{ backgroundColor: '#F8F8F8' }}>
+        {/* Header */}
+        <div className="shadow-sm">
+          <div className="max-w-4xl px-6 py-4">
+            <Logo size="medium" />
+          </div>
         </div>
-      </div>
 
       {/* Main Content */}
       <div className="max-w-4xl mx-auto px-6 py-8">
@@ -543,6 +545,7 @@ const TeacherProfile: React.FC = () => {
         </div>
       </div>
     </div>
+    </PageLoader>
   );
 };
 

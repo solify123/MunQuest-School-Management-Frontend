@@ -1,13 +1,15 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '../../components/ui';
+import PageLoader from '../../components/PageLoader';
 
 const StudentRegistrationSuccess: React.FC = () => {
   const navigate = useNavigate();
 
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#F8F8F8' }}>
+    <PageLoader loadingText="Loading Success Page...">
+      <div className="min-h-screen" style={{ backgroundColor: '#F8F8F8' }}>
       {/* Header Section */}
       <Header />
 
@@ -85,6 +87,7 @@ const StudentRegistrationSuccess: React.FC = () => {
         </div>
       </div>
     </div>
+    </PageLoader>
   );
 };
 

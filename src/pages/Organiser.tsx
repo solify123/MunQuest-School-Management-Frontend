@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '../components/ui';
 import { toast } from 'sonner';
-import { getCurrentEventsApi } from '../apis/Events';
+import { getCurrentEventsOfOrganiserApi } from '../apis/Events';
+import PageLoader from '../components/PageLoader';
 
 const Organiser: React.FC = () => {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ const Organiser: React.FC = () => {
   useEffect(() => {
     const getCurrentEvents = async () => {
       try {
-        const response = await getCurrentEventsApi();
+        const response = await getCurrentEventsOfOrganiserApi();
         console.log('API Response:', response);
         if (response.success) {
           console.log('Events data:', response.data);
@@ -81,9 +82,10 @@ const Organiser: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header Section */}
-      <Header maxWidth="max-w-[88rem]" />
+    <PageLoader loadingText="Loading Organiser Dashboard...">
+      <div className="min-h-screen bg-gray-50">
+        {/* Header Section */}
+        <Header maxWidth="max-w-[88rem]" />
 
       {/* Main Content */}
       <div className="max-w-[85rem] mx-auto px-6 py-8" style={{ paddingLeft: '10.5rem' }}>
@@ -198,6 +200,7 @@ const Organiser: React.FC = () => {
         )}
       </div>
     </div>
+    </PageLoader>
   );
 };
 

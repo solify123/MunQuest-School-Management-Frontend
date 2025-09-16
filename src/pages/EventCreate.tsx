@@ -5,6 +5,7 @@ import EditIcon from '../assets/edit_icon.svg';
 import { createEventApi, eventImagefileUploadApi } from '../apis/Events';
 import { getUserByIdApi } from '../apis/Users';
 import { toast } from 'sonner';
+import PageLoader from '../components/PageLoader';
 
 const EventCreate: React.FC = () => {
   const navigate = useNavigate();
@@ -823,9 +824,10 @@ const EventCreate: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header Section */}
-      <Header />
+    <PageLoader loadingText="Loading Event Creation...">
+      <div className="min-h-screen bg-white">
+        {/* Header Section */}
+        <Header />
 
       {/* Breadcrumb */}
       <div className="py-3">
@@ -942,6 +944,7 @@ const EventCreate: React.FC = () => {
         </div>
       </div>
     </div>
+    </PageLoader>
   );
 };
 

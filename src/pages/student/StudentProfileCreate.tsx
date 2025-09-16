@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { studentProfileApi } from '../../apis/Users';
 import { toast } from 'sonner';
 import { generateUsername } from '../../utils/usernameGenerator';
+import PageLoader from '../../components/PageLoader';
 
 type Step = 'personal' | 'school' | 'contact' | 'success';
 
@@ -548,9 +549,10 @@ const StudentProfile: React.FC = () => {
 
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#F8F8F8' }}>
-      {/* Header */}
-      <Header />
+    <PageLoader loadingText="Loading Student Profile...">
+      <div className="min-h-screen" style={{ backgroundColor: '#F8F8F8' }}>
+        {/* Header */}
+        <Header />
 
       {/* Main Content */}
       <div className="max-w-4xl mx-auto px-6 py-8">
@@ -605,6 +607,7 @@ const StudentProfile: React.FC = () => {
         </div>
       </div>
     </div >
+    </PageLoader>
   );
 };
 

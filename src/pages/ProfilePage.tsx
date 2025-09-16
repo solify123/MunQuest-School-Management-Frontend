@@ -7,6 +7,7 @@ import { changePasswordApi, getUserByIdApi, updateUserProfileApi, uploadAvatarAp
 import { generateUsername } from '../utils/usernameGenerator';
 import { Avatar, LoadingSpinner, Header } from '../components/ui';
 import { clearUserAvatar } from '../utils/avatarUtils';
+import PageLoader from '../components/PageLoader';
 
 // Import default avatars
 import StudentAvatar from '../assets/student.png';
@@ -996,9 +997,10 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
 
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <Header />
+    <PageLoader loadingText="Loading Profile...">
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <Header />
 
       {/* Main Content */}
       <div className="mx-auto py-8" style={{ maxWidth: "65rem" }}>
@@ -1224,6 +1226,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
         </div>
       </div>
     </div>
+    </PageLoader>
   );
 };
 
