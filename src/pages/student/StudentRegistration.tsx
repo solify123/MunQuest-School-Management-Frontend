@@ -1,23 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Header, LoadingSpinner, Avatar } from '../../components/ui';
-import EditIcon from '../../assets/edit_icon.svg';
+import { Header, Avatar } from '../../components/ui';
 import { toast } from 'sonner';
-import { getUserByIdApi, uploadAvatarApi } from '../../apis/Users';
+import { getUserByIdApi } from '../../apis/Users';
 import PageLoader from '../../components/PageLoader';
 
 type Step = 'personal' | 'mun' | 'food' | 'emergency';
 
 const StudentRegistration: React.FC = () => {
   const navigate = useNavigate();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const emergencyDropdownRef = useRef<HTMLDivElement>(null);
 
   // Current step state
   const [currentStep, setCurrentStep] = useState<Step>('personal');
 
   // Form data states
-  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [username, setUsername] = useState<string>('@samm1234');
   const [name, setName] = useState<string>('Sam Morgan Lee');
   const [dateOfBirth, setDateOfBirth] = useState<string>('5 Oct 2008');
@@ -136,26 +133,6 @@ const StudentRegistration: React.FC = () => {
     { id: 'food', name: 'Food Info', active: currentStep === 'food' },
     { id: 'emergency', name: 'Emergency Info', active: currentStep === 'emergency' }
   ];
-
-  // Handle avatar upload
-  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      try {
-        setIsUploadingAvatar(true);
-        const response = await uploadAvatarApi(file);
-        if (response.success) {
-          toast.success('Avatar uploaded successfully');
-        } else {
-          toast.error('Failed to upload avatar: ' + response.message);
-        }
-      } catch (error: any) {
-        toast.error('Failed to upload avatar: ' + error.message);
-      } finally {
-        setIsUploadingAvatar(false);
-      }
-    }
-  };
 
   // Handle continue button
   const handleContinue = () => {
@@ -482,17 +459,11 @@ const StudentRegistration: React.FC = () => {
       {/* Avatar Section */}
       <div className="flex justify-left mb-8">
         <div className="relative">
-          {isUploadingAvatar ? (
-            <div className="w-32 h-32 border-4 border-white shadow-lg rounded-full flex items-center justify-center bg-gray-100">
-              <LoadingSpinner size="large" text="Uploading..." />
-            </div>
-          ) : (
             <Avatar
               size="large"
               className="w-32 h-32 border-4 border-white shadow-lg"
               showBorder={true}
             />
-          )}
         </div>
       </div>
 
@@ -511,7 +482,6 @@ const StudentRegistration: React.FC = () => {
             type="text"
             disabled
             value={username}
-            onChange={(e) => setUsername(e.target.value)}
             className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
             placeholder="Enter username"
           />
