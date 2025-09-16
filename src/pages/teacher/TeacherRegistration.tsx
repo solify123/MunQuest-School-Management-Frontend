@@ -222,22 +222,6 @@ const TeacherRegistration: React.FC = () => {
               showBorder={true}
             />
           )}
-          <button
-            onClick={() => !isUploadingAvatar && fileInputRef.current?.click()}
-            disabled={isUploadingAvatar}
-            className="absolute bottom-0 w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors bg-white shadow-md"
-            style={{ right: '-1.5rem' }}
-          >
-            <img src={EditIcon} alt="Edit Avatar" className="w-4 h-4" />
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleAvatarUpload}
-            disabled={isUploadingAvatar}
-            className="hidden"
-          />
         </div>
       </div>
 
@@ -255,6 +239,7 @@ const TeacherRegistration: React.FC = () => {
           <input
             type="text"
             value={username}
+            disabled={true}
             onChange={(e) => setUsername(e.target.value)}
             className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
             placeholder="Enter username"
@@ -268,8 +253,8 @@ const TeacherRegistration: React.FC = () => {
           <div className="relative">
             <input
               type="text"
+              disabled={true}
               value={name}
-              onChange={(e) => setName(e.target.value)}
               className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent pr-10"
               placeholder="Enter your name"
             />
@@ -282,8 +267,8 @@ const TeacherRegistration: React.FC = () => {
           <div className="relative">
             <input
               type="text"
+              disabled={true}
               value={dateOfBirth}
-              onChange={(e) => setDateOfBirth(e.target.value)}
               className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent pr-10"
               placeholder="Enter date of birth"
             />
@@ -297,7 +282,7 @@ const TeacherRegistration: React.FC = () => {
             {['male', 'female', 'other'].map((option) => (
               <button
                 key={option}
-                onClick={() => setGender(option)}
+                disabled={true}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${gender === option
                   ? 'bg-[#C2A46D] text-white'
                   : ' text-gray-700 hover:bg-gray-300'
@@ -318,8 +303,8 @@ const TeacherRegistration: React.FC = () => {
           <div className="relative">
             <input
               type="text"
+              disabled={true}
               value={placeOfSchool}
-              onChange={(e) => setPlaceOfSchool(e.target.value)}
               className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent pr-10"
               placeholder="Enter place of school"
             />
@@ -332,8 +317,8 @@ const TeacherRegistration: React.FC = () => {
           <div className="relative">
             <input
               type="text"
+              disabled={true}
               value={schoolName}
-              onChange={(e) => setSchoolName(e.target.value)}
               className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent pr-10"
               placeholder="Enter school name"
             />
@@ -346,8 +331,8 @@ const TeacherRegistration: React.FC = () => {
           <div className="relative">
             <input
               type="text"
+              disabled={true}
               value={yearsOfWorkExperience}
-              onChange={(e) => setYearsOfWorkExperience(e.target.value)}
               className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent pr-10"
               placeholder="Enter years of work experience"
             />
@@ -360,8 +345,8 @@ const TeacherRegistration: React.FC = () => {
           <div className="relative">
             <input
               type="email"
+              disabled={true}
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
               className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent pr-10"
               placeholder="Enter email address"
             />
@@ -374,8 +359,8 @@ const TeacherRegistration: React.FC = () => {
           <div className="relative">
             <input
               type="tel"
+              disabled={true}
               value={mobile}
-              onChange={(e) => setMobile(e.target.value)}
               className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent pr-10"
               placeholder="Enter mobile number"
             />

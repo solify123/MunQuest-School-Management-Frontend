@@ -493,22 +493,6 @@ const StudentRegistration: React.FC = () => {
               showBorder={true}
             />
           )}
-          <button
-            onClick={() => !isUploadingAvatar && fileInputRef.current?.click()}
-            disabled={isUploadingAvatar}
-            className="absolute bottom-0 w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors bg-white shadow-md"
-            style={{ right: '-1.5rem' }}
-          >
-            <img src={EditIcon} alt="Edit Avatar" className="w-4 h-4" />
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleAvatarUpload}
-            disabled={isUploadingAvatar}
-            className="hidden"
-          />
         </div>
       </div>
 
