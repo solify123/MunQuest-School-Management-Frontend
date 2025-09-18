@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import PrivateRoute from './components/PrivateRoute';
+import { AppProvider } from './contexts/AppContext';
 import SignUp from './pages/SignUp';
 import Login from './pages/Login';
 import HomePage from './pages/HomePage';
@@ -22,12 +23,15 @@ import StudentDelegatePage from './pages/student/StudentDelegatePage';
 import TeacherRegistration from './pages/teacher/TeacherRegistration';
 import TeacherRegistrationSuccess from './pages/teacher/TeacherRegistrationSuccess';
 import ProfilePage from './pages/ProfilePage';
+import OrganiserDashboard from './pages/OrganiserDashboard';
+import SuperUser from './pages/SuperUser';
 
 function App() {
   return (
-    <Router>
-      <div className="App">
-        <Routes>
+    <AppProvider>
+      <Router>
+        <div className="App">
+          <Routes>
           {/* Public Routes - No authentication required */}
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/signup" element={<SignUp />} />
@@ -41,7 +45,8 @@ function App() {
           <Route path="/event-create" element={<PrivateRoute><EventCreate /></PrivateRoute>} />
           <Route path="/event-create-success" element={<PrivateRoute><EventCreateSuccess /></PrivateRoute>} />
           <Route path="/organiser" element={<PrivateRoute><Organiser /></PrivateRoute>} />
-          <Route path="/organiser/:step" element={<PrivateRoute><Organiser /></PrivateRoute>} />
+          <Route path="/organiser-dashboard/:eventId" element={<PrivateRoute><OrganiserDashboard /></PrivateRoute>} />
+          <Route path="/super-user" element={<PrivateRoute><SuperUser /></PrivateRoute>} />
 
           {/* Student Routes */}
           <Route path="/student-profile" element={<PrivateRoute><StudentProfile /></PrivateRoute>} />
@@ -58,10 +63,11 @@ function App() {
           <Route path="/teacher-registration/:eventId" element={<PrivateRoute><TeacherRegistration /></PrivateRoute>} />
           <Route path="/teacher-registration-success" element={<PrivateRoute><TeacherRegistrationSuccess /></PrivateRoute>} />
           <Route path="/profile-page" element={<PrivateRoute><ProfilePage userType="student" /></PrivateRoute>} />
-        </Routes>
-        <Toaster position="top-right" richColors />
-      </div>
-    </Router>
+          </Routes>
+          <Toaster position="top-right" richColors />
+        </div>
+      </Router>
+    </AppProvider>
   );
 }
 

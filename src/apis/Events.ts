@@ -130,3 +130,76 @@ export const eventRegistratStudentApi = async (eventId: string, munExperience: s
         throw new Error(error.response.data.message);
     }
 }
+
+export const updateEventApi = async (eventId: string, eventName: string, locality: string, school: string, coverImage: string, eventDescription: string, eventStartDate: string, eventEndDate: string, numberOfSeats: string, feesPerDelegate: string, website: string, instagram: string) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.patch(`${backendUrl}/api/v1/events/update-event/${eventId}`, {
+            eventName,
+            locality,
+            school,
+            coverImage,
+            eventDescription,
+            eventStartDate,
+            eventEndDate,
+            numberOfSeats,
+            feesPerDelegate,
+            website,
+            instagram
+        }, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+}
+
+export const getAllEventsApi = async () => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${backendUrl}/api/v1/events/all-events`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+}
+
+export const updateEventStatusApi = async (eventId: string, status: string) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.patch(`${backendUrl}/api/v1/events/update-event-status/${eventId}`,
+            {
+                status
+            },
+            {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+}
+
+export const deleteEventApi = async (eventId: string) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.delete(`${backendUrl}/api/v1/events/delete-event/${eventId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+}

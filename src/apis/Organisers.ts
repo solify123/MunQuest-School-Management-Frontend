@@ -51,3 +51,45 @@ export const verifyOrganiserApi = async () => {
         throw new Error(error.response.data.message);
     }
 }
+
+export const getAllOrganisersApi = async () => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${backendUrl}/api/v1/organisers/all-organisers`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+}
+
+export const updateOrganiserStatusApi = async (organiserId: string, status: string) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.patch(`${backendUrl}/api/v1/organisers/update-organiser-status/${organiserId}`, { status }, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+}
+
+export const deleteOrganiserApi = async (organiserId: string) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.delete(`${backendUrl}/api/v1/organisers/delete-organiser/${organiserId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+}

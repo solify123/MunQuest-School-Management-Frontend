@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Logo, Avatar } from './ui';
 import HomeIcon from '../assets/home_icon.svg';
 import NotificationIcon from '../assets/notification_icon.svg';
 import OrganiserIcon from '../assets/organiser_icon.svg';
-import { getUserType } from '../utils/avatarUtils';
-import { verifyOrganiserApi } from '../apis/Organisers';
+import SuperUserIcon from '../assets/super_user_icon.svg';
+import { useApp } from '../contexts/AppContext';
 import ProfileIcon from '../assets/showprofile_icon.svg';
 import LogoutIcon from '../assets/logout_icon.svg';
 
@@ -20,28 +20,17 @@ const Header: React.FC<HeaderProps> = ({
 }) => {
 
   const navigate = useNavigate();
-
-  const [isOrganiser, setIsOrganiser] = useState<boolean>(false);
-  const checkUserType = async () => {
-    const response = await verifyOrganiserApi()
-    if (response.success) {
-      setIsOrganiser(true);
-    }
-    else {
-      setIsOrganiser(false);
-    }
-  };
-
-  useEffect(() => {
-    checkUserType();
-  }, []);
+  const location = useLocation();
+  const isSuperUserPage = location.pathname === '/super-user';
+  
+  // Use context for global state
+  const { isOrganiser, userType } = useApp();
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const handleProfileClick = async () => {
-    // Check user type and navigate accordingly
-    const userType = await getUserType()
+    // Use userType from context
     if (userType === 'student') {
       navigate('/student-profile-page');
     } else if (userType === 'teacher') {
@@ -59,6 +48,10 @@ const Header: React.FC<HeaderProps> = ({
 
   const handleOrganiserClick = () => {
     navigate('/organiser');
+  };
+
+  const handleSuperUserClick = () => {
+    navigate('/super-user');
   };
 
   const toggleDropdown = () => {
@@ -114,22 +107,35 @@ const Header: React.FC<HeaderProps> = ({
                 <span className="text-xs text-gray-600 font-medium">Home</span>
               </div>
 
-              {/* Notification Icon */}
-              <div className="flex flex-col items-center cursor-pointer">
-                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-1">
-                  <img src={NotificationIcon} alt="Notification" className="w-6 h-6" />
+              {/* Superuser Icon - Only show on super user page */}
+              {isSuperUserPage && (
+                <div className="flex flex-col items-center cursor-pointer">
+                  <div onClick={handleSuperUserClick} className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-1">
+                    <img src={SuperUserIcon} alt="Superuser" className="w-6 h-6" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">Superuser</span>
                 </div>
-                <span className="text-xs text-gray-600 font-medium">Notification</span>
-              </div>
+              )}
 
-              {/* Organiser Icon */}
-              {isOrganiser && <div className="flex flex-col items-center cursor-pointer">
-                <div onClick={handleOrganiserClick} className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-1">
-                  <img src={OrganiserIcon} alt="Organiser" className="w-6 h-6" />
+              {/* Notification Icon - Only show on non-super user pages */}
+              {!isSuperUserPage && (
+                <div className="flex flex-col items-center cursor-pointer">
+                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-1">
+                    <img src={NotificationIcon} alt="Notification" className="w-6 h-6" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">Notification</span>
                 </div>
-                <span className="text-xs text-gray-600 font-medium">Organiser</span>
-              </div>
-              }
+              )}
+
+              {/* Organiser Icon - Only show on non-super user pages */}
+              {!isSuperUserPage && isOrganiser && (
+                <div className="flex flex-col items-center cursor-pointer">
+                  <div onClick={handleOrganiserClick} className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-1">
+                    <img src={OrganiserIcon} alt="Organiser" className="w-6 h-6" />
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium">Organiser</span>
+                </div>
+              )}
 
               {/* Profile Icon with Dropdown */}
               <div className="relative" ref={dropdownRef}>

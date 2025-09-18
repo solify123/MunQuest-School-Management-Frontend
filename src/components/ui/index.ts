@@ -7,3 +7,4 @@ export { default as LoadingSpinner } from './LoadingSpinner';
 export { default as DateRangePicker } from './DateRangePicker';
 export { default as ConfirmationModal } from './ConfirmationModal';
 export { default as Header } from '../Header';
+export * from '../SuperUser';
