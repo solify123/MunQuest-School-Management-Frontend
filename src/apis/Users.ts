@@ -1,9 +1,9 @@
 import axios from 'axios';
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
-export const signupApi = async (email: string, password: string, role: string) => {
+export const signupApi = async (email: string, role: string) => {
     try {
-        const response = await axios.post(`${backendUrl}/api/v1/users/register`, { email, password, role });
+        const response = await axios.post(`${backendUrl}/api/v1/users/register`, { email, role });
         return response.data;
     } catch (error: any) {
         throw new Error(error.response.data.message);

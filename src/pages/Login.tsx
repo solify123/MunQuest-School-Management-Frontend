@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button, Input, PasswordInput, Logo } from '../components/ui';
-  import type { AuthFormData, CustomJwtPayload } from '../types';
+  import type { AuthFormData } from '../types';
 import { toast } from 'sonner';
-import { loginApi } from '../apis/Users';
+import { supabaseSignIn } from '../apis/SupabaseAuth';
 import { checkUserProfileExists } from '../utils/profileCheck';
-import { jwtDecode } from 'jwt-decode';
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -50,39 +49,48 @@ const Login: React.FC = () => {
         return;
       }
 
-      const loginResponse = await loginApi(email, password);
+      const loginResponse = await supabaseSignIn(email, password);
 
       if (!loginResponse.success) {
-        throw new Error("Invalid email or password");
-      } else {
-        toast.success('Login successful');
-        localStorage.setItem('token', loginResponse.token);
-        const decodedToken = jwtDecode<CustomJwtPayload>(loginResponse.token);
-        
-        // Check if user already has a profile
-        const hasProfile = await checkUserProfileExists();
-        
-        if (decodedToken!.role === 'student') {
-          if (hasProfile) {
-            navigate('/student-home');
-          } else {
-            navigate('/student-profile');
-          }
-        } else {
-          if (hasProfile) {
-            navigate('/teacher-home');
-          } else {
-            navigate('/teacher-profile');
-          }
-        }
+        throw new Error(loginResponse.message);
       }
 
+      toast.success('Login successful');
+      console.log(loginResponse.data);
+      // Store Supabase JWT token in localStorage
+      if (loginResponse.data?.session?.access_token) {
+        localStorage.setItem('token', loginResponse.data.session.access_token);
+        console.log('Supabase token stored:', loginResponse.data.session.access_token);
+        console.log('Token in localStorage after storage:', localStorage.getItem('token'));
+      } else {
+        console.error('No access token in Supabase response:', loginResponse.data);
+      }
+      
+      // Get user role from backend response
+      const userRole = loginResponse.data?.user?.user_metadata?.role || 'student';
+      
+      // Check if user already has a profile
+      const hasProfile = await checkUserProfileExists();
+      
+      if (userRole === 'student') {
+        if (hasProfile) {
+          navigate('/student-home');
+        } else {
+          navigate('/student-profile');
+        }
+      } else {
+        if (hasProfile) {
+          navigate('/teacher-home');
+        } else {
+          navigate('/teacher-profile');
+        }
+      }
     } catch (error: any) {
       toast.error(error.message);
     } finally {
       setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-[#F7F7F7] flex items-center justify-center p-6">

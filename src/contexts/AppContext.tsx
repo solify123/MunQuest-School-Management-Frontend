@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { verifyOrganiserApi } from '../apis/Organisers';
-import { getUserType } from '../utils/avatarUtils';
 import { getAllUsersApi } from '../apis/Users';
 import { getAllOrganisersApi } from '../apis/Organisers';
-import { getAllEventsApi } from '../apis/Events';
+// import { getAllEventsApi } from '../apis/Events';
+import { useSupabaseAuth } from './SupabaseAuthContext';
 
 // Define the context type
 interface AppContextType {
@@ -45,6 +45,9 @@ interface AppProviderProps {
 }
 
 export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
+  // Get Supabase auth state
+  const { user: supabaseUser, session, loading: authLoading } = useSupabaseAuth();
+  
   // User state
   const [userType, setUserType] = useState<string | null>(null);
   const [isOrganiser, setIsOrganiser] = useState<boolean>(false);
@@ -67,17 +70,24 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
 
-      const userTypeData = await getUserType();
-      setUserType(userTypeData);
+      // Get user type from Supabase user metadata
+      if (supabaseUser?.user_metadata?.role) {
+        setUserType(supabaseUser.user_metadata.role);
+      } else {
+        setUserType('student'); // default
+      }
 
-      const organiserResponse = await verifyOrganiserApi();
-      setIsOrganiser(organiserResponse.success);
+      // Only make API calls if user is authenticated
+      if (session?.access_token) {
+        const organiserResponse = await verifyOrganiserApi();
+        setIsOrganiser(organiserResponse.success);
 
-      const allUsersResponse = await getAllUsersApi();
-      setAllUsers(allUsersResponse.data);
+        const allUsersResponse = await getAllUsersApi();
+        setAllUsers(allUsersResponse.data);
 
-      const allOrganisersResponse = await getAllOrganisersApi();
-      setAllOrganisers(allOrganisersResponse.data);
+        const allOrganisersResponse = await getAllOrganisersApi();
+        setAllOrganisers(allOrganisersResponse.data);
+      }
     } catch (error) {
       console.error('Error refreshing user data:', error);
     } finally {
@@ -86,8 +96,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   };
 
   const refreshEventsData = async () => {
-    const allEventsResponse = await getAllEventsApi();
-    setAllEvents(allEventsResponse.data);
+    // const allEventsResponse = await getAllEventsApi();
+    // setAllEvents(allEventsResponse.data);
   };
 
   // Update dashboard statistics
@@ -98,11 +108,13 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }));
   };
 
-  // Initialize user data on mount
+  // Initialize user data when Supabase auth state changes
   useEffect(() => {
-    refreshUserData();
-    refreshEventsData();
-  }, []);
+    if (!authLoading) {
+      refreshUserData();
+      refreshEventsData();
+    }
+  }, [supabaseUser, session, authLoading]);
 
   const value: AppContextType = {
     userType,

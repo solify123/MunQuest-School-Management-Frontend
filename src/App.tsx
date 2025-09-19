@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Toaster } from 'sonner';
 import PrivateRoute from './components/PrivateRoute';
 import { AppProvider } from './contexts/AppContext';
+import { SupabaseAuthProvider } from './contexts/SupabaseAuthContext';
 import SignUp from './pages/SignUp';
 import Login from './pages/Login';
 import HomePage from './pages/HomePage';
@@ -28,8 +29,9 @@ import SuperUser from './pages/SuperUser';
 
 function App() {
   return (
-    <AppProvider>
-      <Router>
+    <SupabaseAuthProvider>
+      <AppProvider>
+        <Router>
         <div className="App">
           <Routes>
           {/* Public Routes - No authentication required */}
@@ -66,8 +68,9 @@ function App() {
           </Routes>
           <Toaster position="top-right" richColors />
         </div>
-      </Router>
-    </AppProvider>
+        </Router>
+      </AppProvider>
+    </SupabaseAuthProvider>
   );
 }
 

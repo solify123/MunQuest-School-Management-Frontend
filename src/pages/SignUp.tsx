@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button, Input, PasswordInput, Logo } from '../components/ui';
 import type { AuthFormData } from '../types';
-import { signupApi } from '../apis/Users';
+import { supabaseSignUp } from '../apis/SupabaseAuth';
 import { toast } from 'sonner';
+import { signupApi } from '../apis/Users';
 
 const SignUp: React.FC = () => {
   const navigate = useNavigate();
@@ -57,12 +58,17 @@ const SignUp: React.FC = () => {
         return;
       }
 
-      const signupResponse = await signupApi(email, password, role);
+      const signupResponse = await supabaseSignUp(email, password, role);
 
+      console.log(signupResponse);
       if (!signupResponse.success) {
-        throw new Error("User with this email already exists");
+        throw new Error(signupResponse.message);
       } else {
-        toast.success('Sign up successful');
+        const signupUserTableResponse = await signupApi(email, role);
+        if (!signupUserTableResponse.success) {
+          throw new Error(signupUserTableResponse.message);
+        }
+        toast.success(signupResponse.message);
         navigate('/login');
       }
     } catch (error: any) {
