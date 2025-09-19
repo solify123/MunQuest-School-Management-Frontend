@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { updateOrganiserStatusApi, deleteOrganiserApi } from '../../apis/Organisers';
+import React, { useState, useEffect, useRef } from 'react';
+import { updateOrganiserStatusApi, deleteOrganiserApi, addOrganiserBySuperUserApi } from '../../apis/Organisers';
 import { toast } from 'sonner';
 import { useApp } from '../../contexts/AppContext';
+import saveIcon from '../../assets/save_icon.svg';
 
 interface Student {
   id: string;
@@ -20,17 +21,183 @@ interface Student {
 interface OrganisersTableProps {
   organisers: Student[];
   onAction: (action: string, studentId: string) => void;
+  organiserType?: 'students' | 'teachers' | 'all';
 }
 
-const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction }) => {
-
-  console.log(organisers, "==========");
+const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction, organiserType = 'all' }) => {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [updatingStudentId, setUpdatingStudentId] = useState<string | null>(null);
-  const { refreshUserData } = useApp();
+  const [isAddingNew, setIsAddingNew] = useState<boolean>(false);
+  const [newOrganiser, setNewOrganiser] = useState({
+    student_id: '',
+    username: '',
+    fullname: '',
+    locality: '',
+    school: '',
+    role: '',
+    evidence: '',
+    status: 'pending'
+  });
+  const [userFound, setUserFound] = useState<boolean | null>(null);
+  const [showUsernameDropdown, setShowUsernameDropdown] = useState<boolean>(false);
+  const [filteredUsers, setFilteredUsers] = useState<any[]>([]);
+  const usernameDropdownRef = useRef<HTMLDivElement>(null);
+  const { refreshUserData, allUsers } = useApp();
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (usernameDropdownRef.current && !usernameDropdownRef.current.contains(event.target as Node)) {
+        setShowUsernameDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleDropdownToggle = (studentId: string) => {
     setActiveDropdown(activeDropdown === studentId ? null : studentId);
+  };
+
+  const handleAddNew = () => {
+    setIsAddingNew(true);
+    setUserFound(null);
+    setShowUsernameDropdown(false);
+    setFilteredUsers([]);
+    setNewOrganiser({
+      student_id: '',
+      username: '',
+      fullname: '',
+      locality: '',
+      school: '',
+      role: '',
+      evidence: '',
+      status: 'pending'
+    });
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    setNewOrganiser(prev => ({
+      ...prev,
+      [field]: value
+    }));
+
+    // If username is being changed, show dropdown and filter users
+    if (field === 'username') {
+      if (value.trim()) {
+        setShowUsernameDropdown(true);
+        filterUsersByUsername(value.trim());
+      } else {
+        setShowUsernameDropdown(false);
+        setUserFound(null);
+        setFilteredUsers([]);
+        // Clear fields if username is empty
+        setNewOrganiser(prev => ({
+          ...prev,
+          student_id: '',
+          fullname: '',
+          locality: '',
+          school: '',
+          role: '',
+          evidence: ''
+        }));
+      }
+    }
+  };
+  // Function to filter users by username
+  const filterUsersByUsername = (username: string) => {
+    // Get all user IDs that are already organisers
+    // The organisers data has users.id field, not just id
+    const organiserUserIds = new Set(organisers.map((org: any) => org.users?.id || org.id));
+    
+    // Filter users who are not already organisers and match the username
+    // Also filter by role based on the organiser type context
+    const filtered = allUsers.filter(user => {
+      const matchesUsername = user.username?.toLowerCase().includes(username.toLowerCase());
+      const notAlreadyOrganiser = !organiserUserIds.has(user.id);
+      const matchesRole = organiserType === 'all' || user.role === organiserType.slice(0, -1); // 'students' -> 'student', 'teachers' -> 'teacher'
+      
+      return matchesUsername && notAlreadyOrganiser && matchesRole;
+    });
+
+    // Debug log to see user data structure
+    if (filtered.length > 0) {
+      console.log('Filtered user sample:', filtered[0]);
+      console.log('Available fields:', Object.keys(filtered[0]));
+    }
+
+    setFilteredUsers(filtered);
+  };
+
+  // Function to handle username selection from dropdown
+  const handleUsernameSelect = (selectedUser: any) => {
+
+    setNewOrganiser(prev => ({
+      ...prev,
+      username: selectedUser.username || '',
+      student_id: selectedUser.id || '',
+      fullname: selectedUser.fullname || '',
+      locality: selectedUser.school_location || selectedUser.locality || '',
+      school: selectedUser.school_name || selectedUser.schoolName || '',
+      role: selectedUser.role_in_event || selectedUser.role || '',
+      evidence: selectedUser.evidence || 'Internal'
+    }));
+
+    setUserFound(true);
+    setShowUsernameDropdown(false);
+    setFilteredUsers([]);
+  };
+
+
+  const handleSaveNew = async () => {
+    try {
+      // Validate required fields
+      if (!newOrganiser.username || !newOrganiser.fullname || !newOrganiser.school) {
+        toast.error('Please fill in all required fields (Username, Name, School)');
+        return;
+      }
+
+      const response = await addOrganiserBySuperUserApi(
+        newOrganiser.student_id,
+        newOrganiser.school,
+        newOrganiser.locality,
+        newOrganiser.role,
+        newOrganiser.evidence,
+        'pending'
+      );
+
+      if (response.success) {
+        toast.success('New organiser added successfully!');
+        setIsAddingNew(false);
+        setUserFound(null);
+        setShowUsernameDropdown(false);
+        setFilteredUsers([]);
+        setNewOrganiser({
+          student_id: '',
+          username: '',
+          fullname: '',
+          locality: '',
+          school: '',
+          role: '',
+          evidence: '',
+          status: 'pending'
+        });
+
+        // Refresh data to update both organisers and users lists
+        await refreshUserData();
+        
+        // Debug: Check if the user was properly excluded after refresh
+        console.log('After refresh - checking if user is excluded from dropdown');
+      } else {
+        toast.error(response.message || 'Failed to save new organiser');
+      }
+    } catch (error: any) {
+      console.error('Error saving new organiser:', error);
+      toast.error(error.message || 'Failed to save new organiser');
+    }
   };
 
   const handleAction = async (action: string, studentId: string) => {
@@ -86,7 +253,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction 
     <div>
       {/* Header Row */}
       <div className="grid grid-cols-11 gap-2 mb-2">
-        {['Student ID', 'Username', 'Name', 'Academic Level', 'School', 'Role in Event', 'Evidence', 'Date Received', 'Date Actioned', 'Status', ' '].map((header, index) => (
+        {['Student ID', 'Username', 'Name', 'Locality', 'School', 'Role in Event', 'Evidence', 'Date Received', 'Date Actioned', 'Status', ' '].map((header, index) => (
           header === ' ' ? (
             <div key={header}>
             </div>
@@ -134,9 +301,9 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction 
               {student?.users.fullname || 'N/A'}
             </div>
 
-            {/* Academic Level */}
+            {/* Locality */}
             <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-              {student?.users.academic_level || 'N/A'}
+              {student?.users.school_location || 'N/A'}
             </div>
 
             {/* School */}
@@ -152,17 +319,22 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction 
             {/* Evidence */}
             <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
               {student?.evidence ? (
-                <div className="flex items-center justify-center">
-                  <button
-                    onClick={() => window.open(student.evidence, '_blank')}
-                    className="flex items-center justify-center p-1 rounded hover:bg-gray-100 transition-colors duration-200"
-                    title="Click to open document"
-                  >Document
-                    <svg className="w-5 h-5 text-blue-600 hover:text-blue-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  </button>
-                </div>
+                /^https?:\/\//.test(student.evidence) ? (
+                  <div className="flex items-center justify-center">
+                    <button
+                      onClick={() => window.open(student.evidence, '_blank')}
+                      className="flex items-center justify-center p-1 rounded hover:bg-gray-100 transition-colors duration-200"
+                      title="Click to open document"
+                    >
+                      Document
+                      <svg className="w-5 h-5 text-blue-600 hover:text-blue-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </button>
+                  </div>
+                ) : (
+                  <span>{student.evidence}</span>
+                )
               ) : (
                 'N/A'
               )}
@@ -186,7 +358,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction 
                   <span className="text-gray-500">Updating...</span>
                 </div>
               ) : (
-                <span className={`font-medium ${getStatusColor(student?.users.status)}`}>
+                <span className={`font-medium ${getStatusColor(student?.status)}`}>
                   {student?.status || 'N/A'}
                 </span>
               )}
@@ -296,16 +468,187 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction 
         ))
       )}
 
+      {/* New Organiser Input Row */}
+      {isAddingNew && (
+        <div className="grid grid-cols-11 gap-2 mb-2">
+          {/* Student ID */}
+          <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
+            <input
+              type="text"
+              value={newOrganiser.student_id}
+              placeholder="Auto populated"
+              className="w-full border-none outline-none text-sm"
+              disabled
+            />
+          </div>
+
+          {/* Username */}
+          <div
+            ref={usernameDropdownRef}
+            className={`px-3 py-2 text-sm rounded-md border relative ${userFound === true ? 'bg-green-50 border-green-300' :
+              userFound === false ? 'bg-red-50 border-red-300' :
+                'bg-white border-gray-200'
+              }`}
+          >
+            <div className="flex items-center">
+              <input
+                type="text"
+                value={newOrganiser.username}
+                onChange={(e) => handleInputChange('username', e.target.value)}
+                onFocus={() => {
+                  if (newOrganiser.username.trim()) {
+                    setShowUsernameDropdown(true);
+                    filterUsersByUsername(newOrganiser.username.trim());
+                  }
+                }}
+                placeholder="Enter username to populate fields"
+                className="w-full border-none outline-none text-sm bg-transparent"
+                autoComplete="off"
+              />
+              {userFound === true && (
+                <svg className="w-4 h-4 text-green-600 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+              {userFound === false && (
+                <svg className="w-4 h-4 text-red-600 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              )}
+            </div>
+
+            {/* Username Dropdown */}
+            {showUsernameDropdown && filteredUsers.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
+                {filteredUsers.map((user, index) => (
+                  <div
+                    key={user.id || index}
+                    onClick={() => handleUsernameSelect(user)}
+                    className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm border-b border-gray-100 last:border-b-0"
+                  >
+                    <div className="font-medium text-gray-900">{user.username}</div>
+                    <div className="text-xs text-gray-500">{user.fullname}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {showUsernameDropdown && filteredUsers.length === 0 && newOrganiser.username.trim() && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50">
+                <div className="px-3 py-2 text-sm text-gray-500">
+                  No available users found
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Name */}
+          <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
+            <input
+              type="text"
+              value={newOrganiser.fullname}
+              disabled
+              placeholder="Auto populated"
+              className="w-full border-none outline-none text-sm"
+            />
+          </div>
+
+          {/* Academic Level */}
+          <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
+            <input
+              type="text"
+              value={newOrganiser.locality}
+              disabled
+              placeholder="Auto populated"
+              className="w-full border-none outline-none text-sm"
+            />
+          </div>
+
+          {/* School */}
+          <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
+            <input
+              type="text"
+              value={newOrganiser.school}
+              disabled
+              placeholder="Auto populated"
+              className="w-full border-none outline-none text-sm"
+            />
+          </div>
+
+          {/* Role in Event */}
+          <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
+            <input
+              type="text"
+              value={newOrganiser.role}
+              disabled
+              placeholder="Auto populated"
+              className="w-full border-none outline-none text-sm"
+            />
+          </div>
+
+          {/* Evidence */}
+          <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
+            <input
+              type="text"
+              value={newOrganiser.evidence}
+              disabled
+              placeholder="Auto populated"
+              className="w-full border-none outline-none text-sm"
+            />
+          </div>
+
+          {/* Date Received */}
+          <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
+            <input
+              type="text"
+              value={new Date().toISOString().split('T')[0]}
+              className="w-full border-none outline-none text-sm"
+              disabled
+            />
+          </div>
+
+          {/* Date Actioned */}
+          <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
+            <input
+              type="text"
+              value=""
+              className="w-full border-none outline-none text-sm"
+              disabled
+            />
+          </div>
+
+          {/* Status */}
+          <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
+            <span className="font-medium text-orange-500">Pending</span>
+          </div>
+
+          {/* Actions */}
+          <div className="px-3 py-2 text-sm font-medium relative">
+            <div className="flex space-x-2">
+              <img src={saveIcon} alt="Save" className="w-4 h-4" />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Add and Save Buttons */}
       <div className="flex justify-start space-x-4 mt-6">
         <button
-          className="bg-[#C2A46D] text-white font-medium rounded-[30px] w-[105px] h-[44px] px-[10px] py-[10px] mr-[10px] opacity-100 transition-colors duration-200 hover:bg-[#9a7849]"
+          onClick={handleAddNew}
+          disabled={isAddingNew}
+          className={`bg-[#C2A46D] text-white font-medium rounded-[30px] w-[105px] h-[44px] px-[10px] py-[10px] mr-[10px] opacity-100 transition-colors duration-200 opacity-50 cursor-not-allowed'
+              : 'hover:bg-[#9a7849]'
+            }`}
           style={{ top: '1025px', left: '385px', transform: 'rotate(0deg)' }}
         >
           Add
         </button>
         <button
-          className="bg-[#C2A46D] text-white font-medium rounded-[30px] w-[105px] h-[44px] px-[10px] py-[10px] opacity-100 transition-colors duration-200 hover:bg-[#b89a6a]"
+          onClick={handleSaveNew}
+          disabled={!isAddingNew}
+          className={`bg-[#C2A46D] text-white font-medium rounded-[30px] w-[105px] h-[44px] px-[10px] py-[10px] opacity-100 transition-colors duration-200 
+              opacity-50 cursor-not-allowed hover:bg-[#b89a6a]'
+            }`}
           style={{ top: '1025px', left: '385px', transform: 'rotate(0deg)' }}
         >
           Save

@@ -93,3 +93,26 @@ export const deleteOrganiserApi = async (organiserId: string) => {
         throw new Error(error.response.data.message);
     }
 }
+
+export const addOrganiserBySuperUserApi = async (userId: string, schoolName: string, locality: string, role: string, evidence: string, status: string) => {
+    try {
+        const token = localStorage.getItem('token');
+
+
+        const response = await axios.post(`${backendUrl}/api/v1/organisers/add-organiser-by-super-user`, {
+            userId,
+            schoolName,
+            locality,
+            role,
+            evidence,
+            status
+        }, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+}   

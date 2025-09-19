@@ -2,7 +2,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { verifyOrganiserApi } from '../apis/Organisers';
 import { getUserType } from '../utils/avatarUtils';
-import { getAllOrganisersApi, getAllUsersApi } from '../apis/Users';
+import { getAllUsersApi } from '../apis/Users';
+import { getAllOrganisersApi } from '../apis/Organisers';
 import { getAllEventsApi } from '../apis/Events';
 
 // Define the context type

@@ -96,6 +96,7 @@ const OrganisersPage: React.FC<OrganisersPageProps> = ({ type = 'organisers' }) 
       <OrganisersTable
         organisers={filteredData}
         onAction={handleOrganiserAction}
+        organiserType={type === 'students' ? 'students' : type === 'teachers' ? 'teachers' : 'all'}
       />
     </div>
   );
