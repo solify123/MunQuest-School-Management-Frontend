@@ -28,6 +28,8 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [updatingOrganiserId, setUpdatingOrganiserId] = useState<string | null>(null);
   const [isAddingNew, setIsAddingNew] = useState<boolean>(false);
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [filteredOrganisers, setFilteredOrganisers] = useState<any[]>([]);
   const [newOrganiser, setNewOrganiser] = useState({
     organiser_id: '',
     username: '',
@@ -57,6 +59,31 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  // Filter organisers based on search term
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setFilteredOrganisers(organisers);
+    } else {
+      const filtered = organisers.filter((organiser: any) => {
+        const searchLower = searchTerm.toLowerCase();
+        const username = organiser?.users?.username || '';
+        const fullname = organiser?.users?.fullname || '';
+        const schoolLocation = organiser?.users?.school_location || '';
+        const schoolName = organiser?.school || '';
+        const role = organiser?.role || '';
+
+        return (
+          username.toLowerCase().includes(searchLower) ||
+          fullname.toLowerCase().includes(searchLower) ||
+          schoolLocation.toLowerCase().includes(searchLower) ||
+          schoolName.toLowerCase().includes(searchLower) ||
+          role.toLowerCase().includes(searchLower)
+        );
+      });
+      setFilteredOrganisers(filtered);
+    }
+  }, [searchTerm, organisers]);
 
   const handleDropdownToggle = (organiserId: string) => {
     setActiveDropdown(activeDropdown === organiserId ? null : organiserId);
@@ -244,6 +271,39 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
 
   return (
     <div>
+      {/* Search Input */}
+      <div className="mb-4">
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search by Username, Name, School Location, School Name, or Role..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full px-4 py-2 pl-10 pr-4 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C2A46D] focus:border-transparent"
+          />
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              className="absolute inset-y-0 right-0 pr-3 flex items-center"
+            >
+              <svg className="h-4 w-4 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
+        {searchTerm && (
+          <div className="mt-2 text-sm text-gray-600">
+            Showing {filteredOrganisers.length} of {organisers.length} organisers
+          </div>
+        )}
+      </div>
+
       {/* Header Row */}
       <div className="grid grid-cols-11 gap-2 mb-2">
         {['Organiser ID', 'Username', 'Name', 'Locality', 'School', 'Role in Event', 'Evidence', 'Date Received', 'Date Actioned', 'Status', ' '].map((header, index) => (
@@ -272,12 +332,12 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
       </div>
 
       {/* Data Rows */}
-      {organisers.length === 0 ? (
+      {filteredOrganisers.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
-          No organisers found
+          {searchTerm ? 'No organisers found matching your search' : 'No organisers found'}
         </div>
       ) : (
-        organisers.map((organiser: any) => (
+        filteredOrganisers.map((organiser: any) => (
           <div key={organiser?.id || Math.random()} className="grid grid-cols-11 gap-2 mb-2">
             {/* Student ID */}
             <div className="bg-white px-3 py-2 text-sm font-medium text-gray-900 rounded-md border border-gray-200">
