@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { supabaseSignIn } from '../apis/SupabaseAuth';
 import { checkUserProfileExists } from '../utils/profileCheck';
 import { getUserIdByEmailApi } from '../apis/Users';
+import { verifyOrganiserApi } from '../apis/Organisers';
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -59,6 +60,10 @@ const Login: React.FC = () => {
       if (getUserIdByEmailResponse.success) {
         localStorage.setItem('userId', getUserIdByEmailResponse.user.id);
         localStorage.setItem('userRole', getUserIdByEmailResponse.user.role);
+        const organiserResponse = await verifyOrganiserApi();
+        if (organiserResponse.success) {
+          localStorage.setItem('orgainiserId', organiserResponse.data.id);
+        }
       }
       else {
         throw new Error(getUserIdByEmailResponse.message);
@@ -72,9 +77,13 @@ const Login: React.FC = () => {
       }
 
       const userRole = localStorage.getItem('userRole') || 'student';
+      const organiserId = localStorage.getItem('orgainiserId');
       const hasProfile = await checkUserProfileExists();
 
-      if (userRole === 'student') {
+      // Check if user is an organiser first
+      if (organiserId) {
+        navigate('/organiser');
+      } else if (userRole === 'student') {
         if (hasProfile) {
           navigate('/student-home');
         } else {

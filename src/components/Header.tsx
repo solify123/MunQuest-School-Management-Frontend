@@ -25,10 +25,18 @@ const Header: React.FC<HeaderProps> = ({
   const isSuperUserPage = location.pathname === '/super-user';
 
   // Use context for global state
-  const { isOrganiser, userType } = useApp();
+  const { userType } = useApp();
 
+  // Check if user is an organiser by checking localStorage
+  const [isOrganiser, setIsOrganiser] = useState<boolean>(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Update organiser status based on localStorage
+  useEffect(() => {
+    const organiserId = localStorage.getItem('orgainiserId');
+    setIsOrganiser(!!organiserId);
+  }, []);
 
   const handleProfileClick = async () => {
     // Use userType from context
@@ -44,7 +52,13 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   const handleHomeClick = () => {
-    navigate('/home');
+    // Check if user is an organiser
+    const organiserId = localStorage.getItem('orgainiserId');
+    if (organiserId) {
+      navigate('/organiser');
+    } else {
+      navigate('/home');
+    }
   };
 
   const handleOrganiserClick = () => {
@@ -72,6 +86,7 @@ const Header: React.FC<HeaderProps> = ({
     localStorage.removeItem('userId');
     localStorage.removeItem('userRole');
     localStorage.removeItem('orgainiserId');
+    setIsOrganiser(false); // Update organiser status
     navigate('/login');
   };
 

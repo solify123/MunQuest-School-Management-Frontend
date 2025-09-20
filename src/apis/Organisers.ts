@@ -49,6 +49,7 @@ export const verifyOrganiserApi = async () => {
             }
         });
         return response.data;
+
     } catch (error: any) {
         throw new Error(error.response.data.message);
     }

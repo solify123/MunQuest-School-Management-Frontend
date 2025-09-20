@@ -5,13 +5,73 @@ import MasterlistsNavigation from '../components/SuperUser/MasterlistsNavigation
 import EventsPage from '../components/SuperUser/EventsPage';
 import OrganisersPage from '../components/SuperUser/OrganisersPage';
 import { useApp } from '../contexts/AppContext';
+// import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 
 const SuperUser: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
+  // const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
+  
+  // Get auth context
+  // const { user, loading: authLoading } = useSupabaseAuth();
   
   // Use context for dashboard statistics
   const { allUsers, allOrganisers } = useApp();
-  // Convert context stats to display format
+
+  // Debug logging
+  console.log('SuperUser - allUsers:', allUsers);
+  console.log('SuperUser - allOrganisers:', allOrganisers);
+
+  // Check if user is authorized to access superuser page
+  // useEffect(() => {
+  //   if (!authLoading) {
+  //     if (!user) {
+  //       setIsAuthorized(false);
+  //       return;
+  //     }
+
+  //     // Check user role from localStorage (set during login)
+  //     const userRole = localStorage.getItem('userRole');
+  //     const isSuperUser = userRole === 'super_user' || user?.user_metadata?.role === 'super_user';
+      
+  //     setIsAuthorized(isSuperUser);
+  //   }
+  // }, [user, authLoading]);
+
+  // // Show loading while checking authorization
+  // if (authLoading || isAuthorized === null) {
+  //   return (
+  //     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+  //       <div className="text-center">
+  //         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+  //         <p className="text-gray-600">Checking authorization...</p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
+
+  // // Show access denied if not authorized
+  // if (!isAuthorized) {
+  //   return (
+  //     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+  //       <div className="text-center">
+  //         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md mx-auto">
+  //           <div className="text-red-500 text-6xl mb-4">🚫</div>
+  //           <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
+  //           <p className="text-gray-600 mb-6">
+  //             You don't have permission to access the Super User dashboard.
+  //           </p>
+  //           <button
+  //             onClick={() => window.history.back()}
+  //             className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+  //           >
+  //             Go Back
+  //           </button>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   );
+  // }
+
   const statsDisplay = [
     { title: 'Users', value: allUsers.length.toString() },
     { title: 'Students', value: allUsers.filter(user => user.role === 'student').length.toString() },

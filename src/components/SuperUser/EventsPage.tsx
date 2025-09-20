@@ -8,9 +8,6 @@ const EventsPage: React.FC = () => {
 
   // Filter events based on search term
   const filteredEvents = useMemo(() => {
-    console.log("EventsPage: allEvents received", allEvents);
-    console.log("EventsPage: allEvents length", allEvents?.length);
-    
     if (!allEvents || allEvents.length === 0) {
       console.log("EventsPage: No events found or empty array");
       return [];
@@ -21,8 +18,6 @@ const EventsPage: React.FC = () => {
       return allEvents;
     }
 
-    console.log("EventsPage: Filtering events with search term:", searchTerm);
-    
     const searchLower = searchTerm.toLowerCase();
     return allEvents.filter((event) => {
       const name = event?.name?.toLowerCase() || '';

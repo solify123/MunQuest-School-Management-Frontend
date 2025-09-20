@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
-import { verifyOrganiserApi } from '../apis/Organisers';
 import { getAllUsersApi } from '../apis/Users';
 import { getAllOrganisersApi } from '../apis/Organisers';
 import { getAllLocalitiesApi } from '../apis/localities';
@@ -94,15 +93,17 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
       // Only make API calls if user is authenticated
       if (session?.access_token) {
-        const organiserResponse = await verifyOrganiserApi();
-        setIsOrganiser(organiserResponse.success);
-        localStorage.setItem('orgainiserId', organiserResponse.data.id);
-
+        console.log('AppContext - Loading data for authenticated user');
+        // Load data for all authenticated users (since SuperUser page is now accessible to all)
         const allUsersResponse = await getAllUsersApi();
+        console.log('AppContext - allUsersResponse:', allUsersResponse);
         setAllUsers(allUsersResponse.data);
 
         const allOrganisersResponse = await getAllOrganisersApi();
+        console.log('AppContext - allOrganisersResponse:', allOrganisersResponse);
         setAllOrganisers(allOrganisersResponse.data);
+      } else {
+        console.log('AppContext - No session access token, not loading data');
       }
     } catch (error) {
       console.error('Error refreshing user data:', error);
@@ -114,7 +115,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const refreshEventsData = useCallback(async () => {
     try {
       const allEventsResponse = await getAllEventsApi();
-      console.log("AppContext: allEventsResponse", allEventsResponse);
       setAllEvents(allEventsResponse.data);
     } catch (error) {
       console.error('Error refreshing events data:', error);
@@ -124,7 +124,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const refreshLocalitiesData = useCallback(async () => {
     try {
       const allLocalitiesResponse = await getAllLocalitiesApi();
-      console.log("AppContext: allLocalitiesResponse", allLocalitiesResponse);
       setAllLocalities(allLocalitiesResponse.data);
     } catch (error) {
       console.error('Error refreshing localities data:', error);

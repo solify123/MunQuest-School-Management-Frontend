@@ -4,9 +4,9 @@ import { toast } from 'sonner';
 import { useApp } from '../../contexts/AppContext';
 import saveIcon from '../../assets/save_icon.svg';
 
-interface Student {
+interface Organiser {
   id: string;
-  student_id: string;
+  organiser_id: string;
   username: string;
   name: string;
   academic_level: string;
@@ -19,17 +19,17 @@ interface Student {
 }
 
 interface OrganisersTableProps {
-  organisers: Student[];
-  onAction: (action: string, studentId: string) => void;
+  organisers: Organiser[];
+  onAction: (action: string, organiserId: string) => void;
   organiserType?: 'students' | 'teachers' | 'all';
 }
 
 const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction, organiserType = 'all' }) => {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-  const [updatingStudentId, setUpdatingStudentId] = useState<string | null>(null);
+  const [updatingOrganiserId, setUpdatingOrganiserId] = useState<string | null>(null);
   const [isAddingNew, setIsAddingNew] = useState<boolean>(false);
   const [newOrganiser, setNewOrganiser] = useState({
-    student_id: '',
+    organiser_id: '',
     username: '',
     fullname: '',
     locality: '',
@@ -58,8 +58,8 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
     };
   }, []);
 
-  const handleDropdownToggle = (studentId: string) => {
-    setActiveDropdown(activeDropdown === studentId ? null : studentId);
+  const handleDropdownToggle = (organiserId: string) => {
+    setActiveDropdown(activeDropdown === organiserId ? null : organiserId);
   };
 
   const handleAddNew = () => {
@@ -68,7 +68,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
     setShowUsernameDropdown(false);
     setFilteredUsers([]);
     setNewOrganiser({
-      student_id: '',
+      organiser_id: '',
       username: '',
       fullname: '',
       locality: '',
@@ -97,7 +97,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
         // Clear fields if username is empty
         setNewOrganiser(prev => ({
           ...prev,
-          student_id: '',
+          organiser_id: '',
           fullname: '',
           locality: '',
           school: '',
@@ -131,7 +131,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
     setNewOrganiser(prev => ({
       ...prev,
       username: selectedUser.username || '',
-      student_id: selectedUser.id || '',
+      organiser_id: selectedUser.id || '',
       fullname: selectedUser.fullname || '',
       locality: selectedUser.school_location || selectedUser.locality || '',
       school: selectedUser.school_name || selectedUser.schoolName || '',
@@ -154,7 +154,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
       }
 
       const response = await addOrganiserBySuperUserApi(
-        newOrganiser.student_id,
+        newOrganiser.organiser_id,
         newOrganiser.school,
         newOrganiser.locality,
         newOrganiser.role,
@@ -169,7 +169,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
         setShowUsernameDropdown(false);
         setFilteredUsers([]);
         setNewOrganiser({
-          student_id: '',
+          organiser_id: '',
           username: '',
           fullname: '',
           locality: '',
@@ -193,11 +193,11 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
     }
   };
 
-  const handleAction = async (action: string, studentId: string) => {
-    setUpdatingStudentId(studentId);
+  const handleAction = async (action: string, organiserId: string) => {
+    setUpdatingOrganiserId(organiserId);
     try {
       if (action === 'delete') {
-        const response = await deleteOrganiserApi(studentId);
+        const response = await deleteOrganiserApi(organiserId);
         if (response.success) {
           toast.success(response.message);
           await refreshUserData();
@@ -205,7 +205,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
           toast.error(response.message);
         }
       } else {
-        const response = await updateOrganiserStatusApi(studentId, action);
+        const response = await updateOrganiserStatusApi(organiserId, action);
         if (response.success) {
           toast.success(response.message);
           await refreshUserData();
@@ -213,12 +213,12 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
           toast.error(response.message);
         }
       }
-      onAction(action, studentId);
+      onAction(action, organiserId);
     } catch (error) {
-      console.error('Error updating student status:', error);
-      toast.error('Failed to update student status');
+      console.error('Error updating organiser status:', error);
+      toast.error('Failed to update organiser status');
     } finally {
-      setUpdatingStudentId(null);
+      setUpdatingOrganiserId(null);
     }
     setActiveDropdown(null);
   };
@@ -246,7 +246,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
     <div>
       {/* Header Row */}
       <div className="grid grid-cols-11 gap-2 mb-2">
-        {['Student ID', 'Username', 'Name', 'Locality', 'School', 'Role in Event', 'Evidence', 'Date Received', 'Date Actioned', 'Status', ' '].map((header, index) => (
+        {['Organiser ID', 'Username', 'Name', 'Locality', 'School', 'Role in Event', 'Evidence', 'Date Received', 'Date Actioned', 'Status', ' '].map((header, index) => (
           header === ' ' ? (
             <div key={header}>
             </div>
@@ -274,48 +274,48 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
       {/* Data Rows */}
       {organisers.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
-          No students found
+          No organisers found
         </div>
       ) : (
-        organisers.map((student: any) => (
-          <div key={student?.id || Math.random()} className="grid grid-cols-11 gap-2 mb-2">
+        organisers.map((organiser: any) => (
+          <div key={organiser?.id || Math.random()} className="grid grid-cols-11 gap-2 mb-2">
             {/* Student ID */}
             <div className="bg-white px-3 py-2 text-sm font-medium text-gray-900 rounded-md border border-gray-200">
-              {student?.users.id || 'N/A'}
+              {organiser?.users.id || 'N/A'}
             </div>
 
             {/* Username */}
             <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-              {student?.users.username || 'N/A'}
+              {organiser?.users.username || 'N/A'}
             </div>
 
             {/* Name */}
             <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-              {student?.users.fullname || 'N/A'}
+              {organiser?.users.fullname || 'N/A'}
             </div>
 
             {/* Locality */}
             <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-              {student?.users.school_location || 'N/A'}
+              {organiser?.users.school_location || 'N/A'}
             </div>
 
             {/* School */}
             <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-              {student?.school || 'N/A'}
+              {organiser?.school || 'N/A'}
             </div>
 
             {/* Role in Event */}
             <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-              {student?.role || 'N/A'}
+              {organiser?.role || 'N/A'}
             </div>
 
             {/* Evidence */}
             <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-              {student?.evidence ? (
-                /^https?:\/\//.test(student.evidence) ? (
+              {organiser?.evidence ? (
+                /^https?:\/\//.test(organiser.evidence) ? (
                   <div className="flex items-center justify-center">
                     <button
-                      onClick={() => window.open(student.evidence, '_blank')}
+                      onClick={() => window.open(organiser.evidence, '_blank')}
                       className="flex items-center justify-center p-1 rounded hover:bg-gray-100 transition-colors duration-200"
                       title="Click to open document"
                     >
@@ -326,7 +326,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
                     </button>
                   </div>
                 ) : (
-                  <span>{student.evidence}</span>
+                  <span>{organiser.evidence}</span>
                 )
               ) : (
                 'N/A'
@@ -335,24 +335,24 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
 
             {/* Date Received */}
             <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-              {student?.created_at.split('T')[0] || 'N/A'}
+              {organiser?.created_at.split('T')[0] || 'N/A'}
             </div>
 
             {/* Date Actioned */}
             <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-              {student?.updated_at || 'N/A'}
+              {organiser?.updated_at || 'N/A'}
             </div>
 
             {/* Status */}
             <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
-              {updatingStudentId === student?.users.id ? (
+              {updatingOrganiserId === organiser?.id ? (
                 <div className="flex items-center space-x-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
                   <span className="text-gray-500">Updating...</span>
                 </div>
               ) : (
-                <span className={`font-medium ${getStatusColor(student?.status)}`}>
-                  {student?.status || 'N/A'}
+                <span className={`font-medium ${getStatusColor(organiser?.status)}`}>
+                  {organiser?.status || 'N/A'}
                 </span>
               )}
             </div>
@@ -361,7 +361,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
             <div className="px-3 py-2 text-sm font-medium relative">
               <div className="relative">
                 <button
-                  onClick={() => handleDropdownToggle(student?.users.id || '')}
+                  onClick={() => handleDropdownToggle(organiser?.id || '')}
                   className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 >
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -369,15 +369,15 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
                   </svg>
                 </button>
 
-                {activeDropdown === student?.users.id && (
+                {activeDropdown === organiser?.id && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
                     <div className="py-1">
                       {/* Show Approve button only if status is not approved */}
-                      {student?.users.status?.toLowerCase() !== 'approved' && (
+                      {organiser?.status?.toLowerCase() !== 'approved' && (
                         <button
-                          onClick={() => handleAction('approved', student?.id || '')}
-                          disabled={updatingStudentId === student?.users.id}
-                          className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingStudentId === student?.users.id
+                          onClick={() => handleAction('approved', organiser?.id || '')}
+                          disabled={updatingOrganiserId === organiser?.id}
+                          className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingOrganiserId === organiser?.id
                             ? 'text-gray-400 cursor-not-allowed'
                             : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
                             }`}
@@ -387,11 +387,11 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
                       )}
 
                       {/* Show Reject button only if status is not rejected */}
-                      {student?.status?.toLowerCase() !== 'rejected' && (
+                      {organiser?.status?.toLowerCase() !== 'rejected' && (
                         <button
-                          onClick={() => handleAction('rejected', student?.id || '')}
-                          disabled={updatingStudentId === student?.id}
-                          className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingStudentId === student?.id
+                          onClick={() => handleAction('rejected', organiser?.id || '')}
+                          disabled={updatingOrganiserId === organiser?.id}
+                          className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingOrganiserId === organiser?.id
                             ? 'text-gray-400 cursor-not-allowed'
                             : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
                             }`}
@@ -401,11 +401,11 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
                       )}
 
                       {/* Show Flag button only if status is not flagged */}
-                      {student?.status?.toLowerCase() !== 'flagged' && (
+                      {organiser?.status?.toLowerCase() !== 'flagged' && (
                         <button
-                          onClick={() => handleAction('flagged', student?.id || '')}
-                          disabled={updatingStudentId === student?.id}
-                          className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingStudentId === student?.id
+                          onClick={() => handleAction('flagged', organiser?.id || '')}
+                          disabled={updatingOrganiserId === organiser?.id}
+                          className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingOrganiserId === organiser?.id
                             ? 'text-gray-400 cursor-not-allowed'
                             : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
                             }`}
@@ -415,11 +415,11 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
                       )}
 
                       {/* Show Block button only if status is not blocked */}
-                      {student?.status?.toLowerCase() !== 'blocked' && (
+                      {organiser?.status?.toLowerCase() !== 'blocked' && (
                         <button
-                          onClick={() => handleAction('blocked', student?.id || '')}
-                          disabled={updatingStudentId === student?.id}
-                          className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingStudentId === student?.id
+                          onClick={() => handleAction('blocked', organiser?.id || '')}
+                          disabled={updatingOrganiserId === organiser?.id}
+                          className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingOrganiserId === organiser?.id
                             ? 'text-gray-400 cursor-not-allowed'
                             : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
                             }`}
@@ -429,11 +429,11 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
                       )}
 
                       {/* Show Activate button if status is flagged or blocked */}
-                      {(student?.status?.toLowerCase() === 'flagged' || student?.status?.toLowerCase() === 'blocked') && (
+                      {(organiser?.status?.toLowerCase() === 'flagged' || organiser?.status?.toLowerCase() === 'blocked') && (
                         <button
-                          onClick={() => handleAction('approved', student?.id || '')}
-                          disabled={updatingStudentId === student?.id}
-                          className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingStudentId === student?.id
+                          onClick={() => handleAction('approved', organiser?.id || '')}
+                          disabled={updatingOrganiserId === organiser?.id}
+                          className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingOrganiserId === organiser?.id
                             ? 'text-gray-400 cursor-not-allowed'
                             : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
                             }`}
@@ -443,9 +443,9 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
                       )}
 
                       <button
-                        onClick={() => handleAction('delete', student?.id || '')}
-                        disabled={updatingStudentId === student?.id}
-                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingStudentId === student?.id
+                        onClick={() => handleAction('delete', organiser?.id || '')}
+                        disabled={updatingOrganiserId === organiser?.id}
+                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingOrganiserId === organiser?.id
                           ? 'text-gray-400 cursor-not-allowed'
                           : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
                           }`}
@@ -464,11 +464,11 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
       {/* New Organiser Input Row */}
       {isAddingNew && (
         <div className="grid grid-cols-11 gap-2 mb-2">
-          {/* Student ID */}
+          {/* Organiser ID */}
           <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
             <input
               type="text"
-              value={newOrganiser.student_id}
+              value={newOrganiser.organiser_id}
               placeholder="Auto populated"
               className="w-full border-none outline-none text-sm"
               disabled
