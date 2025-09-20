@@ -376,7 +376,7 @@ const OrganiserDashboard: React.FC = () => {
       console.log("totalRevenue", totalRevenue);
       console.log("numberOfSeats", numberOfSeats);
       console.log("feesPerDelegate", feesPerDelegate);
-      const response = await updateEventApi(eventId || '', eventName, eventDescription, eventStartDate, eventEndDate, coverImage, '', locality_id, school_id, area_id, numberOfSeats, feesPerDelegate, totalRevenue, website, instagram);
+      const response = await updateEventApi(eventId || '', eventName, eventDescription, eventStartDate, eventEndDate, coverImage, locality_id, school_id, area_id, numberOfSeats, feesPerDelegate, totalRevenue, website, instagram);
       if (response.success) {
         toast.success(response.message);
       } else {

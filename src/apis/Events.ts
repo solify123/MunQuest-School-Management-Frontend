@@ -134,7 +134,7 @@ export const eventRegistratStudentApi = async (eventId: string, munExperience: s
     }
 }
 
-export const updateEventApi = async (eventId: string, name: string, description: string, start_date: string, end_date: string, cover_image: string, logo_image: string, locality_id: string, school_id: string, area_id: string, number_of_seats: string, fees_per_delegate: string, total_revenue: string, website: string, instagram: string) => {
+export const updateEventApi = async (eventId: string, name: string, description: string, start_date: string, end_date: string, cover_image: string, locality_id: string, school_id: string, area_id: string, number_of_seats: string, fees_per_delegate: string, total_revenue: string, website: string, instagram: string) => {
     try {
         const token = localStorage.getItem('token');
         const response = await axios.patch(`${backendUrl}/api/v1/events/update-event/${eventId}`, {
