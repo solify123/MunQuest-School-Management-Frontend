@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button, Input, PasswordInput, Logo } from '../components/ui';
-  import type { AuthFormData } from '../types';
+import type { AuthFormData } from '../types';
 import { toast } from 'sonner';
 import { supabaseSignIn } from '../apis/SupabaseAuth';
 import { checkUserProfileExists } from '../utils/profileCheck';
+import { getUserIdByEmailApi } from '../apis/Users';
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -54,24 +55,25 @@ const Login: React.FC = () => {
       if (!loginResponse.success) {
         throw new Error(loginResponse.message);
       }
-
+      const getUserIdByEmailResponse = await getUserIdByEmailApi(email);
+      if (getUserIdByEmailResponse.success) {
+        localStorage.setItem('userId', getUserIdByEmailResponse.user.id);
+        localStorage.setItem('userRole', getUserIdByEmailResponse.user.role);
+      }
+      else {
+        throw new Error(getUserIdByEmailResponse.message);
+      }
       toast.success('Login successful');
-      console.log(loginResponse.data);
       // Store Supabase JWT token in localStorage
       if (loginResponse.data?.session?.access_token) {
         localStorage.setItem('token', loginResponse.data.session.access_token);
-        console.log('Supabase token stored:', loginResponse.data.session.access_token);
-        console.log('Token in localStorage after storage:', localStorage.getItem('token'));
       } else {
-        console.error('No access token in Supabase response:', loginResponse.data);
+        throw new Error(loginResponse.message);
       }
-      
-      // Get user role from backend response
-      const userRole = loginResponse.data?.user?.user_metadata?.role || 'student';
-      
-      // Check if user already has a profile
+
+      const userRole = localStorage.getItem('userRole') || 'student';
       const hasProfile = await checkUserProfileExists();
-      
+
       if (userRole === 'student') {
         if (hasProfile) {
           navigate('/student-home');

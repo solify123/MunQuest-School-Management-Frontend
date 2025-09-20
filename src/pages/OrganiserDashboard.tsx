@@ -22,6 +22,10 @@ const OrganiserDashboard: React.FC = () => {
   const [numberOfSeats, setNumberOfSeats] = useState('');
   const [website, setWebsite] = useState('');
   const [instagram, setInstagram] = useState('');
+  const [locality_id, setLocality_id] = useState('');
+  const [school_id, setSchool_id] = useState('');
+  const [area_id, setArea_id] = useState('');
+  const [totalRevenue, setTotalRevenue] = useState('');
   const [isUploadingCoverImage, setIsUploadingCoverImage] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -87,13 +91,18 @@ const OrganiserDashboard: React.FC = () => {
             setEventDescription(response.data[0].description);
             setEventStartDate(response.data[0].start_date);
             setEventEndDate(response.data[0].end_date);
-            setLocality(response.data[0].locality);
-            setSchool(response.data[0].school);
-            setArea(response.data[0].area);
+            setLocality(response.data[0].locality.name);
+            setSchool(response.data[0].school.name);
+            setArea(response.data[0].school.name);
             setFeesPerDelegate(response.data[0].fees_per_delegate);
             setNumberOfSeats(response.data[0].number_of_seats);
             setWebsite(response.data[0].website);
             setInstagram(response.data[0].instagram);
+            setLocality_id(response.data[0].locality.id);
+            setSchool_id(response.data[0].school.id);
+            setArea_id(response.data[0].school.area_id);
+            // Calculate total revenue
+            calculateTotalRevenue(response.data[0].number_of_seats, response.data[0].fees_per_delegate);
           }
         } else {
           toast.error(response.message);
@@ -139,9 +148,11 @@ const OrganiserDashboard: React.FC = () => {
         break;
       case 'number_of_seats':
         setNumberOfSeats(value);
+        calculateTotalRevenue(value, feesPerDelegate);
         break;
       case 'fees_per_delegate':
         setFeesPerDelegate(value);
+        calculateTotalRevenue(numberOfSeats, value);
         break;
       case 'website':
         setWebsite(value);
@@ -176,9 +187,11 @@ const OrganiserDashboard: React.FC = () => {
           break;
         case 'number_of_seats':
           setNumberOfSeats(numberOfSeats);
+          calculateTotalRevenue(numberOfSeats, feesPerDelegate);
           break;
         case 'fees_per_delegate':
           setFeesPerDelegate(feesPerDelegate);
+          calculateTotalRevenue(numberOfSeats, feesPerDelegate);
           break;
         case 'website':
           setWebsite(website);
@@ -334,11 +347,36 @@ const OrganiserDashboard: React.FC = () => {
     toast.success('Committees saved successfully');
   };
 
+  const calculateTotalRevenue = (seats: string, fees: string) => {
+    const seatsNum = Number(seats);
+    const feesNum = Number(fees);
+    if (!isNaN(seatsNum) && !isNaN(feesNum) && seatsNum > 0 && feesNum > 0) {
+      setTotalRevenue((seatsNum * feesNum).toString());
+    } else {
+      setTotalRevenue('');
+    }
+  };
+
   // Save all changes
   const handleUpdateEvent = async () => {
     try {
       setIsSaving(true);
-      const response = await updateEventApi(eventId || '', eventName, locality, school, coverImage, eventDescription, eventStartDate, eventEndDate, numberOfSeats, feesPerDelegate, website, instagram);
+      // Calculate total revenue before updating
+      calculateTotalRevenue(numberOfSeats, feesPerDelegate);
+      console.log("eventName", eventName);
+      console.log("eventDescription", eventDescription);
+      console.log("eventStartDate", eventStartDate);
+      console.log("eventEndDate", eventEndDate);
+      console.log("coverImage", coverImage);
+      console.log("locality_id", locality_id);
+      console.log("school_id", school_id);
+      console.log("area_id", area_id);
+      console.log("website", website);
+      console.log("instagram", instagram);
+      console.log("totalRevenue", totalRevenue);
+      console.log("numberOfSeats", numberOfSeats);
+      console.log("feesPerDelegate", feesPerDelegate);
+      const response = await updateEventApi(eventId || '', eventName, eventDescription, eventStartDate, eventEndDate, coverImage, '', locality_id, school_id, area_id, numberOfSeats, feesPerDelegate, totalRevenue, website, instagram);
       if (response.success) {
         toast.success(response.message);
       } else {
@@ -1077,11 +1115,11 @@ const OrganiserDashboard: React.FC = () => {
             </div>
             <div className="flex justify-center items-center text-white border rounded-lg border border-gray-800">
               <div className="bg-[#607DA3] text-sm font-medium px-2.5 py-2 h-full rounded-l-[5px] flex justify-center items-center">Delegates</div>
-              <div className="text-lg text-gray-800 p-[10px] w-full">50</div>
+              <div className="text-lg text-gray-800 p-[10px] w-full">{numberOfSeats || '0'}</div>
             </div>
             <div className="flex justify-center items-center text-white border rounded-lg border border-gray-800">
-              <div className="bg-[#607DA3] text-sm font-medium px-2.5 py-2 h-full rounded-l-[5px] flex justify-center items-center">Schools</div>
-              <div className="text-lg text-gray-800 p-[10px] w-full">10</div>
+              <div className="bg-[#607DA3] text-sm font-medium px-2.5 py-2 h-full rounded-l-[5px] flex justify-center items-center">Total Revenue</div>
+              <div className="text-lg text-gray-800 p-[10px] w-full">AED {totalRevenue || '0'}</div>
             </div>
           </div>
         </div>
@@ -1090,7 +1128,7 @@ const OrganiserDashboard: React.FC = () => {
         <div className="p-6">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Allocation Summary</h2>
           <div className="overflow-x-auto">
-            <table className="w-full border border-gray-800 w-[570px]">
+            <table className="w-[800px] border border-gray-800 w-[570px]">
               <thead >
                 <tr className="bg-[#607DA3] text-white ">
                   <th className="px-4 py-3 text-center border border-gray-800 w-[19%]"></th>
@@ -1276,6 +1314,12 @@ const OrganiserDashboard: React.FC = () => {
 
             {/* Fees */}
             {renderEditableField('Fees', 'fees_per_delegate', feesPerDelegate || '')}
+
+            {/* Total Revenue */}
+            <div className="w-[400px] flex justify-between items-center py-3 border-b border-gray-200">
+              <span className="text-sm font-medium text-gray-700">Total Revenue</span>
+              <div className="text-lg text-gray-800 font-medium">AED {totalRevenue || '0'}</div>
+            </div>
 
             {/* Website */}
             {renderEditableField('Website', 'website', website || '')}

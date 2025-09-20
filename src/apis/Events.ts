@@ -18,21 +18,23 @@ export const eventImagefileUploadApi = async (file: File) => {
     }
 };
 
-export const createEventApi = async (eventName: string, locality: string, school: string, coverImage: string, eventLogo: string, eventDescription: string, eventStartDate: string, eventEndDate: string, numberOfSeats: string, feesPerDelegate: string, totalRevenue: string, website: string, instagram: string) => {
+export const createEventApi = async (name: string, description: string, start_date: string, end_date: string, cover_image: string, logo_image: string, locality_id: string, school_id: string, area_id: string, number_of_seats: string, fees_per_delegate: string, total_revenue: string, website: string, instagram: string) => {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.post(`${backendUrl}/api/v1/events/create-event`, {
-            eventName,
-            locality,
-            school,
-            coverImage,
-            eventLogo,
-            eventDescription,
-            eventStartDate,
-            eventEndDate,
-            numberOfSeats,
-            feesPerDelegate,
-            totalRevenue,
+        const organiserId = localStorage.getItem('orgainiserId');
+        const response = await axios.post(`${backendUrl}/api/v1/events/create-event/${organiserId}`, {
+            name,
+            description,
+            start_date,
+            end_date,
+            cover_image,
+            logo_image,
+            locality_id,
+            school_id,
+            area_id,
+            number_of_seats,
+            fees_per_delegate,
+            total_revenue,
             website,
             instagram
         }, {
@@ -61,10 +63,11 @@ export const getCurrentEventsApi = async () => {
     }
 }
 
-export const getCurrentEventsOfOrganiserApi = async () => {
+export const getEventsByOrganiserApi = async () => {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.get(`${backendUrl}/api/v1/events/get-events-of-organiser`, {
+        const organiserId = localStorage.getItem('orgainiserId');
+        const response = await axios.get(`${backendUrl}/api/v1/events/get-events-of-organiser/${organiserId}`, {
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
@@ -131,19 +134,21 @@ export const eventRegistratStudentApi = async (eventId: string, munExperience: s
     }
 }
 
-export const updateEventApi = async (eventId: string, eventName: string, locality: string, school: string, coverImage: string, eventDescription: string, eventStartDate: string, eventEndDate: string, numberOfSeats: string, feesPerDelegate: string, website: string, instagram: string) => {
+export const updateEventApi = async (eventId: string, name: string, description: string, start_date: string, end_date: string, cover_image: string, logo_image: string, locality_id: string, school_id: string, area_id: string, number_of_seats: string, fees_per_delegate: string, total_revenue: string, website: string, instagram: string) => {
     try {
         const token = localStorage.getItem('token');
         const response = await axios.patch(`${backendUrl}/api/v1/events/update-event/${eventId}`, {
-            eventName,
-            locality,
-            school,
-            coverImage,
-            eventDescription,
-            eventStartDate,
-            eventEndDate,
-            numberOfSeats,
-            feesPerDelegate,
+            name,
+            description,
+            start_date,
+            end_date,
+            cover_image,
+            locality_id,
+            school_id,
+            area_id,
+            number_of_seats,
+            fees_per_delegate,
+            total_revenue,
             website,
             instagram
         }, {

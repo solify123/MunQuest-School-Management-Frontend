@@ -5,12 +5,16 @@ import { studentProfileApi } from '../../apis/Users';
 import { toast } from 'sonner';
 import { generateUsername } from '../../utils/usernameGenerator';
 import PageLoader from '../../components/PageLoader';
+import { useApp } from '../../contexts/AppContext';
 
 type Step = 'personal' | 'school' | 'contact' | 'success';
 
 const StudentProfile: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<Step>('personal');
   const navigate = useNavigate();
+  const { allLocalities, allSchools, refreshLocalitiesData, refreshSchoolsData, refreshAreasData } = useApp();
+
+  // Debug: Log context data whenever it changes
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [fullname, setFullname] = useState<string>('');
@@ -19,12 +23,13 @@ const StudentProfile: React.FC = () => {
   const [birthday, setBirthday] = useState<string>('');
   const [gender, setGender] = useState<string>('');
   const [locality, setLocality] = useState<string>('');
-  const [schoolName, setSchoolName] = useState<string>('');
+  const [selectedSchool, setSelectedSchool] = useState<any>(null);
+  const [school_id, setSchool_id] = useState<string>('');
   const [gradeType, setGradeType] = useState<string>('');
   const [grade, setGrade] = useState<string>('');
   const [phone, setPhone] = useState<string>('');
-  const [countryCode, setCountryCode] = useState<string>('UAE');
-  const [schools, setSchools] = useState<any[]>([]);
+  const [phone_e164, setPhone_e164] = useState<string>('');
+  const [countryCode, setCountryCode] = useState<string>('+971');
   const [filteredSchools, setFilteredSchools] = useState<any[]>([]);
   const [showSchoolDropdown, setShowSchoolDropdown] = useState(false);
   const [schoolSearchTerm, setSchoolSearchTerm] = useState<string>('');
@@ -69,37 +74,53 @@ const StudentProfile: React.FC = () => {
     setGradeType(gradeType);
   };
 
+  // Function to generate phone_e164 format
+  const generatePhoneE164 = (phone: string, countryCode: string): string => {
+    // Remove all non-numeric characters from phone
+    const cleanPhone = phone.replace(/[^0-9]/g, '');
+    // Combine country code with phone number to create complete E.164 format
+    const phoneE164 = `${countryCode}${cleanPhone}`;
+    console.log('Generating phone_e164:', { phone, countryCode, cleanPhone, phoneE164 });
+    return phoneE164;
+  };
+
   const handleCountryCodeSelect = (code: string) => {
     setCountryCode(code);
     setShowCountryDropdown(false);
-  };
-
-  const loadSchoolData = async (cityCode: string) => {
-    try {
-      const response = await fetch(`/school_list/${cityCode}.json`);
-      if (response.ok) {
-        const schoolData = await response.json();
-        setSchools(schoolData);
-        setFilteredSchools(schoolData);
-      } else {
-        setSchools([]);
-        setFilteredSchools([]);
-      }
-    } catch (error) {
-      console.error('Error loading school data:', error);
-      setSchools([]);
-      setFilteredSchools([]);
+    // Regenerate phone_e164 with new country code
+    if (phone) {
+      const phoneE164 = generatePhoneE164(phone, code);
+      setPhone_e164(phoneE164);
     }
   };
 
+  // Load localities, schools, and areas data on component mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        await Promise.all([
+          refreshLocalitiesData(),
+          refreshSchoolsData(),
+          refreshAreasData()
+        ]);
+      } catch (error) {
+        console.error('Error loading data:', error);
+        toast.error('Failed to load profile data. Please refresh the page.');
+      }
+    };
+    loadData();
+  }, []); // Empty dependency array to run only once on mount
+
   const handleCityChange = (cityCode: string) => {
     setLocality(cityCode);
-    setSchoolName('');
+    setSelectedSchool(null);
+    setSchool_id('');
     setSchoolSearchTerm('');
     if (cityCode) {
-      loadSchoolData(cityCode);
+      // Filter schools by locality
+      const schoolsInLocality = allSchools.filter(school => school.locality.code === cityCode);
+      setFilteredSchools(schoolsInLocality);
     } else {
-      setSchools([]);
       setFilteredSchools([]);
     }
   };
@@ -107,21 +128,25 @@ const StudentProfile: React.FC = () => {
   const handleSchoolSearch = (searchTerm: string) => {
     setSchoolSearchTerm(searchTerm);
     if (searchTerm.trim() === '') {
-      setFilteredSchools(schools);
+      // Show all schools in the selected locality
+      const schoolsInLocality = allSchools.filter(school => school.locality.code === locality);
+      setFilteredSchools(schoolsInLocality);
     } else {
-      const filtered = schools.filter(school =>
-        school.school_label?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        school.school_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        school.school_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        school.location?.toLowerCase().includes(searchTerm.toLowerCase())
+      // Filter schools in the selected locality by search term
+      const schoolsInLocality = allSchools.filter(school => school.locality.code === locality);
+      const filtered = schoolsInLocality.filter(school =>
+        school.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        school.locality.code?.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredSchools(filtered);
     }
   };
 
   const handleSchoolSelect = (school: any) => {
-    const schoolLabel = school.school_label || school.school_name;
-    setSchoolName(schoolLabel);
+    console.log('handleSchoolSelect', school);
+    const schoolLabel = school.name;
+    setSelectedSchool(school);
+    setSchool_id(school.id);
     setSchoolSearchTerm(schoolLabel);
     setShowSchoolDropdown(false);
   };
@@ -197,7 +222,7 @@ const StudentProfile: React.FC = () => {
                 <span className="text-sm text-gray-600">Generated Username:</span>
                 <span className="ml-2 font-mono text-sm font-medium text-[#1E395D]">{generatedUsername}</span>
               </div>
-              
+
             </div>
           </div>
         )}
@@ -266,14 +291,18 @@ const StudentProfile: React.FC = () => {
             className={`w-[400px] px-4 py-4 pr-10 border rounded-lg text-sm bg-white focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 appearance-none ${errors.locality ? 'border-red-500' : 'border-gray-300'
               }`}
           >
-            <option value="">E.g. Dubai</option>
-            <option value="AD">Abu Dhabi</option>
-            <option value="DU">Dubai</option>
-            <option value="SH">Sharjah</option>
-            <option value="AJ">Ajman</option>
-            <option value="RAK">Ras Al Khaimah</option>
-            <option value="UAQ">Umm Al Quwain</option>
-            <option value="AIN">Al Ain</option>
+            <option value="">Select a locality...</option>
+            {allLocalities.length > 0 ? (
+              allLocalities.map((localityItem) => {
+                return (
+                  <option key={localityItem.id} value={localityItem.code}>
+                    {localityItem.name}
+                  </option>
+                );
+              })
+            ) : (
+              <option value="" disabled>No localities loaded</option>
+            )}
           </select>
           <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -308,7 +337,8 @@ const StudentProfile: React.FC = () => {
           <button
             type="button"
             onClick={() => {
-              setSchoolName('');
+              setSelectedSchool(null);
+              setSchool_id('');
               setSchoolSearchTerm('');
               setShowSchoolDropdown(false);
             }}
@@ -324,31 +354,31 @@ const StudentProfile: React.FC = () => {
             <div className="absolute top-full left-0 z-10 w-[400px] mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
               {filteredSchools.map((school, index) => (
                 <div
-                  key={`${school.school_code}-${index}`}
+                  key={`${school.code}-${index}`}
                   className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
                   onClick={() => handleSchoolSelect(school)}
                 >
                   <div className="font-medium text-sm text-gray-900">
-                    {school.school_label || school.school_name}
+                    {school.name}
                   </div>
                   <div className="text-xs text-blue-600 mt-1">
-                    Code: {school.school_code}
+                    Code: {school.code}
                   </div>
-                  {(school.area_label && school.area_label !== '-') && (
+                  {(school.area && school.area.name !== '-') && (
                     <div className="text-xs text-gray-500 mt-1">
-                      {school.area_label}
+                      {school.area.name}
                     </div>
                   )}
-                  {school.location && (
+                  {school.locality.name && (
                     <div className="text-xs text-gray-500 mt-1">
-                      {school.location}
+                      {school.locality.name}
                     </div>
                   )}
                 </div>
               ))}
               <div
                 className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
-                onClick={() => handleSchoolSelect({ school_name: 'Unlisted / Not in the list / Other', school_label: 'Unlisted / Not in the list / Other', school_code: 'UNLISTED' })}
+                onClick={() => handleSchoolSelect({ id: 'UNLISTED', name: 'Unlisted / Not in the list / Other', code: 'UNLISTED', locality: { name: 'Unlisted / Not in the list / Other' } })}
               >
                 <div className="font-medium text-sm text-gray-900">
                   Unlisted / Not in the list / Other
@@ -502,6 +532,9 @@ const StudentProfile: React.FC = () => {
                 // Remove any non-numeric characters except spaces
                 const phoneValue = e.target.value.replace(/[^0-9\s]/g, '');
                 setPhone(phoneValue);
+                // Generate phone_e164 format
+                const phoneE164 = generatePhoneE164(phoneValue, countryCode);
+                setPhone_e164(phoneE164);
               }}
               className={`flex-1 px-4 py-4 text-sm bg-white placeholder-gray-500 focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors.phone ? 'border-red-500' : 'border-gray-300'
                 }`}
@@ -530,9 +563,9 @@ const StudentProfile: React.FC = () => {
     </div>
   );
 
-  const StudentProfileHandler = async (fullName: string, generatedUsername: string, birthday: string, gender: string, locality: string, schoolName: string, gradeType: string, grade: string, phone: string, countryCode: string) => {
+  const StudentProfileHandler = async (fullName: string, generatedUsername: string, birthday: string, gender: string, school_id: string, grade: string, phone: string, phone_e164: string) => {
     try {
-      const response = await studentProfileApi(fullName, generatedUsername, birthday, gender, locality, schoolName, gradeType, grade, phone, countryCode);
+      const response = await studentProfileApi(fullName, generatedUsername, birthday, gender, school_id, grade, phone, phone_e164);
       if (response.success) {
         toast.success('Student profile created successfully');
         navigate('/student-home');
@@ -553,59 +586,68 @@ const StudentProfile: React.FC = () => {
         {/* Header */}
         <Header />
 
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-6 py-8">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6 text-left">Student Signup</h1>
-          {renderStepIndicator()}
-        </div>
+        {/* Main Content */}
+        <div className="max-w-4xl mx-auto px-6 py-8">
+          <div className="text-center mb-8">
+            <h1 className="text-2xl font-bold text-gray-900 mb-6 text-left">Student Signup</h1>
+            {renderStepIndicator()}
+          </div>
 
-        {/* Form Content */}
-        <div className="w-[400px] rounded-lg shadow-sm mb-8" style={{ padding: '2rem 0.5rem' }}>
-          {currentStep === 'personal' && renderPersonalInfo()}
-          {currentStep === 'school' && renderSchoolInfo()}
-          {currentStep === 'contact' && renderContactInfo()}
-        </div>
+          {/* Form Content */}
+          <div className="w-[400px] rounded-lg shadow-sm mb-8" style={{ padding: '2rem 0.5rem' }}>
+            {currentStep === 'personal' && renderPersonalInfo()}
+            {currentStep === 'school' && renderSchoolInfo()}
+            {currentStep === 'contact' && renderContactInfo()}
+          </div>
 
-        {/* Navigation Buttons */}
-        <div className="flex justify-start">
-          <button
-            type="button"
-            onClick={() => {
-              if (currentStep === 'personal') {
-                if (username && generatedUsername && birthday && gender) {
-                  setCurrentStep('school');
+          {/* Navigation Buttons */}
+          <div className="flex justify-start">
+            <button
+              type="button"
+              onClick={() => {
+                if (currentStep === 'personal') {
+                  // Validate personal info
+                  if (username && generatedUsername && birthday && gender) {
+                    setCurrentStep('school');
+                  } else {
+                    toast.error('Please fill in all personal information fields');
+                  }
+                } else if (currentStep === 'school') {
+                  // Validate school info
+                  if (locality && selectedSchool && grade) {
+                    setCurrentStep('contact');
+                  } else {
+                    toast.error('Please fill in all school information fields');
+                  }
+                } else if (currentStep === 'contact') {
+                  // Validate contact info and submit
+                  if (phone && phone_e164) {
+                    StudentProfileHandler(fullname, generatedUsername, birthday, gender, school_id, grade, phone, phone_e164);
+                  } else {
+                    toast.error('Please fill in all contact information fields');
+                  }
                 }
-              } else if (currentStep === 'school') {
-                if (locality && schoolName && gradeType && grade) {
-                  setCurrentStep('contact');
-                }
-              } else if (currentStep === 'contact') {
-                if (phone && countryCode) {
-                  StudentProfileHandler(fullname, generatedUsername, birthday, gender, locality, schoolName, gradeType, grade, phone, countryCode);
-                }
-              }
-            }}
-            className="font-medium text-white transition-all"
-            style={{
-              backgroundColor: '#C2A46D',
-              borderRadius: '30px',
-              display: 'flex',
-              width: '120px',
-              padding: '10px',
-              justifyContent: 'center',
-              alignItems: 'center',
-              gap: '10px',
-              transition: 'background-color 0.2s',
-            }}
-            onMouseOver={e => (e.currentTarget.style.backgroundColor = '#C2A46D')}
-            onMouseOut={e => (e.currentTarget.style.backgroundColor = '#D9C7A1')}
-          >
-            Continue
-          </button>
+              }}
+              className="font-medium text-white transition-all"
+              style={{
+                backgroundColor: '#C2A46D',
+                borderRadius: '30px',
+                display: 'flex',
+                width: '120px',
+                padding: '10px',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: '10px',
+                transition: 'background-color 0.2s',
+              }}
+              onMouseOver={e => (e.currentTarget.style.backgroundColor = '#C2A46D')}
+              onMouseOut={e => (e.currentTarget.style.backgroundColor = '#D9C7A1')}
+            >
+              Continue
+            </button>
+          </div>
         </div>
-      </div>
-    </div >
+      </div >
     </PageLoader>
   );
 };

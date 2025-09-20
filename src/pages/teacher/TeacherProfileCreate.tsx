@@ -5,11 +5,13 @@ import { teacherProfileApi } from '../../apis/Users';
 import { useNavigate } from 'react-router-dom';
 import { generateUsername } from '../../utils/usernameGenerator';
 import PageLoader from '../../components/PageLoader';
+import { useApp } from '../../contexts/AppContext';
 
 type Step = 'personal' | 'school' | 'contact' | 'success';
 
 const TeacherProfile: React.FC = () => {
   const navigate = useNavigate();
+  const { allLocalities, allSchools, refreshLocalitiesData, refreshSchoolsData, refreshAreasData } = useApp();
   const [currentStep, setCurrentStep] = useState<Step>('personal');
   const [fullname, setFullname] = useState<string>('');
   const [username, setUsername] = useState<string>('');
@@ -17,11 +19,10 @@ const TeacherProfile: React.FC = () => {
   const [birthday, setBirthday] = useState<string>('');
   const [gender, setGender] = useState<string>('');
   const [locality, setLocality] = useState<string>('');
-  const [schoolName, setSchoolName] = useState<string>('');
-  const [yearsOfWorkExperience, setYearsOfWorkExperience] = useState<string>('');
+  const [selectedSchool, setSelectedSchool] = useState<any>(null);
+  const [yearsOfExperience, setYearsOfExperience] = useState<string>('');
   const [phone, setPhone] = useState<string>('');
-  const [countryCode, setCountryCode] = useState<string>('UAE');
-  const [schools, setSchools] = useState<any[]>([]);
+  const [countryCode, setCountryCode] = useState<string>('+971');
   const [filteredSchools, setFilteredSchools] = useState<any[]>([]);
   const [showSchoolDropdown, setShowSchoolDropdown] = useState(false);
   const [schoolSearchTerm, setSchoolSearchTerm] = useState<string>('');
@@ -54,32 +55,36 @@ const TeacherProfile: React.FC = () => {
     { code: '+27', country: 'South Africa', flag: '🇿🇦' }
   ];
 
-  const loadSchoolData = async (cityCode: string) => {
-    try {
-      const response = await fetch(`/school_list/${cityCode}.json`);
-      if (response.ok) {
-        const schoolData = await response.json();
-        setSchools(schoolData);
-        setFilteredSchools(schoolData);
-      } else {
-        setSchools([]);
-        setFilteredSchools([]);
+  // Load localities, schools, and areas data on component mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        
+        await Promise.all([
+          refreshLocalitiesData(),
+          refreshSchoolsData(),
+          refreshAreasData()
+        ]);
+        
+      } catch (error) {
+        console.error('Error loading data:', error);
+        toast.error('Failed to load profile data. Please refresh the page.');
       }
-    } catch (error) {
-      console.error('Error loading school data:', error);
-      setSchools([]);
-      setFilteredSchools([]);
-    }
-  };
+    };
+    loadData();
+  }, []); // Empty dependency array to run only once on mount
 
   const handleCityChange = (cityCode: string) => {
+    console.log('handleCityChange', cityCode);
+    console.log('allSchools', allSchools);
     setLocality(cityCode);
-    setSchoolName('');
+    setSelectedSchool(null);
     setSchoolSearchTerm('');
     if (cityCode) {
-      loadSchoolData(cityCode);
+      // Filter schools by locality
+      const schoolsInLocality = allSchools.filter(school => school.locality.code === cityCode);
+      setFilteredSchools(schoolsInLocality);
     } else {
-      setSchools([]);
       setFilteredSchools([]);
     }
   };
@@ -87,21 +92,24 @@ const TeacherProfile: React.FC = () => {
   const handleSchoolSearch = (searchTerm: string) => {
     setSchoolSearchTerm(searchTerm);
     if (searchTerm.trim() === '') {
-      setFilteredSchools(schools);
+      // Show all schools in the selected locality
+      const schoolsInLocality = allSchools.filter(school => school.locality.code === locality);
+      setFilteredSchools(schoolsInLocality);
     } else {
-      const filtered = schools.filter(school =>
-        school.school_label?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        school.school_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        school.school_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        school.location?.toLowerCase().includes(searchTerm.toLowerCase())
+      // Filter schools in the selected locality by search term
+      const schoolsInLocality = allSchools.filter(school => school.locality.code === locality);
+      const filtered = schoolsInLocality.filter(school =>
+        school.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        school.locality.code?.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredSchools(filtered);
     }
   };
 
   const handleSchoolSelect = (school: any) => {
-    const schoolLabel = school.school_label || school.school_name;
-    setSchoolName(schoolLabel);
+    console.log('handleSchoolSelect', school);
+    const schoolLabel = school.name;
+    setSelectedSchool(school);
     setSchoolSearchTerm(schoolLabel);
     setShowSchoolDropdown(false);
   };
@@ -249,14 +257,12 @@ const TeacherProfile: React.FC = () => {
             className={`w-[400px] px-4 py-4 pr-10 border rounded-lg text-sm bg-white focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 appearance-none ${errors.locality ? 'border-red-500' : 'border-gray-300'
               }`}
           >
-            <option value="">E.g. Dubai</option>
-            <option value="AD">Abu Dhabi</option>
-            <option value="DU">Dubai</option>
-            <option value="SH">Sharjah</option>
-            <option value="AJ">Ajman</option>
-            <option value="RAK">Ras Al Khaimah</option>
-            <option value="UAQ">Umm Al Quwain</option>
-            <option value="AIN">Al Ain</option>
+            <option value="">Select a locality...</option>
+            {allLocalities.map((localityItem) => (
+              <option key={localityItem.id} value={localityItem.code}>
+                {localityItem.name}
+              </option>
+            ))}
           </select>
           <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -291,7 +297,7 @@ const TeacherProfile: React.FC = () => {
           <button
             type="button"
             onClick={() => {
-              setSchoolName('');
+              setSelectedSchool(null);
               setSchoolSearchTerm('');
               setShowSchoolDropdown(false);
             }}
@@ -307,32 +313,31 @@ const TeacherProfile: React.FC = () => {
             <div className="absolute top-full left-0 z-10 w-[400px] mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
               {filteredSchools.map((school, index) => (
                 <div
-                  key={`${school.school_code}-${index}`}
-                  className="w-[400px] px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                  key={`${school.code}-${index}`}
+                  className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
                   onClick={() => handleSchoolSelect(school)}
                 >
                   <div className="font-medium text-sm text-gray-900">
-                    {school.school_label || school.school_name}
+                    {school.name}
                   </div>
                   <div className="text-xs text-blue-600 mt-1">
-                    Code: {school.school_code}
+                    Code: {school.code}
                   </div>
-                  {(school.area_label && school.area_label !== '-') && (
+                  {(school.area && school.area.name !== '-') && (
                     <div className="text-xs text-gray-500 mt-1">
-                      {school.area_label}
+                      {school.area.name}
                     </div>
                   )}
-                  {school.location && (
+                  {school.locality.name && (
                     <div className="text-xs text-gray-500 mt-1">
-                      {school.location}
+                      {school.locality.name}
                     </div>
                   )}
                 </div>
-
               ))}
               <div
-                className="w-[400px] px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
-                onClick={() => handleSchoolSelect({ school_name: 'Unlisted / Not in the list / Other', school_label: 'Unlisted / Not in the list / Other', school_code: 'UNLISTED' })}
+                className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                onClick={() => handleSchoolSelect({ id: 'UNLISTED', name: 'Unlisted / Not in the list / Other', code: 'UNLISTED', locality: { name: 'Unlisted / Not in the list / Other' } })}
               >
                 <div className="font-medium text-sm text-gray-900">
                 Unlisted / Not in the list / Other
@@ -359,9 +364,9 @@ const TeacherProfile: React.FC = () => {
             type="number"
             inputMode="numeric"
             pattern="[0-9]*"
-            name="yearsOfWorkExperience"
+            name="yearsOfExperience"
             placeholder="E.g. 20"
-            value={yearsOfWorkExperience}
+            value={yearsOfExperience}
             onChange={(e) => {
               // Check if user tried to enter non-numeric characters
               const hasNonNumeric = /[^0-9]/.test(e.target.value);
@@ -371,9 +376,9 @@ const TeacherProfile: React.FC = () => {
 
               // Remove any non-numeric characters
               const numericValue = e.target.value.replace(/[^0-9]/g, '');
-              setYearsOfWorkExperience(numericValue);
+              setYearsOfExperience(numericValue);
             }}
-            className={`w-[400px] px-4 py-4 pl-12 border rounded-lg text-sm bg-white placeholder-gray-500 focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors.yearsOfWorkExperience ? 'border-red-500' : 'border-gray-300'
+            className={`w-[400px] px-4 py-4 pl-12 border rounded-lg text-sm bg-white placeholder-gray-500 focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors.yearsOfExperience ? 'border-red-500' : 'border-gray-300'
               }`}
           />
           <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
@@ -382,7 +387,7 @@ const TeacherProfile: React.FC = () => {
             </svg>
           </div>
         </div>
-        {errors.yearsOfWorkExperience && <p className="mt-1 text-xs text-red-600">{errors.yearsOfWorkExperience}</p>}
+        {errors.yearsOfExperience && <p className="mt-1 text-xs text-red-600">{errors.yearsOfExperience}</p>}
       </div>
 
 
@@ -456,9 +461,31 @@ const TeacherProfile: React.FC = () => {
   );
 
 
-  const TeacherProfileHandler = async (fullname: string, username: string, birthday: string, gender: string, locality: string, schoolName: string, yearsOfWorkExperience: string, phone: string, countryCode: string) => {
+  // Function to generate phone_e164 format
+  const generatePhoneE164 = (phone: string, countryCode: string): string => {
+    // Remove all non-numeric characters from phone
+    const cleanPhone = phone.replace(/[^0-9]/g, '');
+    // Combine country code with phone number
+    return `${countryCode}${cleanPhone}`;
+  };
+
+  const TeacherProfileHandler = async (fullname: string, username: string, birthday: string, gender: string, school_id: string, yearsOfExperience: string, phone: string, countryCode: string) => {
     try {
-      const response = await teacherProfileApi(fullname, username, birthday, gender, locality, schoolName, yearsOfWorkExperience, phone, countryCode);
+      console.log('Teacher Profile Data:', {
+        fullname,
+        username,
+        birthday,
+        gender,
+        school_id,
+        yearsOfExperience,
+        phone,
+        countryCode
+      });
+      
+      const phone_e164 = generatePhoneE164(phone, countryCode);
+      
+      const response = await teacherProfileApi(fullname, username, birthday, gender, school_id, yearsOfExperience, phone, phone_e164);
+      
       if (response.success) {
         toast.success('Teacher profile created successfully');
         navigate('/teacher-home');
@@ -468,8 +495,13 @@ const TeacherProfile: React.FC = () => {
       }
 
     } catch (error: any) {
-      setErrors(error.errors);
-      toast.error(error.errors.message);
+      console.error('Teacher Profile Error:', error);
+      if (error.errors) {
+        setErrors(error.errors);
+        toast.error(error.errors.message);
+      } else {
+        toast.error(error.message || 'Failed to create teacher profile');
+      }
     }
   }
 
@@ -511,7 +543,7 @@ const TeacherProfile: React.FC = () => {
                   }
                 } else if (currentStep === 'school') {
                   // Validate school info
-                  if (locality && schoolName && yearsOfWorkExperience) {
+                  if (locality && selectedSchool && yearsOfExperience) {
                     setCurrentStep('contact');
                   } else {
                     toast.error('Please fill in all school information fields');
@@ -519,7 +551,7 @@ const TeacherProfile: React.FC = () => {
                 } else if (currentStep === 'contact') {
                   // Validate contact info and submit
                   if (phone && countryCode) {
-                    TeacherProfileHandler(fullname, generatedUsername, birthday, gender, locality, schoolName, yearsOfWorkExperience, phone, countryCode);
+                    TeacherProfileHandler(fullname, generatedUsername, birthday, gender, selectedSchool.id, yearsOfExperience, phone, countryCode);
                   } else {
                     toast.error('Please fill in all contact information fields');
                   }

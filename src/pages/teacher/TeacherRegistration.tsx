@@ -34,7 +34,6 @@ const TeacherRegistration: React.FC = () => {
     const getUserById = async () => {
       try {
         const response = await getUserByIdApi();
-        console.log(response);
         if (response.success) {
           setUsername(response.data.username);
           setFullname(response.data.fullname);

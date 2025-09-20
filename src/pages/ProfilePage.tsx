@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom';
 
 // Import icons
 import EditIcon from '../assets/edit_icon.svg';
-import { changePasswordApi, deleteAccountApi, getUserByIdApi, updateUserProfileApi, uploadAvatarApi } from '../apis/Users';
+import { deleteAccountApi, getUserByIdApi, updateStudentProfileApi, updateTeacherProfileApi, uploadAvatarApi } from '../apis/Users';
+import { updatePassword } from '../apis/SupabaseAuth';
 import { generateUsername } from '../utils/usernameGenerator';
 import { Avatar, LoadingSpinner, Header, ConfirmationModal } from '../components/ui';
 import { clearUserAvatar } from '../utils/avatarUtils';
@@ -13,6 +14,7 @@ import PageLoader from '../components/PageLoader';
 // Import default avatars
 import StudentAvatar from '../assets/student.png';
 import TeacherAvatar from '../assets/teacher.png';
+import { useApp } from '../contexts/AppContext';
 
 interface ProfileData {
   id?: number;
@@ -22,6 +24,7 @@ interface ProfileData {
   gender: string;
   school_location: string;
   school_name: string;
+  school_id?: string;
   grade: string;
   email: string;
   phone_number: string;
@@ -49,6 +52,28 @@ interface ProfilePageProps {
 
 const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { allLocalities, refreshLocalitiesData, allSchools, refreshSchoolsData } = useApp();
+
+  // Create locality options from context data
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        await Promise.all([
+          refreshLocalitiesData(),
+          refreshSchoolsData(),
+        ]);
+      } catch (error) {
+        console.error('Error loading data:', error);
+        toast.error('Failed to load profile data. Please refresh the page.');
+      }
+    };
+    loadData();
+  }, []); // Empty dependency array to run only once on mount
+
+  const localityOptions = allLocalities.map((locality) => ({
+    value: locality.code,
+    label: locality.name
+  }));
 
   useEffect(() => {
     const getUserById = async () => {
@@ -60,8 +85,9 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
         fullname: user.data.fullname || '',
         birthday: user.data.birthday || '',
         gender: user.data.gender || '',
-        locality: user.data.school_location || '',
-        schoolName: user.data.school_name || '',
+        locality: user.data.school.code || '',
+        schoolName: user.data.school.name || '',
+        school_id: user.data.school.id || '',
         grade: user.data.grade || '',
         year_of_work_experience: user.data.year_of_work_experience || '',
         phone_number: user.data.phone_number || '',
@@ -79,10 +105,12 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
       setGender(userData.gender);
       setLocality(userData.locality);
       setSchoolName(userData.schoolName);
+      setSchool_id(userData.school_id || '');
       setGrade(userData.grade);
       setYearOfWorkExperience(userData.year_of_work_experience);
       setPhone(userData.phone_number);
       setCountryCode(userData.country_code || '+971');
+      setPhone_e164(generatePhoneE164(userData.phone_number || '', userData.country_code || '+971'));
       setEmail(userData.email);
       // Avatar is now managed by Avatar component
     };
@@ -137,27 +165,27 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
   const [gender, setGender] = useState<string>('');
   const [locality, setLocality] = useState<string>('');
   const [schoolName, setSchoolName] = useState<string>('');
+  const [school_id, setSchool_id] = useState<string>('');
   const [grade, setGrade] = useState<string>('');
   const [gradeType, setGradeType] = useState<string>('');
   const [yearOfWorkExperience, setYearOfWorkExperience] = useState<string>('');
   const [phone, setPhone] = useState<string>('');
+  const [phone_e164, setPhone_e164] = useState<string>('');
   const [countryCode, setCountryCode] = useState<string>('+971');
   const [email, setEmail] = useState<string>('');
   // Avatar state removed - now using Avatar component which manages its own state
   const [isUploadingAvatar, setIsUploadingAvatar] = useState<boolean>(false);
-  
+
   // Delete confirmation modal state
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
 
-  const localityOptions = [
-    { value: 'AD', label: 'Abu Dhabi' },
-    { value: 'DU', label: 'Dubai' },
-    { value: 'SH', label: 'Sharjah' },
-    { value: 'AJ', label: 'Ajman' },
-    { value: 'RAK', label: 'Ras Al Khaimah' },
-    { value: 'UAQ', label: 'Umm Al Quwain' },
-    { value: 'AIN', label: 'Al Ain' }
-  ];
+  // Function to generate phone_e164 format
+  const generatePhoneE164 = (phone: string, countryCode: string): string => {
+    // Remove all non-numeric characters from phone
+    const cleanPhone = phone.replace(/[^0-9]/g, '');
+    // Combine country code with phone number to create complete E.164 format
+    return `${countryCode}${cleanPhone}`;
+  };
 
   const countryCodes = [
     { code: '+971', country: 'UAE', flag: '🇦🇪' },
@@ -260,6 +288,9 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
       case 'school_name':
         setSchoolName(value);
         break;
+      case 'school_id':
+        setSchool_id(value);
+        break;
       case 'grade':
         setGrade(value);
         break;
@@ -306,6 +337,9 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
           break;
         case 'school_name':
           setSchoolName(profileData.school_name);
+          break;
+        case 'school_id':
+          setSchool_id(profileData.school_id || '');
           break;
         case 'grade':
           setGrade(profileData.grade);
@@ -375,20 +409,24 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
       toast.error('Password must be at least 6 characters');
       return;
     }
-    // Here you would typically call an API to change password
-    const response = await changePasswordApi(newPassword);
-    if (response.success) {
-      toast.success(response.message);
-      setNewPassword('');
-      setConfirmPassword('');
-      setShowPasswordFields(false);
-    } else {
-      toast.error(response.message);
+
+    try {
+      const response = await updatePassword(newPassword);
+      if (response.success) {
+        toast.success(response.message);
+        setNewPassword('');
+        setConfirmPassword('');
+        setShowPasswordFields(false);
+      } else {
+        toast.error(response.message);
+      }
+    } catch (error: any) {
+      toast.error('Failed to update password: ' + (error.message || 'Unknown error'));
     }
   };
 
   const navigate = useNavigate();
-  
+
   const handleDeleteAccountClick = () => {
     setShowDeleteModal(true);
   };
@@ -435,29 +473,15 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
 
   // Load school data when locality changes
   useEffect(() => {
-    if (locality && localityOptions.find(l => l.value === locality)) {
-      loadSchoolData(locality);
-    }
-  }, [locality]);
-
-  // School data functions
-  const loadSchoolData = async (cityCode: string) => {
-    try {
-      const response = await fetch(`/school_list/${cityCode}.json`);
-      if (response.ok) {
-        const schoolData = await response.json();
-        setSchools(schoolData);
-        setFilteredSchools(schoolData);
-      } else {
-        setSchools([]);
-        setFilteredSchools([]);
-      }
-    } catch (error) {
-      console.error('Error loading school data:', error);
+    if (locality && allSchools.length > 0) {
+      const schoolsInLocality = allSchools.filter(school => school.locality.name === locality);
+      setSchools(schoolsInLocality);
+      setFilteredSchools(schoolsInLocality);
+    } else {
       setSchools([]);
       setFilteredSchools([]);
     }
-  };
+  }, [locality, allSchools]);
 
   const handleSchoolSearch = (searchTerm: string) => {
     setSchoolSearchTerm(searchTerm);
@@ -465,10 +489,9 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
       setFilteredSchools(schools);
     } else {
       const filtered = schools.filter(school =>
-        school.school_label?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        school.school_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        school.school_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        school.location?.toLowerCase().includes(searchTerm.toLowerCase())
+        school.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        school.code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        school.locality.name?.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredSchools(filtered);
     }
@@ -571,12 +594,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
 
     const handleLocalityChange = (selectedValue: any) => {
       handleFieldChange(field, selectedValue.label);
-      if (selectedValue.value) {
-        loadSchoolData(selectedValue.value);
-      } else {
-        setSchools([]);
-        setFilteredSchools([]);
-      }
+      // School filtering is now handled by useEffect when locality changes
     };
     return (
       <div className="mb-6">
@@ -651,7 +669,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
 
     const handleSchoolSelect = (school: any) => {
       if (isEditingThisField) {
-        const schoolLabel = school.school_label || school.school_name;
+        const schoolLabel = school.name;
+        setSchool_id(school.id);
         handleFieldChange(field, schoolLabel);
         setSchoolSearchTerm(schoolLabel);
         setShowSchoolDropdown(true);
@@ -695,31 +714,31 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
             <div className="absolute top-full left-0 z-10 w-[400px] mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
               {filteredSchools.map((school, index) => (
                 <div
-                  key={`${school.school_code}-${index}`}
+                  key={`${school.code}-${index}`}
                   className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
                   onClick={() => handleSchoolSelect(school)}
                 >
                   <div className="font-medium text-sm text-gray-900">
-                    {school.school_label || school.school_name}
+                    {school.name}
                   </div>
                   <div className="text-xs text-blue-600 mt-1">
-                    Code: {school.school_code}
+                    Code: {school.code}
                   </div>
-                  {(school.area_label && school.area_label !== '-') && (
+                  {(school.area && school.area.name !== '-') && (
                     <div className="text-xs text-gray-500 mt-1">
-                      {school.area_label}
+                      {school.area.name}
                     </div>
                   )}
-                  {school.location && (
+                  {school.locality.name && (
                     <div className="text-xs text-gray-500 mt-1">
-                      {school.location}
+                      {school.locality.name}
                     </div>
                   )}
                 </div>
               ))}
               <div
                 className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
-                onClick={() => handleSchoolSelect({ school_name: 'Unlisted / Not in the list / Other', school_label: 'Unlisted / Not in the list / Other', school_code: 'UNLISTED' })}
+                onClick={() => handleSchoolSelect({ id: 'UNLISTED', name: 'Unlisted / Not in the list / Other', code: 'UNLISTED', locality: { name: 'Unlisted / Not in the list / Other' } })}
               >
                 <div className="font-medium text-sm text-gray-900">
                   Unlisted / Not in the list / Other
@@ -762,11 +781,21 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
       // Remove any non-numeric characters except spaces
       const phoneValue = newValue.replace(/[^0-9\s]/g, '');
       handleFieldChange(field, phoneValue);
+
+      // Generate phone_e164 format
+      const phoneE164 = generatePhoneE164(phoneValue, countryCode);
+      setPhone_e164(phoneE164);
     };
 
     const handleCountryCodeChange = (newCode: string) => {
       setCountryCode(newCode);
       setShowCountryDropdown(false); // Close dropdown after selection
+
+      // Regenerate phone_e164 with new country code
+      if (phone) {
+        const phoneE164 = generatePhoneE164(phone, newCode);
+        setPhone_e164(phoneE164);
+      }
     };
 
     return (
@@ -929,6 +958,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
       </div>
     );
   };
+
   const renderGradeField = (label: string, field: keyof ProfileData, value: string) => {
     const isEditingThisField = editingField === field;
     const currentGradeType = gradeType;
@@ -1013,11 +1043,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
               </option>
             ))}
           </select>
-          <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </div>
         </div>
       </div>
     );
@@ -1029,7 +1054,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
       const storedAvatar = localStorage.getItem('userAvatar');
       const avatarToSend = storedAvatar || undefined;
 
-      const response = await updateUserProfileApi(fullname, username, birthday, gender, locality, schoolName, grade, yearOfWorkExperience, phone, email, avatarToSend, countryCode);
+      const response = userType === 'student' ? await updateStudentProfileApi(fullname, username, birthday, gender, school_id, grade, yearOfWorkExperience, phone, email, avatarToSend, phone_e164) : await updateTeacherProfileApi(fullname, username, birthday, gender, school_id, yearOfWorkExperience, phone, email, avatarToSend, phone_e164);
       if (response.success) {
         toast.success(response.message);
       } else {

@@ -18,12 +18,13 @@ export const edviceDocsfileUploadApi = async (file: File) => {
     }
 };
 
-export const requestApprovalApi = async (schoolName: string, locality: string, role: string, evidenceDocs: string) => {
+export const requestApprovalApi = async (school_id: string, locality_id: string, role: string, evidenceDocs: string) => {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.post(`${backendUrl}/api/v1/organisers/organiser-approval-request`, {
-            schoolName,
-            locality,
+        const userId = localStorage.getItem('userId');
+        const response = await axios.post(`${backendUrl}/api/v1/organisers/organiser-approval-request/${userId}`, {
+            school_id,
+            locality_id,
             role,
             evidenceDocs
         }, {
@@ -40,7 +41,8 @@ export const requestApprovalApi = async (schoolName: string, locality: string, r
 export const verifyOrganiserApi = async () => {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.get(`${backendUrl}/api/v1/organisers/verify-organiser`, {
+        const userId = localStorage.getItem('userId');
+        const response = await axios.get(`${backendUrl}/api/v1/organisers/verify-organiser/${userId}`, {
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`

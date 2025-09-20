@@ -114,3 +114,26 @@ export const getCurrentSession = async () => {
     };
   }
 };
+
+export const updatePassword = async (newPassword: string) => {
+  try {
+    const { data, error } = await supabase.auth.updateUser({
+      password: newPassword
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return {
+      success: true,
+      message: 'Password updated successfully!',
+      data: data
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      message: error.message || 'Failed to update password'
+    };
+  }
+};

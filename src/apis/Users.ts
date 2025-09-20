@@ -10,6 +10,15 @@ export const signupApi = async (email: string, role: string) => {
     }
 };
 
+export const getUserIdByEmailApi = async (email: string) => {
+    try {
+        const response = await axios.post(`${backendUrl}/api/v1/users/get-userid-by-email`, { email });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+};
+
 export const loginApi = async (email: string, password: string) => {
     try {
         const response = await axios.post(`${backendUrl}/api/v1/users/login`, { email, password });
@@ -22,7 +31,8 @@ export const loginApi = async (email: string, password: string) => {
 export const deleteAccountApi = async () => {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.delete(`${backendUrl}/api/v1/users/delete-account`, {
+        const userId = localStorage.getItem('userId');
+        const response = await axios.delete(`${backendUrl}/api/v1/users/delete-account/${userId}`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -33,19 +43,28 @@ export const deleteAccountApi = async () => {
     }
 };
 
-export const teacherProfileApi = async (fullname: string, username: string, birthday: string, gender: string, locality: string, schoolName: string, yearsOfWorkExperience: string, phone: string, countryCode: string) => {
+export const teacherProfileApi = async (fullname: string, username: string, birthday: string, gender: string, school_id: string, yearsOfExperience: string, phone: string, phone_e164: string) => {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.post(`${backendUrl}/api/v1/users/teacher-profile`, {
+        const userId = localStorage.getItem('userId');
+
+        if (!token) {
+            throw new Error('Authentication token not found. Please login again.');
+        }
+
+        if (!userId) {
+            throw new Error('User ID not found. Please login again.');
+        }
+
+        const response = await axios.patch(`${backendUrl}/api/v1/users/teacher-profile/${userId}`, {
             fullname,
             username,
             birthday,
             gender,
-            locality,
-            schoolName,
-            yearsOfWorkExperience,
+            school_id,
+            yearsOfExperience,
             phone,
-            countryCode
+            phone_e164
         }, {
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -53,24 +72,39 @@ export const teacherProfileApi = async (fullname: string, username: string, birt
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        console.error('Teacher profile API error:', error);
+        if (error.response?.data?.message) {
+            throw new Error(error.response.data.message);
+        } else if (error.message) {
+            throw new Error(error.message);
+        } else {
+            throw new Error('Failed to create teacher profile. Please try again.');
+        }
     }
 };
 
-export const studentProfileApi = async (fullname: string, username: string, birthday: string, gender: string, locality: string, schoolName: string, gradeType: string, grade: string, phone: string, countryCode: string) => {
+export const studentProfileApi = async (fullname: string, username: string, birthday: string, gender: string, school_id: string, grade: string, phone: string, phone_e164: string) => {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.post(`${backendUrl}/api/v1/users/student-profile`, {
+        const userId = localStorage.getItem('userId');
+
+        if (!token) {
+            throw new Error('Authentication token not found. Please login again.');
+        }
+
+        if (!userId) {
+            throw new Error('User ID not found. Please login again.');
+        }
+
+        const response = await axios.patch(`${backendUrl}/api/v1/users/student-profile/${userId}`, {
             fullname,
             username,
             birthday,
             gender,
-            locality,
-            schoolName,
-            gradeType,
+            school_id,
             grade,
             phone,
-            countryCode
+            phone_e164,
         }, {
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -78,15 +112,22 @@ export const studentProfileApi = async (fullname: string, username: string, birt
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        console.error('Student profile API error:', error);
+        if (error.response?.data?.message) {
+            throw new Error(error.response.data.message);
+        } else if (error.message) {
+            throw new Error(error.message);
+        } else {
+            throw new Error('Failed to create student profile. Please try again.');
+        }
     }
 };
 
 export const getUserByIdApi = async () => {
     try {
         const token = localStorage.getItem('token');
-
-        const response = await axios.get(`${backendUrl}/api/v1/users/user-profile`, {
+        const userId = localStorage.getItem('userId');
+        const response = await axios.get(`${backendUrl}/api/v1/users/user-profile/${userId}`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -97,22 +138,48 @@ export const getUserByIdApi = async () => {
     }
 };
 
-export const updateUserProfileApi = async (fullname: string, username: string, birthday: string, gender: string, locality: string, schoolName: string, grade: string, yearOfWorkExperience: string, phone: string, email: string, avatar?: string, countryCode?: string) => {
+export const updateStudentProfileApi = async (fullname: string, username: string, birthday: string, gender: string, school_id: string, grade: string, yearsOfExperience: string, phone: string, email: string, avatar?: string, phone_e164?: string) => {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.patch(`${backendUrl}/api/v1/users/user-profile-update`, {
+        const userId = localStorage.getItem('userId');
+        const response = await axios.patch(`${backendUrl}/api/v1/users/student-profile-update/${userId}`, {
             fullname,
             username,
             birthday,
             gender,
-            locality,
-            schoolName,
+            school_id,
             grade,
-            year_of_work_experience: yearOfWorkExperience,
+            yearsOfExperience,
             phone,
             email,
             avatar,
-            countryCode
+            phone_e164
+        }, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+};
+
+export const updateTeacherProfileApi = async (fullname: string, username: string, birthday: string, gender: string, school_id: string, yearsOfExperience: string, phone: string, email: string, avatar?: string, phone_e164?: string) => {
+    try {
+        const token = localStorage.getItem('token');
+        const userId = localStorage.getItem('userId');
+        const response = await axios.patch(`${backendUrl}/api/v1/users/teacher-profile-update/${userId}`, {
+            fullname,
+            username,
+            birthday,
+            gender,
+            school_id,
+            yearsOfExperience,
+            phone,
+            email,
+            avatar,
+            phone_e164
         }, {
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -127,10 +194,11 @@ export const updateUserProfileApi = async (fullname: string, username: string, b
 export const uploadAvatarApi = async (avatarFile: File) => {
     try {
         const token = localStorage.getItem('token');
+        const userId = localStorage.getItem('userId');
         const formData = new FormData();
         formData.append('avatar', avatarFile);
 
-        const response = await axios.post(`${backendUrl}/api/v1/users/upload-avatar`, formData, {
+        const response = await axios.post(`${backendUrl}/api/v1/users/upload-avatar/${userId}`, formData, {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'multipart/form-data'
@@ -145,7 +213,8 @@ export const uploadAvatarApi = async (avatarFile: File) => {
 export const changePasswordApi = async (newPassword: string) => {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.patch(`${backendUrl}/api/v1/users/change-password`, { newPassword }, {
+        const userId = localStorage.getItem('userId');
+        const response = await axios.patch(`${backendUrl}/api/v1/users/change-password/${userId}`, { newPassword }, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }

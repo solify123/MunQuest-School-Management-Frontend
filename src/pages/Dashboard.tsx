@@ -15,8 +15,6 @@ const Dashboard: React.FC = () => {
     const checkEvents = async () => {
       try {
         const response = await getCurrentEventsApi();
-        console.log('Dashboard events check response:', response);
-
         if (response.success && response.data && response.data.length > 0) {
           // Store all events
           setAllEvents(response.data);

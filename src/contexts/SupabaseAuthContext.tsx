@@ -34,10 +34,8 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
       setSession(session);
       setUser(session?.user ?? null);
       // Store token in localStorage when session is available
-      console.log('session', session);
       if (session?.access_token) {
         localStorage.setItem('token', session.access_token);
-        console.log('Token stored in context:', session.access_token);
       } else {
         localStorage.removeItem('token');
       }
@@ -51,12 +49,9 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
-      
-      // Store token in localStorage when session is available
-      console.log('session', session);
+     
       if (session?.access_token) {
         localStorage.setItem('token', session.access_token);
-        console.log('Token stored in context (auth change):', session.access_token);
       } else {
         localStorage.removeItem('token');
       }

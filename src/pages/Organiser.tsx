@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '../components/ui';
 import { toast } from 'sonner';
-import { getCurrentEventsOfOrganiserApi } from '../apis/Events';
+import { getEventsByOrganiserApi } from '../apis/Events';
 import PageLoader from '../components/PageLoader';
 
 const Organiser: React.FC = () => {
@@ -15,7 +15,7 @@ const Organiser: React.FC = () => {
   useEffect(() => {
     const getCurrentEvents = async () => {
       try {
-        const response = await getCurrentEventsOfOrganiserApi();
+        const response = await getEventsByOrganiserApi();
         if (response.success) {
           setEvents(response.data || []);
         } else {
@@ -133,7 +133,7 @@ const Organiser: React.FC = () => {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
-                        {event.locality}
+                        {event.locality.name}
                       </div>
                       <div className="flex items-center text-sm text-gray-600">
                         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

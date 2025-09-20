@@ -44,14 +44,12 @@ const Avatar: React.FC<AvatarProps> = ({
   // Listen for changes in localStorage to refresh avatar
   useEffect(() => {
     const handleStorageChange = () => {
-      console.log('Avatar: Storage change detected, reloading avatar');
       setLastAvatarCheck(Date.now());
       loadAvatar();
     };
 
     const handleAvatarUpdated = (event: Event) => {
       const customEvent = event as CustomEvent;
-      console.log('Avatar: avatarUpdated event received', customEvent.detail);
       // Force reload avatar immediately
       setLastAvatarCheck(Date.now());
       loadAvatar();
@@ -84,7 +82,6 @@ const Avatar: React.FC<AvatarProps> = ({
       if (currentTime - lastAvatarCheck > 2000) {
         const storedAvatar = localStorage.getItem('userAvatar');
         if (storedAvatar && storedAvatar !== avatarUrl) {
-          console.log('Avatar: Periodic check detected new avatar, reloading');
           loadAvatar();
         }
         setLastAvatarCheck(currentTime);

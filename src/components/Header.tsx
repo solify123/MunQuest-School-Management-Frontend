@@ -8,6 +8,7 @@ import SuperUserIcon from '../assets/super_user_icon.svg';
 import { useApp } from '../contexts/AppContext';
 import ProfileIcon from '../assets/showprofile_icon.svg';
 import LogoutIcon from '../assets/logout_icon.svg';
+import { supabaseSignOut } from '../apis/SupabaseAuth';
 
 interface HeaderProps {
   showNavigation?: boolean;
@@ -22,7 +23,7 @@ const Header: React.FC<HeaderProps> = ({
   const navigate = useNavigate();
   const location = useLocation();
   const isSuperUserPage = location.pathname === '/super-user';
-  
+
   // Use context for global state
   const { isOrganiser, userType } = useApp();
 
@@ -63,10 +64,14 @@ const Header: React.FC<HeaderProps> = ({
     await handleProfileClick();
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setIsDropdownOpen(false);
+    await supabaseSignOut();
     localStorage.removeItem('token');
     localStorage.removeItem('userAvatar');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('orgainiserId');
     navigate('/login');
   };
 
@@ -154,7 +159,7 @@ const Header: React.FC<HeaderProps> = ({
                     >
                       <div className="flex items-center mr-3">
                         {/* User Profile Icon */}
-                        
+
                         <img src={ProfileIcon} alt="Profile" />
                       </div>
                       <span className="text-gray-900 font-medium">Show Profile</span>

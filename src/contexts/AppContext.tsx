@@ -1,8 +1,11 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { verifyOrganiserApi } from '../apis/Organisers';
 import { getAllUsersApi } from '../apis/Users';
 import { getAllOrganisersApi } from '../apis/Organisers';
+import { getAllLocalitiesApi } from '../apis/localities';
+import { getAllSchoolsApi } from '../apis/schools';
+import { getAllAreasApi } from '../apis/areas';
 // import { getAllEventsApi } from '../apis/Events';
 import { useSupabaseAuth } from './SupabaseAuthContext';
 
@@ -33,7 +36,16 @@ interface AppContextType {
   setAllUsers: (users: any[]) => void;
   setAllOrganisers: (organisers: any[]) => void;
   setAllEvents: (events: any[]) => void;
+  setAllLocalities: (localities: any[]) => void;
+  setAllSchools: (schools: any[]) => void;
+  setAllAreas: (areas: any[]) => void;
   refreshEventsData: () => Promise<void>;
+  refreshLocalitiesData: () => Promise<void>;
+  refreshSchoolsData: () => Promise<void>;
+  refreshAreasData: () => Promise<void>;
+  allLocalities: any[];
+  allSchools: any[];
+  allAreas: any[];
 }
 
 // Create the context
@@ -47,7 +59,7 @@ interface AppProviderProps {
 export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   // Get Supabase auth state
   const { user: supabaseUser, session, loading: authLoading } = useSupabaseAuth();
-  
+
   // User state
   const [userType, setUserType] = useState<string | null>(null);
   const [isOrganiser, setIsOrganiser] = useState<boolean>(false);
@@ -55,6 +67,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const [allOrganisers, setAllOrganisers] = useState<any[]>([]);
   const [allEvents, setAllEvents] = useState<any[]>([]);
+  const [allLocalities, setAllLocalities] = useState<any[]>([]);
+  const [allSchools, setAllSchools] = useState<any[]>([]);
+  const [allAreas, setAllAreas] = useState<any[]>([]);
   // Dashboard statistics state
   const [dashboardStats, setDashboardStats] = useState({
     eventsUpcoming: 5,
@@ -66,7 +81,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   });
 
   // Check user type and organiser status
-  const refreshUserData = async () => {
+  const refreshUserData = useCallback(async () => {
     try {
       setIsLoading(true);
 
@@ -81,6 +96,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       if (session?.access_token) {
         const organiserResponse = await verifyOrganiserApi();
         setIsOrganiser(organiserResponse.success);
+        localStorage.setItem('orgainiserId', organiserResponse.data.id);
 
         const allUsersResponse = await getAllUsersApi();
         setAllUsers(allUsersResponse.data);
@@ -93,12 +109,44 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [supabaseUser, session]);
 
-  const refreshEventsData = async () => {
-    // const allEventsResponse = await getAllEventsApi();
-    // setAllEvents(allEventsResponse.data);
-  };
+  const refreshEventsData = useCallback(async () => {
+    try {
+      // const allEventsResponse = await getAllEventsApi();
+      // setAllEvents(allEventsResponse.data);
+    } catch (error) {
+      console.error('Error refreshing events data:', error);
+    }
+  }, []);
+
+  const refreshLocalitiesData = useCallback(async () => {
+    try {
+      const allLocalitiesResponse = await getAllLocalitiesApi();
+      console.log("AppContext: allLocalitiesResponse", allLocalitiesResponse);
+      setAllLocalities(allLocalitiesResponse.data);
+    } catch (error) {
+      console.error('Error refreshing localities data:', error);
+    }
+  }, []);
+
+  const refreshSchoolsData = useCallback(async () => {
+    try {
+      const allSchoolsResponse = await getAllSchoolsApi();
+      setAllSchools(allSchoolsResponse.data);
+    } catch (error) {
+      console.error('Error refreshing schools data:', error);
+    }
+  }, []);
+
+  const refreshAreasData = useCallback(async () => {
+    try {
+      const allAreasResponse = await getAllAreasApi();
+      setAllAreas(allAreasResponse.data);
+    } catch (error) {
+      console.error('Error refreshing areas data:', error);
+    }
+  }, []);
 
   // Update dashboard statistics
   const updateDashboardStats = (newStats: Partial<AppContextType['dashboardStats']>) => {
@@ -114,7 +162,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       refreshUserData();
       refreshEventsData();
     }
-  }, [supabaseUser, session, authLoading]);
+  }, [supabaseUser, session, authLoading, refreshUserData, refreshEventsData]);
 
   const value: AppContextType = {
     userType,
@@ -123,7 +171,13 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     dashboardStats,
     allUsers,
     allEvents,
+    allLocalities,
+    allSchools,
+    allAreas,
     setAllEvents,
+    setAllLocalities,
+    setAllSchools,
+    setAllAreas,
     setAllUsers,
     setAllOrganisers,
     allOrganisers,
@@ -132,6 +186,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     updateDashboardStats,
     refreshUserData,
     refreshEventsData,
+    refreshLocalitiesData,
+    refreshSchoolsData,
+    refreshAreasData,
   };
 
   return (

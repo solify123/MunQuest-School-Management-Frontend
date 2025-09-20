@@ -54,7 +54,6 @@ const StudentDelegatePage: React.FC = () => {
       try {
         const response = await getEventByIdApi(eventId || '');
         if (response.success) {
-          console.log(response);
           setName(response.data[0].name);
           setDescription(response.data[0].description);
           setStartDate(response.data[0].start_date);
@@ -158,7 +157,6 @@ const StudentDelegatePage: React.FC = () => {
           emergencyMobileNumber: ''
         });
       } catch (error: any) {
-        console.log('Registration info API not available, using placeholder data');
         // Fallback to placeholder data
         setRegistrationInfo({
           registrationNo: '223344',

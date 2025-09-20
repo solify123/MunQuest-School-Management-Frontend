@@ -122,13 +122,6 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
       
       return matchesUsername && notAlreadyOrganiser && matchesRole;
     });
-
-    // Debug log to see user data structure
-    if (filtered.length > 0) {
-      console.log('Filtered user sample:', filtered[0]);
-      console.log('Available fields:', Object.keys(filtered[0]));
-    }
-
     setFilteredUsers(filtered);
   };
 

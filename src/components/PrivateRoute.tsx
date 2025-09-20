@@ -10,11 +10,9 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
   
   // Check if user is authenticated by looking for token in localStorage
   const token = localStorage.getItem('token');
-  console.log('PrivateRoute - Token in localStorage:', token);
   
   // If no token, redirect to login with the current location as state
   if (!token) {
-    console.log('PrivateRoute - No token found, redirecting to login');
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
   

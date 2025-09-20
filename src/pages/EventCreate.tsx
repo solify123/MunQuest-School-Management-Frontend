@@ -12,6 +12,9 @@ const EventCreate: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [school, setSchool] = useState('');
   const [locality, setLocality] = useState('');
+  const [locality_id, setLocality_id] = useState('');
+  const [school_id, setSchool_id] = useState('');
+  const [area_id, setArea_id] = useState('');
   const [coverImage, setCoverImage] = useState<File | string | null>(null);
   const [eventLogo, setEventLogo] = useState<File | string | null>(null);
   const [eventName, setEventName] = useState('');
@@ -41,25 +44,12 @@ const EventCreate: React.FC = () => {
   useEffect(() => {
     async function getUserById() {
       const user = await getUserByIdApi();
-
-      setSchool(user.data.school_name);
-      if (user.data.school_location === "AD") {
-        setLocality("Abu Dhabi");
-      } else if (user.data.school_location === "DU") {
-        setLocality("Dubai");
-      } else if (user.data.school_location === "SH") {
-        setLocality("Sharjah");
-      } else if (user.data.school_location === "AJ") {
-        setLocality("Ajman");
-      } else if (user.data.school_location === "RAK") {
-        setLocality("Ras Al Khaimah");
-      } else if (user.data.school_location === "UAQ") {
-        setLocality("Umm Al Quwain");
-      } else if (user.data.school_location === "AIN") {
-        setLocality("Al Ain");
-      } else {
-        setLocality(user.data.school_location);
-      }
+      console.log("user", user);
+      setSchool(user.data.school.name);
+      setLocality(user.data.school.code);
+      setLocality_id(user.data.school.locality_id);
+      setSchool_id(user.data.school.id);
+      setArea_id(user.data.school.area_id);
     }
     getUserById();
   }, []);
@@ -156,7 +146,7 @@ const EventCreate: React.FC = () => {
 
       try {
         setIsSubmitting(true);
-        const response = await createEventApi(eventName, locality, school, coverImage as string, eventLogo as string, eventDescription, eventStartDate, eventEndDate, numberOfSeats, feesPerDelegate, totalRevenue, website, instagram);
+        const response = await createEventApi(eventName, eventDescription, eventStartDate, eventEndDate, coverImage as string, eventLogo as string, locality_id, school_id, area_id, numberOfSeats, feesPerDelegate, totalRevenue, website, instagram);
         if (response.success) {
           toast.success(response.message);
           navigate('/event-create-success');
@@ -837,130 +827,130 @@ const EventCreate: React.FC = () => {
         {/* Header Section */}
         <Header />
 
-      {/* Breadcrumb */}
-      <div className="py-3">
-        <div className="mx-auto px-6" style={{ maxWidth: '65rem' }}>
-          <div className="flex items-center text-sm text-gray-600">
-            <span
-              className="cursor-pointer"
-              onClick={() => navigate('/home')}
-              style={{
+        {/* Breadcrumb */}
+        <div className="py-3">
+          <div className="mx-auto px-6" style={{ maxWidth: '65rem' }}>
+            <div className="flex items-center text-sm text-gray-600">
+              <span
+                className="cursor-pointer"
+                onClick={() => navigate('/home')}
+                style={{
+                  color: '#C2A46D',
+                  fontSize: '25px',
+                  fontStyle: 'normal',
+                  fontWeight: 700,
+                  lineHeight: '150%',
+                }}
+              >
+                Home
+              </span>
+              <span className="mx-2" style={{
                 color: '#C2A46D',
                 fontSize: '25px',
                 fontStyle: 'normal',
                 fontWeight: 700,
                 lineHeight: '150%',
-              }}
-            >
-              Home
-            </span>
-            <span className="mx-2" style={{
-              color: '#C2A46D',
-              fontSize: '25px',
-              fontStyle: 'normal',
-              fontWeight: 700,
-              lineHeight: '150%',
-            }}>&gt;</span>
-            <span className="text-[#1E395D] font-medium" style={{
-              color: '#C2A46D',
-              fontSize: '25px',
-              fontStyle: 'normal',
-              fontWeight: 700,
-              lineHeight: '150%',
-            }}>Event Info</span>
+              }}>&gt;</span>
+              <span className="text-[#1E395D] font-medium" style={{
+                color: '#C2A46D',
+                fontSize: '25px',
+                fontStyle: 'normal',
+                fontWeight: 700,
+                lineHeight: '150%',
+              }}>Event Info</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Step Navigation */}
-      <div className="bg-white">
-        <div className="mx-auto px-6" style={{ maxWidth: '65rem' }}>
-          <div className="flex items-center space-x-4">
-            {steps.map((step, index) => (
-              <React.Fragment key={step.id}>
-                <div
-                  className={`font-medium transition-colors duration-200 cursor-pointer ${step.active
-                    ? 'bg-[#1E395D] text-white'
-                    : 'bg-white text-gray-600 hover:text-gray-800'
-                    }`}
-                  style={{
-                    display: 'flex',
-                    width: '200px',
-                    height: '58px',
-                    padding: '5px',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    borderRadius: '20px',
+        {/* Step Navigation */}
+        <div className="bg-white">
+          <div className="mx-auto px-6" style={{ maxWidth: '65rem' }}>
+            <div className="flex items-center space-x-4">
+              {steps.map((step, index) => (
+                <React.Fragment key={step.id}>
+                  <div
+                    className={`font-medium transition-colors duration-200 cursor-pointer ${step.active
+                      ? 'bg-[#1E395D] text-white'
+                      : 'bg-white text-gray-600 hover:text-gray-800'
+                      }`}
+                    style={{
+                      display: 'flex',
+                      width: '200px',
+                      height: '58px',
+                      padding: '5px',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      borderRadius: '20px',
 
-                  }}
-                  onClick={() => setCurrentStep(step.id)}
-                >
-                  {step.name}
-                </div>
-                {index < steps.length - 1 && (
-                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                )}
-              </React.Fragment>
-            ))}
+                    }}
+                    onClick={() => setCurrentStep(step.id)}
+                  >
+                    {step.name}
+                  </div>
+                  {index < steps.length - 1 && (
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="mx-auto px-6 py-8" style={{ maxWidth: '65rem' }}>
-        {currentStep === 1 && renderEventInfoStep()}
-        {currentStep === 2 && renderSeatsAndFeesStep()}
-        {currentStep === 3 && renderEventLinksStep()}
+        {/* Main Content */}
+        <div className="mx-auto px-6 py-8" style={{ maxWidth: '65rem' }}>
+          {currentStep === 1 && renderEventInfoStep()}
+          {currentStep === 2 && renderSeatsAndFeesStep()}
+          {currentStep === 3 && renderEventLinksStep()}
 
-        {/* Continue Button */}
-        <div className="mt-12 text-left">
-          <button
-            onClick={() => {
-              if (currentStep === 3) {
-                handleContinue();
-              } else {
-                if (!validateForm()) {
-                  toast.error('Please fill in all required fields');
-                  return;
+          {/* Continue Button */}
+          <div className="mt-12 text-left">
+            <button
+              onClick={() => {
+                if (currentStep === 3) {
+                  handleContinue();
+                } else {
+                  if (!validateForm()) {
+                    toast.error('Please fill in all required fields');
+                    return;
+                  }
+                  setCurrentStep(currentStep + 1);
                 }
-                setCurrentStep(currentStep + 1);
-              }
-            }}
-            disabled={isSubmitting}
-            style={{
-              display: 'flex',
-              width: '120px',
-              padding: '10px',
-              justifyContent: 'center',
-              alignItems: 'center',
-              gap: '10px',
-              borderRadius: '30px',
-              background: isSubmitting ? '#9CA3AF' : '#C2A46D',
-              color: '#fff',
-              fontWeight: 500,
-              fontSize: '16px',
-              border: 'none',
-              cursor: isSubmitting ? 'not-allowed' : 'pointer',
-              transition: 'background 0.2s',
-              opacity: isSubmitting ? 0.7 : 1,
-            }}
-            onMouseOver={e => !isSubmitting && (e.currentTarget.style.background = '#B8945F')}
-            onMouseOut={e => !isSubmitting && (e.currentTarget.style.background = '#C2A46D')}
-          >
-            {isSubmitting ? (
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                <span>Creating...</span>
-              </div>
-            ) : (
-              'Continue'
-            )}
-          </button>
+              }}
+              disabled={isSubmitting}
+              style={{
+                display: 'flex',
+                width: '120px',
+                padding: '10px',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: '10px',
+                borderRadius: '30px',
+                background: isSubmitting ? '#9CA3AF' : '#C2A46D',
+                color: '#fff',
+                fontWeight: 500,
+                fontSize: '16px',
+                border: 'none',
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                transition: 'background 0.2s',
+                opacity: isSubmitting ? 0.7 : 1,
+              }}
+              onMouseOver={e => !isSubmitting && (e.currentTarget.style.background = '#B8945F')}
+              onMouseOut={e => !isSubmitting && (e.currentTarget.style.background = '#C2A46D')}
+            >
+              {isSubmitting ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Creating...</span>
+                </div>
+              ) : (
+                'Continue'
+              )}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
     </PageLoader>
   );
 };
