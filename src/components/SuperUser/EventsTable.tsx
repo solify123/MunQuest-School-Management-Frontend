@@ -6,7 +6,9 @@ import { useApp } from '../../contexts/AppContext';
 interface Event {
   id: string;
   name: string;
-  locality: string;
+  locality: {
+    name: string;
+  };
   start_date: string;
   end_date: string;
   fees_per_delegate: string;
@@ -23,6 +25,9 @@ const EventsTable: React.FC<EventsTableProps> = ({ events, onAction }) => {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [updatingEventId, setUpdatingEventId] = useState<string | null>(null);
   const { refreshEventsData } = useApp();
+
+  console.log("EventsTable: Received events", events);
+  console.log("EventsTable: Events length", events?.length);
 
   const handleDropdownToggle = (eventId: string) => {
     setActiveDropdown(activeDropdown === eventId ? null : eventId);
@@ -114,7 +119,7 @@ const EventsTable: React.FC<EventsTableProps> = ({ events, onAction }) => {
 
             {/* Locality */}
             <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-              {event?.locality || 'N/A'}
+              {event?.locality?.name || 'N/A'}
             </div>
 
             {/* Date */}

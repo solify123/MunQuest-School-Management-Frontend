@@ -9,9 +9,9 @@ interface AvatarProps {
   forceRefresh?: boolean; // New prop to force refresh
 }
 
-const Avatar: React.FC<AvatarProps> = ({ 
-  size = 'medium', 
-  className = '', 
+const Avatar: React.FC<AvatarProps> = ({
+  size = 'medium',
+  className = '',
   onClick,
   showBorder = false,
   forceRefresh = false
@@ -48,16 +48,14 @@ const Avatar: React.FC<AvatarProps> = ({
       loadAvatar();
     };
 
-    const handleAvatarUpdated = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      // Force reload avatar immediately
+    const handleAvatarUpdated = () => {
       setLastAvatarCheck(Date.now());
       loadAvatar();
     };
 
     // Listen for storage changes
     window.addEventListener('storage', handleStorageChange);
-    
+
     // Also listen for custom avatar update events
     window.addEventListener('avatarUpdated', handleAvatarUpdated);
 
@@ -97,13 +95,13 @@ const Avatar: React.FC<AvatarProps> = ({
     large: 'w-16 h-16'
   };
 
-  const borderClasses = showBorder 
-    ? 'border-2 border-white shadow-lg' 
+  const borderClasses = showBorder
+    ? 'border-2 border-white shadow-lg'
     : '';
 
   if (isLoading) {
     return (
-      <div 
+      <div
         className={`${sizeClasses[size]} bg-gray-200 rounded-full flex items-center justify-center ${className}`}
         onClick={onClick}
       >
@@ -113,7 +111,7 @@ const Avatar: React.FC<AvatarProps> = ({
   }
 
   return (
-    <div 
+    <div
       className={`${sizeClasses[size]}  rounded-full flex items-center justify-center cursor-pointer ${borderClasses} ${className}`}
       onClick={onClick}
     >

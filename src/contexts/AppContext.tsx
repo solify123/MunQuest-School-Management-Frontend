@@ -6,7 +6,7 @@ import { getAllOrganisersApi } from '../apis/Organisers';
 import { getAllLocalitiesApi } from '../apis/localities';
 import { getAllSchoolsApi } from '../apis/schools';
 import { getAllAreasApi } from '../apis/areas';
-// import { getAllEventsApi } from '../apis/Events';
+import { getAllEventsApi } from '../apis/Events';
 import { useSupabaseAuth } from './SupabaseAuthContext';
 
 // Define the context type
@@ -113,8 +113,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
   const refreshEventsData = useCallback(async () => {
     try {
-      // const allEventsResponse = await getAllEventsApi();
-      // setAllEvents(allEventsResponse.data);
+      const allEventsResponse = await getAllEventsApi();
+      console.log("AppContext: allEventsResponse", allEventsResponse);
+      setAllEvents(allEventsResponse.data);
     } catch (error) {
       console.error('Error refreshing events data:', error);
     }

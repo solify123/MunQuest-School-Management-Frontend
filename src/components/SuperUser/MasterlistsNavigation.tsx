@@ -14,7 +14,6 @@ const MasterlistsNavigation: React.FC<MasterlistsNavigationProps> = ({
     { id: 'users-related', label: 'Users Related' },
     { id: 'schools-related', label: 'Schools Related' }
   ];
-  console.log(activeSection, "==========");
   const subSections = {
     'events-related': [
       { id: 'events', label: 'Events' },

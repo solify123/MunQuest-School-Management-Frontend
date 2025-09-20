@@ -8,14 +8,25 @@ const EventsPage: React.FC = () => {
 
   // Filter events based on search term
   const filteredEvents = useMemo(() => {
-    if (!allEvents || allEvents.length === 0) return [];
+    console.log("EventsPage: allEvents received", allEvents);
+    console.log("EventsPage: allEvents length", allEvents?.length);
     
-    if (!searchTerm.trim()) return allEvents;
+    if (!allEvents || allEvents.length === 0) {
+      console.log("EventsPage: No events found or empty array");
+      return [];
+    }
+    
+    if (!searchTerm.trim()) {
+      console.log("EventsPage: No search term, returning all events");
+      return allEvents;
+    }
+
+    console.log("EventsPage: Filtering events with search term:", searchTerm);
     
     const searchLower = searchTerm.toLowerCase();
     return allEvents.filter((event) => {
       const name = event?.name?.toLowerCase() || '';
-      const locality = event?.locality?.toLowerCase() || '';
+      const locality = event?.locality?.name?.toLowerCase() || '';
       const eventId = event?.id?.toString().toLowerCase() || '';
       
       return name.includes(searchLower) || 
