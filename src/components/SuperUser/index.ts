@@ -5,3 +5,5 @@ export { default as OrganisersTable } from './OrganisersTable';
 export { default as OrganisersPage } from './OrganisersPage';
 export { default as LeadershipRolesTable } from './LeadershipRolesTable';
 export { default as LeadershipRolesPage } from './LeadershipRolesPage';
+export { default as CommitteesTable } from './CommitteesTable';
+export { default as CommitteesPage } from './CommitteesPage';
