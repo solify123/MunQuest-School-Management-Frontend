@@ -281,6 +281,17 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
 
   return (
     <div>
+      {/* Search Input */}
+      <div className="mb-4" style={{ display: 'none' }}>
+        <input
+          type="text"
+          placeholder="Search organisers..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full max-w-md px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
       {/* Header Row */}
       <div className="grid grid-cols-11 gap-2 mb-2">
         {['Organiser ID', 'Username', 'Name', 'Locality', 'School', 'Role in Event', 'Evidence', 'Date Received', 'Date Actioned', 'Status', ' '].map((header, index) => (
