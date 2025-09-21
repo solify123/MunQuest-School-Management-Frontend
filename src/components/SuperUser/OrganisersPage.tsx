@@ -29,22 +29,24 @@ const OrganisersPage: React.FC<OrganisersPageProps> = ({ type = 'organisers' }) 
   const filteredData = useMemo(() => {
     const data = getData();
     if (!data || data.length === 0) return [];
-    
+
     if (!searchTerm.trim()) return data;
-    
+
     const searchLower = searchTerm.toLowerCase();
     return data.filter((item) => {
-      const name = item?.name?.toLowerCase() || '';
-      const username = item?.username?.toLowerCase() || '';
-      const school = item?.school?.toLowerCase() || '';
-      const studentId = item?.student_id?.toString().toLowerCase() || '';
-      const role = item?.role_in_event?.toLowerCase() || '';
-      
-      return name.includes(searchLower) || 
-             username.includes(searchLower) || 
-             school.includes(searchLower) ||
-             studentId.includes(searchLower) ||
-             role.includes(searchLower);
+      const name = item?.users?.fullname?.toLowerCase() || '';
+      const username = item?.users?.username?.toLowerCase() || '';
+      const school = item?.school?.name?.toLowerCase() || item?.school?.toLowerCase() || '';
+      const organiserId = item?.users?.id?.toString().toLowerCase() || '';
+      const role = item?.role?.toLowerCase() || '';
+      const locality = item?.users?.school_location?.toLowerCase() || '';
+
+      return name.includes(searchLower) ||
+        username.includes(searchLower) ||
+        school.includes(searchLower) ||
+        organiserId.includes(searchLower) ||
+        role.includes(searchLower) ||
+        locality.includes(searchLower);
     });
   }, [type, allOrganisers, searchTerm]);
 

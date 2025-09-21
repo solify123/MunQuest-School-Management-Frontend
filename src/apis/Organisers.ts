@@ -97,18 +97,18 @@ export const deleteOrganiserApi = async (organiserId: string) => {
     }
 }
 
-export const addOrganiserBySuperUserApi = async (userId: string, schoolName: string, locality: string, role: string, evidence: string, status: string) => {
+export const addOrganiserBySuperUserApi = async (user_id: string, school_id: string, locality_id: string, role: string, evidence: string, status: string, actioned_by_user_id: string) => {
     try {
         const token = localStorage.getItem('token');
 
-
         const response = await axios.post(`${backendUrl}/api/v1/organisers/add-organiser-by-super-user`, {
-            userId,
-            schoolName,
-            locality,
+            user_id,
+            school_id,
+            locality_id,
             role,
             evidence,
-            status
+            status,
+            actioned_by_user_id
         }, {
             headers: {
                 'Authorization': `Bearer ${token}`

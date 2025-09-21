@@ -30,16 +30,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
   const [isAddingNew, setIsAddingNew] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [filteredOrganisers, setFilteredOrganisers] = useState<any[]>([]);
-  const [newOrganiser, setNewOrganiser] = useState({
-    organiser_id: '',
-    username: '',
-    fullname: '',
-    locality: '',
-    school: '',
-    role: '',
-    evidence: '',
-    status: 'pending'
-  });
+  const [newOrganiser, setNewOrganiser] = useState<any>(null);
   const [userFound, setUserFound] = useState<boolean | null>(null);
   const [showUsernameDropdown, setShowUsernameDropdown] = useState<boolean>(false);
   const [filteredUsers, setFilteredUsers] = useState<any[]>([]);
@@ -70,7 +61,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
         const username = organiser?.users?.username || '';
         const fullname = organiser?.users?.fullname || '';
         const schoolLocation = organiser?.users?.school_location || '';
-        const schoolName = organiser?.school || '';
+        const schoolName = organiser?.school?.name || organiser?.school || '';
         const role = organiser?.role || '';
 
         return (
@@ -95,6 +86,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
     setShowUsernameDropdown(false);
     setFilteredUsers([]);
     setNewOrganiser({
+      id: '',
       organiser_id: '',
       username: '',
       fullname: '',
@@ -107,7 +99,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
   };
 
   const handleInputChange = (field: string, value: string) => {
-    setNewOrganiser(prev => ({
+    setNewOrganiser((prev: any) => ({
       ...prev,
       [field]: value
     }));
@@ -116,13 +108,14 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
     if (field === 'username') {
       if (value.trim()) {
         setShowUsernameDropdown(true);
+        setUserFound(null); // Reset user found state when typing
         filterUsersByUsername(value.trim());
       } else {
         setShowUsernameDropdown(false);
         setUserFound(null);
         setFilteredUsers([]);
         // Clear fields if username is empty
-        setNewOrganiser(prev => ({
+        setNewOrganiser((prev: any) => ({
           ...prev,
           organiser_id: '',
           fullname: '',
@@ -139,29 +132,43 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
     // Get all user IDs that are already organisers
     // The organisers data has users.id field, not just id
     const organiserUserIds = new Set(organisers.map((org: any) => org.users?.id || org.id));
-    
+
     // Filter users who are not already organisers and match the username
     // Also filter by role based on the organiser type context
     const filtered = allUsers.filter(user => {
       const matchesUsername = user.username?.toLowerCase().includes(username.toLowerCase());
       const notAlreadyOrganiser = !organiserUserIds.has(user.id);
-      const matchesRole = organiserType === 'all' || user.role === organiserType.slice(0, -1); // 'students' -> 'student', 'teachers' -> 'teacher'
-      
+
+      // Fix role matching logic
+      let matchesRole = true;
+      if (organiserType === 'students') {
+        matchesRole = user.role === 'student';
+      } else if (organiserType === 'teachers') {
+        matchesRole = user.role === 'teacher';
+      }
+      // If organiserType is 'all', we don't filter by role
+
       return matchesUsername && notAlreadyOrganiser && matchesRole;
     });
+
+    console.log('Filtering users:', { username, organiserType, filteredUsers: filtered.length, totalUsers: allUsers.length });
     setFilteredUsers(filtered);
   };
 
   // Function to handle username selection from dropdown
   const handleUsernameSelect = (selectedUser: any) => {
+    console.log('Selected user:', selectedUser);
 
-    setNewOrganiser(prev => ({
+    setNewOrganiser((prev: any) => ({
       ...prev,
+      user_id: selectedUser.id || '',
+      school_id: selectedUser.school_id || '',
+      locality_id: selectedUser.school.locality_id || '',
       username: selectedUser.username || '',
       organiser_id: selectedUser.id || '',
       fullname: selectedUser.fullname || '',
-      locality: selectedUser.school_location || selectedUser.locality || '',
-      school: selectedUser.school_name || selectedUser.schoolName || '',
+      locality: selectedUser.school.code || '',
+      school: selectedUser.school?.name || '',
       role: selectedUser.role_in_event || selectedUser.role || '',
       evidence: selectedUser.evidence || 'Internal'
     }));
@@ -180,13 +187,15 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
         return;
       }
 
+      const actioned_by_user_id = localStorage.getItem('userId');
       const response = await addOrganiserBySuperUserApi(
-        newOrganiser.organiser_id,
-        newOrganiser.school,
-        newOrganiser.locality,
+        newOrganiser.user_id || '',
+        newOrganiser.school_id || '',
+        newOrganiser.locality_id || '',
         newOrganiser.role,
         newOrganiser.evidence,
-        'pending'
+        'pending',
+        actioned_by_user_id || ''
       );
 
       if (response.success) {
@@ -196,6 +205,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
         setShowUsernameDropdown(false);
         setFilteredUsers([]);
         setNewOrganiser({
+          id: '',
           organiser_id: '',
           username: '',
           fullname: '',
@@ -208,7 +218,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
 
         // Refresh data to update both organisers and users lists
         await refreshUserData();
-        
+
         // Debug: Check if the user was properly excluded after refresh
         console.log('After refresh - checking if user is excluded from dropdown');
       } else {
@@ -271,39 +281,6 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
 
   return (
     <div>
-      {/* Search Input */}
-      <div className="mb-4">
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Search by Username, Name, School Location, School Name, or Role..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2 pl-10 pr-4 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C2A46D] focus:border-transparent"
-          />
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
-          {searchTerm && (
-            <button
-              onClick={() => setSearchTerm('')}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center"
-            >
-              <svg className="h-4 w-4 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          )}
-        </div>
-        {searchTerm && (
-          <div className="mt-2 text-sm text-gray-600">
-            Showing {filteredOrganisers.length} of {organisers.length} organisers
-          </div>
-        )}
-      </div>
-
       {/* Header Row */}
       <div className="grid grid-cols-11 gap-2 mb-2">
         {['Organiser ID', 'Username', 'Name', 'Locality', 'School', 'Role in Event', 'Evidence', 'Date Received', 'Date Actioned', 'Status', ' '].map((header, index) => (
@@ -332,12 +309,13 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
       </div>
 
       {/* Data Rows */}
-      {filteredOrganisers.length === 0 ? (
+      {filteredOrganisers.length === 0 && !isAddingNew ? (
         <div className="text-center py-8 text-gray-500">
           {searchTerm ? 'No organisers found matching your search' : 'No organisers found'}
         </div>
-      ) : (
+      ) : filteredOrganisers.length > 0 ? (
         filteredOrganisers.map((organiser: any) => (
+          console.log("------------------------------------------",organiser),
           <div key={organiser?.id || Math.random()} className="grid grid-cols-11 gap-2 mb-2">
             {/* Student ID */}
             <div className="bg-white px-3 py-2 text-sm font-medium text-gray-900 rounded-md border border-gray-200">
@@ -356,12 +334,12 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
 
             {/* Locality */}
             <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-              {organiser?.users.school_location || 'N/A'}
+              {organiser?.locality?.name || 'N/A'}
             </div>
 
             {/* School */}
             <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-              {organiser?.school || 'N/A'}
+              {organiser?.school?.name || organiser?.school || 'N/A'}
             </div>
 
             {/* Role in Event */}
@@ -519,7 +497,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
             </div>
           </div>
         ))
-      )}
+      ) : null}
 
       {/* New Organiser Input Row */}
       {isAddingNew && (
@@ -581,6 +559,9 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
                   >
                     <div className="font-medium text-gray-900">{user.username}</div>
                     <div className="text-xs text-gray-500">{user.fullname}</div>
+                    <div className="text-xs text-gray-400">
+                      {user.school?.name || user.school_name || user.schoolName || user.school || 'No school'} • {user.locality?.name || user.school_location || user.locality || 'No location'}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -606,7 +587,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
             />
           </div>
 
-          {/* Academic Level */}
+          {/* Locality */}
           <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
             <input
               type="text"
@@ -689,20 +670,20 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
         <button
           onClick={handleAddNew}
           disabled={isAddingNew}
-          className={`bg-[#C2A46D] text-white font-medium rounded-[30px] w-[105px] h-[44px] px-[10px] py-[10px] mr-[10px] opacity-100 transition-colors duration-200 opacity-50 cursor-not-allowed'
-              : 'hover:bg-[#9a7849]'
+          className={`bg-[#C2A46D] text-white font-medium rounded-[30px] w-[105px] h-[44px] px-[10px] py-[10px] mr-[10px] transition-colors duration-200 ${isAddingNew
+            ? 'opacity-50 cursor-not-allowed'
+            : 'hover:bg-[#9a7849]'
             }`}
-          style={{ top: '1025px', left: '385px', transform: 'rotate(0deg)' }}
         >
           Add
         </button>
         <button
           onClick={handleSaveNew}
           disabled={!isAddingNew}
-          className={`bg-[#C2A46D] text-white font-medium rounded-[30px] w-[105px] h-[44px] px-[10px] py-[10px] opacity-100 transition-colors duration-200 
-              opacity-50 cursor-not-allowed hover:bg-[#b89a6a]'
+          className={`bg-[#C2A46D] text-white font-medium rounded-[30px] w-[105px] h-[44px] px-[10px] py-[10px] transition-colors duration-200 ${!isAddingNew
+            ? 'opacity-50 cursor-not-allowed'
+            : 'hover:bg-[#b89a6a]'
             }`}
-          style={{ top: '1025px', left: '385px', transform: 'rotate(0deg)' }}
         >
           Save
         </button>
