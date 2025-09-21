@@ -63,6 +63,7 @@ export const getAllOrganisersApi = async () => {
                 'Authorization': `Bearer ${token}`
             }
         });
+
         return response.data;
     } catch (error: any) {
         throw new Error(error.response.data.message);
@@ -72,7 +73,8 @@ export const getAllOrganisersApi = async () => {
 export const updateOrganiserStatusApi = async (organiserId: string, status: string) => {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.patch(`${backendUrl}/api/v1/organisers/update-organiser-status/${organiserId}`, { status }, {
+        const userId = localStorage.getItem('userId');
+        const response = await axios.patch(`${backendUrl}/api/v1/organisers/update-organiser-status/${organiserId}`, { status, userId }, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }

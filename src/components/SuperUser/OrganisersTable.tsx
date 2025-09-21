@@ -76,6 +76,8 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
     }
   }, [searchTerm, organisers]);
 
+  console.log('Filtered organisers:', filteredOrganisers);
+
   const handleDropdownToggle = (organiserId: string) => {
     setActiveDropdown(activeDropdown === organiserId ? null : organiserId);
   };
@@ -170,7 +172,12 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
       locality: selectedUser.school.code || '',
       school: selectedUser.school?.name || '',
       role: selectedUser.role_in_event || selectedUser.role || '',
-      evidence: selectedUser.evidence || 'Internal'
+      evidence: selectedUser.evidence || 'Internal',
+      // Set appropriate field based on organiser type
+      ...(organiserType === 'students' 
+        ? { grade: selectedUser.grade || '' }
+        : { years_of_experience: selectedUser.years_of_experience || '' }
+      )
     }));
 
     setUserFound(true);
@@ -293,8 +300,8 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
       </div>
 
       {/* Header Row */}
-      <div className="grid grid-cols-11 gap-2 mb-2">
-        {['Organiser ID', 'Username', 'Name', 'Locality', 'School', 'Role in Event', 'Evidence', 'Date Received', 'Date Actioned', 'Status', ' '].map((header, index) => (
+      <div className="grid grid-cols-12 gap-2 mb-2">
+        {['UserID', 'Organiser ID', 'Username', 'Name', organiserType === 'students' ? 'Grade' : 'Teaching Experience', 'School', 'Role in Event', 'Evidence', 'Date Received', 'Date Actioned', 'Status', ' '].map((header, index) => (
           header === ' ' ? (
             <div key={header}>
             </div>
@@ -326,10 +333,14 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
         </div>
       ) : filteredOrganisers.length > 0 ? (
         filteredOrganisers.map((organiser: any) => (
-          <div key={organiser?.id || Math.random()} className="grid grid-cols-11 gap-2 mb-2">
-            {/* Student ID */}
+          <div key={organiser?.id || Math.random()} className="grid grid-cols-12 gap-2 mb-2">
+            {/* User ID */}
             <div className="bg-white px-3 py-2 text-sm font-medium text-gray-900 rounded-md border border-gray-200">
-              {organiser?.users.id || 'N/A'}
+              {organiser?.users.id.split('-')[0] || 'N/A'}
+            </div>
+            {/* Organiser ID */}
+            <div className="bg-white px-3 py-2 text-sm font-medium text-gray-900 rounded-md border border-gray-200">
+              {organiser?.id.split('-')[0] || 'N/A'}
             </div>
 
             {/* Username */}
@@ -342,9 +353,12 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
               {organiser?.users.fullname || 'N/A'}
             </div>
 
-            {/* Locality */}
+            {/* Grade/Teaching Experience */}
             <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-              {organiser?.locality?.name || 'N/A'}
+              {organiserType === 'students' 
+                ? (organiser?.users?.grade || 'N/A')
+                : (organiser?.users?.years_of_experience || 'N/A')
+              }
             </div>
 
             {/* School */}
@@ -360,7 +374,20 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
             {/* Evidence */}
             <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
               {organiser?.evidence ? (
-                /^https?:\/\//.test(organiser.evidence) ? (
+                typeof organiser.evidence === 'object' && organiser.evidence.file_url ? (
+                  <div className="flex items-center justify-center">
+                    <button
+                      onClick={() => window.open(organiser.evidence.file_url, '_blank')}
+                      className="flex items-center justify-center p-1 rounded hover:bg-gray-100 transition-colors duration-200"
+                      title="Click to open document"
+                    >
+                      Document
+                      <svg className="w-5 h-5 text-blue-600 hover:text-blue-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </button>
+                  </div>
+                ) : typeof organiser.evidence === 'string' && /^https?:\/\//.test(organiser.evidence) ? (
                   <div className="flex items-center justify-center">
                     <button
                       onClick={() => window.open(organiser.evidence, '_blank')}
@@ -374,7 +401,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
                     </button>
                   </div>
                 ) : (
-                  <span>{organiser.evidence}</span>
+                  <span>{typeof organiser.evidence === 'string' ? organiser.evidence : 'Document'}</span>
                 )
               ) : (
                 'N/A'
@@ -383,12 +410,12 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
 
             {/* Date Received */}
             <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-              {organiser?.created_at.split('T')[0] || 'N/A'}
+              {organiser?.created_at?.split('T')[0] || 'N/A'}
             </div>
 
             {/* Date Actioned */}
             <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-              {organiser?.updated_at || 'N/A'}
+              {organiser?.actioned_at?.split('T')[0] || 'N/A'}
             </div>
 
             {/* Status */}
@@ -597,11 +624,11 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
             />
           </div>
 
-          {/* Locality */}
+          {/* Grade/Teaching Experience */}
           <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
             <input
               type="text"
-              value={newOrganiser.locality}
+              value={organiserType === 'students' ? (newOrganiser.grade || '') : (newOrganiser.years_of_experience || '')}
               disabled
               placeholder="Auto populated"
               className="w-full border-none outline-none text-sm"
@@ -645,7 +672,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
           <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
             <input
               type="text"
-              value={new Date().toISOString().split('T')[0]}
+              value={newOrganiser.created_at?.split('T')[0] || 'N/A'}
               className="w-full border-none outline-none text-sm"
               disabled
             />
@@ -655,7 +682,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
           <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
             <input
               type="text"
-              value=""
+              value={newOrganiser.actioned_at?.split('T')[0] || 'N/A'}
               className="w-full border-none outline-none text-sm"
               disabled
             />

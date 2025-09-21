@@ -143,7 +143,7 @@ const SuperUser: React.FC = () => {
       <div className="space-y-6">
         {activeTab === 'events' && <EventsPage />}
         
-        {/* {activeTab === 'organisers' && <OrganisersPage type="organisers" />} */}
+        {activeTab === 'organisers' && <OrganisersPage type="students" />}
         
         {activeTab === 'students' && <OrganisersPage type="students" />}
         

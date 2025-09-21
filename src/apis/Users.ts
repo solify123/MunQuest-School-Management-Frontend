@@ -239,3 +239,17 @@ export const getAllUsersApi = async () => {
     }
 
 }
+
+export const updateUserStatusApi = async (userId: string, status: string) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.patch(`${backendUrl}/api/v1/users/update-user-status/${userId}`, { status }, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response?.data?.message || 'Failed to update user status');
+    }
+};

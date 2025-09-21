@@ -64,7 +64,7 @@ const MasterlistsNavigation: React.FC<MasterlistsNavigationProps> = ({
   const isSubSectionActive = (sectionId: string) => {
     // Only highlight the main category if we're on that category page, not on a sub-page
     if (sectionId === 'events-related') {
-      return activeSection === 'events-related';
+      return activeSection === 'events-related' || activeSection === 'events' || activeSection === 'organisers' || activeSection === 'leadership-roles' || activeSection === 'committees' || activeSection === 'students' || activeSection === 'teachers';
     }
     if (sectionId === 'users-related') {
       return activeSection === 'users-related';
@@ -73,7 +73,7 @@ const MasterlistsNavigation: React.FC<MasterlistsNavigationProps> = ({
       return activeSection === 'schools-related';
     }
     if (sectionId === 'organisers') {
-      return activeSection === 'organisers' || activeSection === 'students' || activeSection === 'teachers';
+      return activeSection === 'students' || activeSection === 'teachers';
     }
     return activeSection === sectionId;
   };
@@ -106,7 +106,7 @@ const MasterlistsNavigation: React.FC<MasterlistsNavigationProps> = ({
           Dashboard
         </button>
         <button
-          onClick={() => onSectionChange('masterlists')}
+          onClick={() => onSectionChange('events')}
           className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] ${getButtonStyle(isMainSectionActive('masterlists'))}`}
         >
           Masterlists
@@ -114,7 +114,7 @@ const MasterlistsNavigation: React.FC<MasterlistsNavigationProps> = ({
       </div>
 
       {/* Sub Navigation Buttons */}
-      {(isMainSectionActive('masterlists') || activeSection === 'students' || activeSection === 'teachers') && (
+      {(isMainSectionActive('masterlists') || activeSection === 'events' || activeSection === 'students' || activeSection === 'teachers') && (
         <div className="space-y-2">
           {/* First row of sub-sections */}
           <div className="flex space-x-2">
@@ -135,7 +135,7 @@ const MasterlistsNavigation: React.FC<MasterlistsNavigationProps> = ({
               {subSections['events-related']?.map((subSection) => (
                 <button
                   key={subSection.id}
-                  onClick={() => onSectionChange(subSection.id)}
+                  onClick={() => onSectionChange(subSection.id === 'organisers' ? 'students' : subSection.id)}
                   className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] ${getButtonStyle(isSubSectionActive(subSection.id), true, isSubSectionParent(subSection.id))}`}
                 >
                   {subSection.label}
@@ -145,7 +145,7 @@ const MasterlistsNavigation: React.FC<MasterlistsNavigationProps> = ({
           ) : null}
 
           {/* Third row for Organisers sub-sections */}
-          {(activeSection === 'organisers') || activeSection === 'students' || activeSection === 'teachers' ? (
+          {activeSection === 'students' || activeSection === 'teachers' ? (
             <div className="flex space-x-2">
               <button
                 onClick={() => onSectionChange('students')}
