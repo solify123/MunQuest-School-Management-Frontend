@@ -98,17 +98,14 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
       // Only make API calls if user is authenticated
       if (session?.access_token) {
-        console.log('AppContext - Loading data for authenticated user');
-        // Load data for all authenticated users (since SuperUser page is now accessible to all)
         const allUsersResponse = await getAllUsersApi();
-        console.log('AppContext - allUsersResponse:', allUsersResponse);
         setAllUsers(allUsersResponse.data);
 
         const allOrganisersResponse = await getAllOrganisersApi();
-        console.log('AppContext - allOrganisersResponse:', allOrganisersResponse);
         setAllOrganisers(allOrganisersResponse.data);
-      } else {
-        console.log('AppContext - No session access token, not loading data');
+
+        const allLeadershipRolesResponse = await getAllLeadershipRolesApi();
+        setAllLeadershipRoles(allLeadershipRolesResponse.data);
       }
     } catch (error) {
       console.error('Error refreshing user data:', error);
@@ -159,16 +156,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       setAllLeadershipRoles(allLeadershipRolesResponse.data || []);
     } catch (error) {
       console.error('Error refreshing leadership roles data:', error);
-      // Set mock data for demo purposes
-      setAllLeadershipRoles([
-        { id: 'LR0001', abbreviation: 'SG', title: 'Secretary General' },
-        { id: 'LR0002', abbreviation: 'DG', title: 'Director General' },
-        { id: 'LR0003', abbreviation: 'COM', title: 'Head of Committees' },
-        { id: 'LR0004', abbreviation: 'DA', title: 'Head of Delegate Affairs' },
-        { id: 'LR0005', abbreviation: 'CHR', title: 'Head of Chairs' },
-        { id: 'LR0006', abbreviation: 'LOG', title: 'Head of Logistics' },
-        { id: 'LR0007', abbreviation: 'PR', title: 'Head of Public Relations' },
-      ]);
     }
   }, []);
 

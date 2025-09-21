@@ -15,12 +15,12 @@ export const getAllLeadershipRolesApi = async () => {
     }
 };
 
-export const createLeadershipRoleApi = async (abbreviation: string, title: string) => {
+export const createLeadershipRoleApi = async (abbr: string, leadership_role: string) => {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.post(`${backendUrl}/api/v1/leadership-roles/create-leadership-role`, {
-            abbreviation,
-            title
+        const response = await axios.post(`${backendUrl}/api/v1/leadership-roles/add-leadership-role`, {
+            abbr,
+            leadership_role
         }, {
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -32,12 +32,12 @@ export const createLeadershipRoleApi = async (abbreviation: string, title: strin
     }
 };
 
-export const updateLeadershipRoleApi = async (roleId: string, abbreviation: string, title: string) => {
+export const updateLeadershipRoleApi = async (roleId: string, abbr: string, leadership_role: string) => {
     try {
         const token = localStorage.getItem('token');
         const response = await axios.patch(`${backendUrl}/api/v1/leadership-roles/update-leadership-role/${roleId}`, {
-            abbreviation,
-            title
+            abbr,
+            leadership_role
         }, {
             headers: {
                 'Authorization': `Bearer ${token}`

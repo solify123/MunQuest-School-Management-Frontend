@@ -19,8 +19,7 @@ const SuperUser: React.FC = () => {
   const { allUsers, allOrganisers } = useApp();
 
   // Debug logging
-  console.log('SuperUser - allUsers:', allUsers);
-  console.log('SuperUser - allOrganisers:', allOrganisers);
+
 
   // Check if user is authorized to access superuser page
   // useEffect(() => {

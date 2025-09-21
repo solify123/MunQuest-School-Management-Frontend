@@ -26,9 +26,6 @@ const EventsTable: React.FC<EventsTableProps> = ({ events, onAction }) => {
   const [updatingEventId, setUpdatingEventId] = useState<string | null>(null);
   const { refreshEventsData } = useApp();
 
-  console.log("EventsTable: Received events", events);
-  console.log("EventsTable: Events length", events?.length);
-
   const handleDropdownToggle = (eventId: string) => {
     setActiveDropdown(activeDropdown === eventId ? null : eventId);
   };

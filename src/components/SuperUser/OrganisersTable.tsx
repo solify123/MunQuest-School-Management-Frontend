@@ -326,7 +326,6 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
         </div>
       ) : filteredOrganisers.length > 0 ? (
         filteredOrganisers.map((organiser: any) => (
-          console.log("------------------------------------------",organiser),
           <div key={organiser?.id || Math.random()} className="grid grid-cols-11 gap-2 mb-2">
             {/* Student ID */}
             <div className="bg-white px-3 py-2 text-sm font-medium text-gray-900 rounded-md border border-gray-200">
