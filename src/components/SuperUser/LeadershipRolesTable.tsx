@@ -24,35 +24,35 @@ const LeadershipRolesTable: React.FC<LeadershipRolesTableProps> = ({ leadershipR
 
   const handleAdd = async () => {
     if (!newRole.abbreviation.trim() || !newRole.title.trim()) {
-      showToast('Please fill in all fields', 'error');
+      showToast.error('Please fill in all fields');
       return;
     }
 
     try {
       await createLeadershipRoleApi(newRole.abbreviation.trim(), newRole.title.trim());
-      showToast('Leadership role created successfully', 'success');
+      showToast.success('Leadership role created successfully');
       setNewRole({ abbreviation: '', title: '' });
       setIsAdding(false);
       onRefresh();
     } catch (error: any) {
-      showToast(error.message || 'Failed to create leadership role', 'error');
+      showToast.error(error.message || 'Failed to create leadership role');
     }
   };
 
   const handleSave = async (roleId: string) => {
     if (!editRole.abbreviation.trim() || !editRole.title.trim()) {
-      showToast('Please fill in all fields', 'error');
+      showToast.error('Please fill in all fields');
       return;
     }
 
     try {
       await updateLeadershipRoleApi(roleId, editRole.abbreviation.trim(), editRole.title.trim());
-      showToast('Leadership role updated successfully', 'success');
+      showToast.success('Leadership role updated successfully');
       setEditRole({ abbreviation: '', title: '' });
       setEditingId(null);
       onRefresh();
     } catch (error: any) {
-      showToast(error.message || 'Failed to update leadership role', 'error');
+      showToast.error(error.message || 'Failed to update leadership role');
     }
   };
 
@@ -60,10 +60,10 @@ const LeadershipRolesTable: React.FC<LeadershipRolesTableProps> = ({ leadershipR
     if (window.confirm('Are you sure you want to delete this leadership role?')) {
       try {
         await deleteLeadershipRoleApi(roleId);
-        showToast('Leadership role deleted successfully', 'success');
+        showToast.success('Leadership role deleted successfully');
         onRefresh();
       } catch (error: any) {
-        showToast(error.message || 'Failed to delete leadership role', 'error');
+        showToast.error(error.message || 'Failed to delete leadership role');
       }
     }
   };

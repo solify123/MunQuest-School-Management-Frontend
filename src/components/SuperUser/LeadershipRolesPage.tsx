@@ -2,14 +2,6 @@ import React, { useState, useMemo } from 'react';
 import LeadershipRolesTable from './LeadershipRolesTable';
 import { useApp } from '../../contexts/AppContext';
 
-interface LeadershipRole {
-  id: string;
-  abbreviation: string;
-  title: string;
-  created_at?: Date;
-  updated_at?: Date;
-}
-
 const LeadershipRolesPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const { allLeadershipRoles, refreshLeadershipRolesData, isLoading } = useApp();
