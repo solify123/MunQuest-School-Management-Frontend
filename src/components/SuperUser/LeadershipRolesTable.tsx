@@ -157,7 +157,7 @@ const LeadershipRolesTable: React.FC<LeadershipRolesTableProps> = ({ leadershipR
       </div>
 
       {/* Header Row */}
-      <div className="grid grid-cols-4 gap-2 mb-2">
+      <div className="w-[600px] grid grid-cols-[0.5fr_0.5fr_2fr_0.25fr] gap-2 mb-2">
         {['ID', 'ABBR', 'Leadership Role', ' '].map((header) => (
           header === ' ' ? (
             <div key={header}>
@@ -183,7 +183,7 @@ const LeadershipRolesTable: React.FC<LeadershipRolesTableProps> = ({ leadershipR
         </div>
       ) : filteredRoles.length > 0 ? (
         filteredRoles.map((role) => (
-          <div key={role.id} className="grid grid-cols-4 gap-2 mb-2">
+          <div key={role.id} className="w-[600px] grid grid-cols-[0.5fr_0.5fr_2fr_auto] gap-2 mb-2">
             {/* ID */}
             <div className="bg-white px-3 py-2 text-sm font-medium text-gray-900 rounded-md border border-gray-200">
               {role.id}
@@ -296,7 +296,7 @@ const LeadershipRolesTable: React.FC<LeadershipRolesTableProps> = ({ leadershipR
 
       {/* Add New Role Input Row */}
       {isAdding && (
-        <div className="grid grid-cols-4 gap-2 mb-2">
+        <div className="w-[600px] grid grid-cols-[0.5fr_0.5fr_2fr_auto] gap-2 mb-2">
           {/* ID */}
           <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
             <input
