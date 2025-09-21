@@ -42,3 +42,11 @@ export interface AppState {
   theme: Theme;
   isLoading: boolean;
 }
+
+export interface LeadershipRole {
+  id: string;
+  abbreviation: string;
+  title: string;
+  created_at?: Date;
+  updated_at?: Date;
+}

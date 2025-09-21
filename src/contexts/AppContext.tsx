@@ -6,6 +6,7 @@ import { getAllLocalitiesApi } from '../apis/localities';
 import { getAllSchoolsApi } from '../apis/schools';
 import { getAllAreasApi } from '../apis/areas';
 import { getAllEventsApi } from '../apis/Events';
+import { getAllLeadershipRolesApi } from '../apis/LeadershipRoles';
 import { useSupabaseAuth } from './SupabaseAuthContext';
 
 // Define the context type
@@ -17,6 +18,7 @@ interface AppContextType {
   allUsers: any[];
   allOrganisers: any[];
   allEvents: any[];
+  allLeadershipRoles: any[];
   // Dashboard statistics
   dashboardStats: {
     eventsUpcoming: number;
@@ -38,10 +40,12 @@ interface AppContextType {
   setAllLocalities: (localities: any[]) => void;
   setAllSchools: (schools: any[]) => void;
   setAllAreas: (areas: any[]) => void;
+  setAllLeadershipRoles: (leadershipRoles: any[]) => void;
   refreshEventsData: () => Promise<void>;
   refreshLocalitiesData: () => Promise<void>;
   refreshSchoolsData: () => Promise<void>;
   refreshAreasData: () => Promise<void>;
+  refreshLeadershipRolesData: () => Promise<void>;
   allLocalities: any[];
   allSchools: any[];
   allAreas: any[];
@@ -69,6 +73,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [allLocalities, setAllLocalities] = useState<any[]>([]);
   const [allSchools, setAllSchools] = useState<any[]>([]);
   const [allAreas, setAllAreas] = useState<any[]>([]);
+  const [allLeadershipRoles, setAllLeadershipRoles] = useState<any[]>([]);
   // Dashboard statistics state
   const [dashboardStats, setDashboardStats] = useState({
     eventsUpcoming: 5,
@@ -148,6 +153,25 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   }, []);
 
+  const refreshLeadershipRolesData = useCallback(async () => {
+    try {
+      const allLeadershipRolesResponse = await getAllLeadershipRolesApi();
+      setAllLeadershipRoles(allLeadershipRolesResponse.data || []);
+    } catch (error) {
+      console.error('Error refreshing leadership roles data:', error);
+      // Set mock data for demo purposes
+      setAllLeadershipRoles([
+        { id: 'LR0001', abbreviation: 'SG', title: 'Secretary General' },
+        { id: 'LR0002', abbreviation: 'DG', title: 'Director General' },
+        { id: 'LR0003', abbreviation: 'COM', title: 'Head of Committees' },
+        { id: 'LR0004', abbreviation: 'DA', title: 'Head of Delegate Affairs' },
+        { id: 'LR0005', abbreviation: 'CHR', title: 'Head of Chairs' },
+        { id: 'LR0006', abbreviation: 'LOG', title: 'Head of Logistics' },
+        { id: 'LR0007', abbreviation: 'PR', title: 'Head of Public Relations' },
+      ]);
+    }
+  }, []);
+
   // Update dashboard statistics
   const updateDashboardStats = (newStats: Partial<AppContextType['dashboardStats']>) => {
     setDashboardStats(prev => ({
@@ -161,8 +185,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     if (!authLoading) {
       refreshUserData();
       refreshEventsData();
+      refreshLeadershipRolesData();
     }
-  }, [supabaseUser, session, authLoading, refreshUserData, refreshEventsData]);
+  }, [supabaseUser, session, authLoading, refreshUserData, refreshEventsData, refreshLeadershipRolesData]);
 
   const value: AppContextType = {
     userType,
@@ -174,10 +199,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     allLocalities,
     allSchools,
     allAreas,
+    allLeadershipRoles,
     setAllEvents,
     setAllLocalities,
     setAllSchools,
     setAllAreas,
+    setAllLeadershipRoles,
     setAllUsers,
     setAllOrganisers,
     allOrganisers,
@@ -189,6 +216,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     refreshLocalitiesData,
     refreshSchoolsData,
     refreshAreasData,
+    refreshLeadershipRolesData,
   };
 
   return (

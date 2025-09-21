@@ -4,6 +4,7 @@ import PageLoader from '../components/PageLoader';
 import MasterlistsNavigation from '../components/SuperUser/MasterlistsNavigation';
 import EventsPage from '../components/SuperUser/EventsPage';
 import OrganisersPage from '../components/SuperUser/OrganisersPage';
+import LeadershipRolesPage from '../components/SuperUser/LeadershipRolesPage';
 import { useApp } from '../contexts/AppContext';
 // import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 
@@ -148,12 +149,7 @@ const SuperUser: React.FC = () => {
         
         {activeTab === 'teachers' && <OrganisersPage type="teachers" />}
         
-        {activeTab === 'leadership-roles' && (
-          <div className="text-center py-12">
-            <h2 className="text-2xl font-bold text-gray-900">Leadership Roles</h2>
-            <p className="text-gray-500 mt-2">Leadership roles management coming soon...</p>
-          </div>
-        )}
+        {activeTab === 'leadership-roles' && <LeadershipRolesPage />}
         
         {activeTab === 'committees' && (
           <div className="text-center py-12">
