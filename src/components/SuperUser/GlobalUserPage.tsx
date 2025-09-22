@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import GlobalUserTable from './globalUserTable';
+import GlobalUserTable from './GlobalUserTable';
 import { useApp } from '../../contexts/AppContext';
 
 interface GlobalUserPageProps {
