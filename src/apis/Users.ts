@@ -240,6 +240,20 @@ export const getAllUsersApi = async () => {
 
 }
 
+export const deleteUserBySuperUserApi = async (userId: string) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.delete(`${backendUrl}/api/v1/users/delete-user-by-super-user/${userId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+}
+
 export const updateUserStatusApi = async (userId: string, status: string) => {
     try {
         const token = localStorage.getItem('token');
@@ -250,6 +264,6 @@ export const updateUserStatusApi = async (userId: string, status: string) => {
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response?.data?.message || 'Failed to update user status');
+        throw new Error(error.response.data.message);
     }
-};
+}

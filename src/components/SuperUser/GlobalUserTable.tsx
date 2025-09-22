@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { useApp } from '../../contexts/AppContext';
-import saveIcon from '../../assets/save_icon.svg';
-import { updateUserStatusApi } from '../../apis/Users';
+import { deleteUserBySuperUserApi, updateUserStatusApi } from '../../apis/Users';
+import { ConfirmationModal } from '../ui';
+import OrganiserIcon from '../../assets/organiser_icon.svg';
 
 interface GlobalUser {
   id: string;
@@ -26,29 +27,17 @@ interface GlobalUserTableProps {
 const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, userType = 'students' }) => {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
-  const [isAddingNew, setIsAddingNew] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
   const [filteredUsers, setFilteredUsers] = useState<any[]>([]);
-  const [newUser, setNewUser] = useState<any>(null);
-  const [userFound, setUserFound] = useState<boolean | null>(null);
-  const [showUsernameDropdown, setShowUsernameDropdown] = useState<boolean>(false);
-  const [filteredAvailableUsers, setFilteredAvailableUsers] = useState<any[]>([]);
-  const usernameDropdownRef = useRef<HTMLDivElement>(null);
-  const { refreshUserData, allUsers } = useApp();
+  const { refreshUserData, allOrganisers } = useApp();
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Handle click outside to close dropdown
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (usernameDropdownRef.current && !usernameDropdownRef.current.contains(event.target as Node)) {
-        setShowUsernameDropdown(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+  // Helper function to check if user is an organizer
+  const isUserOrganiser = (userId: string) => {
+    return allOrganisers.some((organiser: any) => organiser.userid === userId);
+  };
 
   // Filter users based on search term
   useEffect(() => {
@@ -59,8 +48,8 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, user
         const searchLower = searchTerm.toLowerCase();
         const username = user?.username || '';
         const fullname = user?.fullname || '';
-        const schoolLocation = user?.school_location || '';
-        const schoolName = user?.school?.name || user?.school || '';
+        const schoolLocation = user?.school.code || '';
+        const schoolName = user?.school?.name || '';
         const role = user?.role || '';
 
         return (
@@ -75,152 +64,63 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, user
     }
   }, [searchTerm, users]);
 
+  // Handle clicking outside dropdown to close it
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setActiveDropdown(null);
+      }
+    };
+
+    if (activeDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [activeDropdown]);
+
   const handleDropdownToggle = (userId: string) => {
     setActiveDropdown(activeDropdown === userId ? null : userId);
   };
 
-  const handleAddNew = () => {
-    setIsAddingNew(true);
-    setUserFound(null);
-    setShowUsernameDropdown(false);
-    setFilteredAvailableUsers([]);
-    setNewUser({
-      id: '',
-      username: '',
-      fullname: '',
-      role: userType,
-      school: '',
-      school_location: '',
-      grade: '',
-      years_of_experience: '',
-    });
-  };
-
-  const handleInputChange = (field: string, value: string) => {
-    setNewUser((prev: any) => ({
-      ...prev,
-      [field]: value
-    }));
-
-    // If username is being changed, show dropdown and filter users
-    if (field === 'username') {
-      if (value.trim()) {
-        setShowUsernameDropdown(true);
-        setUserFound(null); // Reset user found state when typing
-        filterUsersByUsername(value.trim());
-      } else {
-        setShowUsernameDropdown(false);
-        setUserFound(null);
-        setFilteredAvailableUsers([]);
-        // Clear fields if username is empty
-        setNewUser((prev: any) => ({
-          ...prev,
-          id: '',
-          fullname: '',
-          school: '',
-          school_location: '',
-          grade: '',
-          years_of_experience: '',
-        }));
-      }
+  // Delete confirmation handlers
+  const handleDeleteConfirm = () => {
+    if (userToDelete) {
+      handleAction('delete', userToDelete);
+      setShowDeleteModal(false);
+      setUserToDelete(null);
     }
   };
-  // Function to filter users by username
-  const filterUsersByUsername = (username: string) => {
-    // Get all user IDs that are already in the current list
-    const existingUserIds = new Set(users.map((user: any) => user.id));
 
-    // Filter users who are not already in the list and match the username
-    // Also filter by role based on the user type context
-    const filtered = allUsers.filter(user => {
-      const matchesUsername = user.username?.toLowerCase().includes(username.toLowerCase());
-      const notAlreadyInList = !existingUserIds.has(user.id);
-
-      // Filter by role based on the user type context
-      let matchesRole = true;
-      if (userType === 'students') {
-        matchesRole = user.role === 'student';
-      } else if (userType === 'teachers') {
-        matchesRole = user.role === 'teacher';
-      }
-
-      return matchesUsername && notAlreadyInList && matchesRole;
-    });
-
-    console.log('Filtering users:', { username, userType, filteredUsers: filtered.length, totalUsers: allUsers.length });
-    setFilteredAvailableUsers(filtered);
-  };
-
-  // Function to handle username selection from dropdown
-  const handleUsernameSelect = (selectedUser: any) => {
-    console.log('Selected user:', selectedUser);
-
-    setNewUser((prev: any) => ({
-      ...prev,
-      id: selectedUser.id || '',
-      username: selectedUser.username || '',
-      fullname: selectedUser.fullname || '',
-      role: selectedUser.role || userType,
-      school: selectedUser.school?.name || selectedUser.school || '',
-      school_location: selectedUser.school_location || selectedUser.locality?.name || '',
-      // Set appropriate field based on user type
-      ...(userType === 'students' 
-        ? { grade: selectedUser.grade || '' }
-        : { years_of_experience: selectedUser.years_of_experience || '' }
-      )
-    }));
-
-    setUserFound(true);
-    setShowUsernameDropdown(false);
-    setFilteredAvailableUsers([]);
-  };
-
-
-  const handleSaveNew = async () => {
-    try {
-      // Validate required fields
-      if (!newUser.username || !newUser.fullname || !newUser.school) {
-        toast.error('Please fill in all required fields (Username, Name, School)');
-        return;
-      }
-
-      // For now, just show success message since we don't have a specific API for adding users
-      toast.success('New user added successfully!');
-      setIsAddingNew(false);
-      setUserFound(null);
-      setShowUsernameDropdown(false);
-      setFilteredAvailableUsers([]);
-      setNewUser({
-        id: '',
-        username: '',
-        fullname: '',
-        role: userType,
-        school: '',
-        school_location: '',
-        grade: '',
-        years_of_experience: '',
-      });
-
-      // Refresh data
-      await refreshUserData();
-    } catch (error: any) {
-      console.error('Error saving new user:', error);
-      toast.error(error.message || 'Failed to save new user');
-    }
+  const handleDeleteCancel = () => {
+    setShowDeleteModal(false);
+    setUserToDelete(null);
   };
 
   const handleAction = async (action: string, userId: string) => {
+    setActiveDropdown(null); // Close dropdown immediately when action is triggered
     setUpdatingUserId(userId);
+    
     try {
-      // For now, just show success message since we don't have specific APIs for user actions
-      const response = await updateUserStatusApi(userId, action);
-      if (response.success) {
-        toast.success(response.message);
-        await refreshUserData();
+      if (action === 'delete') {
+        const response = await deleteUserBySuperUserApi(userId);
+        if (response.success) {
+          toast.success(response.message);
+          await refreshUserData();
+        } else {
+          toast.error(response.message);
+        }
       } else {
-        toast.error(response.message);
+        const response = await updateUserStatusApi(userId, action);
+        if (response.success) {
+          toast.success(response.message);
+          await refreshUserData();
+        } else {
+          toast.error(response.message);
+        }
       }
-      toast.success(`User ${action} successfully!`);
       await refreshUserData();
       onAction(action, userId);
     } catch (error) {
@@ -229,21 +129,18 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, user
     } finally {
       setUpdatingUserId(null);
     }
-    setActiveDropdown(null);
   };
 
   const getStatusColor = (status: string | undefined) => {
     if (!status) return 'text-gray-600';
 
     switch (status.toLowerCase()) {
-      case 'active':
+      case 'actived':
         return 'text-green-600';
-      case 'inactive':
-        return 'text-red-600';
-      case 'pending':
-        return 'text-orange-500';
-      case 'suspended':
+      case 'flagged':
         return 'text-yellow-500';
+      case 'blocked':
+        return 'text-red-600';
       default:
         return 'text-gray-600';
     }
@@ -290,7 +187,7 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, user
       </div>
 
       {/* Data Rows */}
-      {filteredUsers.length === 0 && !isAddingNew ? (
+      {filteredUsers.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
           {searchTerm ? 'No users found matching your search' : 'No users found'}
         </div>
@@ -314,7 +211,7 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, user
 
             {/* Grade/Teaching Experience */}
             <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-              {userType === 'students' 
+              {userType === 'students'
                 ? (user?.grade || 'N/A')
                 : (user?.years_of_experience || 'N/A')
               }
@@ -350,18 +247,30 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, user
               {updatingUserId === user?.id ? (
                 <div className="flex items-center space-x-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
-                  <span className="text-gray-500">Updating...</span>
+                  <span className="text-gray-500">Updating</span>
                 </div>
               ) : (
-                <span className={`font-medium ${getStatusColor('active')}`}>
-                  Active
-                </span>
+                <div className="flex items-center justify-between">
+                  <span className={`font-medium ${getStatusColor(user.status)}`}>
+                    {user.status}
+                  </span>
+                </div>
               )}
             </div>
 
             {/* Actions */}
-            <div className="px-3 py-2 text-sm font-medium relative">
-              <div className="relative">
+            <div className="px-3 py-2 text-sm font-medium relative" ref={dropdownRef}>
+              <div className="relative flex items-center justify-left">
+                {isUserOrganiser(user?.id) && (
+                  <div className="ml-2">
+                    <img
+                      src={OrganiserIcon}
+                      alt="Organiser"
+                      className="w-5 h-5"
+                      title="This user is an organizer"
+                    />
+                  </div>
+                )}
                 <button
                   onClick={() => handleDropdownToggle(user?.id || '')}
                   className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
@@ -372,47 +281,51 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, user
                 </button>
 
                 {activeDropdown === user?.id && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+                  <div className="absolute top-full right-0 mt-1 w-48 bg-white rounded-md shadow-lg z-50 border-2">
                     <div className="py-1">
                       <button
-                        onClick={() => handleAction('activate', user?.id || '')}
+                        onClick={() => handleAction('actived', user?.id || '')}
                         disabled={updatingUserId === user?.id}
                         className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingUserId === user?.id
                           ? 'text-gray-400 cursor-not-allowed'
-                          : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
+                          : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
                           }`}
                       >
                         Activate
                       </button>
 
                       <button
-                        onClick={() => handleAction('suspend', user?.id || '')}
+                        onClick={() => handleAction('flagged', user?.id || '')}
                         disabled={updatingUserId === user?.id}
                         className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingUserId === user?.id
                           ? 'text-gray-400 cursor-not-allowed'
-                          : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
+                          : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
                           }`}
                       >
-                        Suspend
+                        Flag
                       </button>
 
                       <button
-                        onClick={() => handleAction('edit', user?.id || '')}
+                        onClick={() => handleAction('blocked', user?.id || '')}
                         disabled={updatingUserId === user?.id}
                         className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingUserId === user?.id
                           ? 'text-gray-400 cursor-not-allowed'
-                          : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
+                          : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
                           }`}
                       >
-                        Edit
+                        Block
                       </button>
 
                       <button
-                        onClick={() => handleAction('delete', user?.id || '')}
+                        onClick={() => {
+                          setActiveDropdown(null); // Close dropdown when delete modal is triggered
+                          setUserToDelete(user?.id || '');
+                          setShowDeleteModal(true);
+                        }}
                         disabled={updatingUserId === user?.id}
                         className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingUserId === user?.id
                           ? 'text-gray-400 cursor-not-allowed'
-                          : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
+                          : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
                           }`}
                       >
                         Delete
@@ -426,195 +339,17 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, user
         ))
       ) : null}
 
-      {/* New User Input Row */}
-      {isAddingNew && (
-        <div className="grid grid-cols-11 gap-2 mb-2">
-          {/* User ID */}
-          <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
-            <input
-              type="text"
-              value={newUser.id}
-              placeholder="Auto populated"
-              className="w-full border-none outline-none text-sm"
-              disabled
-            />
-          </div>
-
-          {/* Username */}
-          <div
-            ref={usernameDropdownRef}
-            className={`px-3 py-2 text-sm rounded-md border relative ${userFound === true ? 'bg-green-50 border-green-300' :
-              userFound === false ? 'bg-red-50 border-red-300' :
-                'bg-white border-gray-200'
-              }`}
-          >
-            <div className="flex items-center">
-              <input
-                type="text"
-                value={newUser.username}
-                onChange={(e) => handleInputChange('username', e.target.value)}
-                onFocus={() => {
-                  if (newUser.username.trim()) {
-                    setShowUsernameDropdown(true);
-                    filterUsersByUsername(newUser.username.trim());
-                  }
-                }}
-                placeholder="Enter username to populate fields"
-                className="w-full border-none outline-none text-sm bg-transparent"
-                autoComplete="off"
-              />
-              {userFound === true && (
-                <svg className="w-4 h-4 text-green-600 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              )}
-              {userFound === false && (
-                <svg className="w-4 h-4 text-red-600 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              )}
-            </div>
-
-            {/* Username Dropdown */}
-            {showUsernameDropdown && filteredAvailableUsers.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
-                {filteredAvailableUsers.map((user, index) => (
-                  <div
-                    key={user.id || index}
-                    onClick={() => handleUsernameSelect(user)}
-                    className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm border-b border-gray-100 last:border-b-0"
-                  >
-                    <div className="font-medium text-gray-900">{user.username}</div>
-                    <div className="text-xs text-gray-500">{user.fullname}</div>
-                    <div className="text-xs text-gray-400">
-                      {user.school?.name || user.school_name || user.schoolName || user.school || 'No school'} • {user.locality?.name || user.school_location || user.locality || 'No location'}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {showUsernameDropdown && filteredAvailableUsers.length === 0 && newUser.username.trim() && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50">
-                <div className="px-3 py-2 text-sm text-gray-500">
-                  No available users found
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Name */}
-          <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
-            <input
-              type="text"
-              value={newUser.fullname}
-              disabled
-              placeholder="Auto populated"
-              className="w-full border-none outline-none text-sm"
-            />
-          </div>
-
-          {/* Grade/Teaching Experience */}
-          <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
-            <input
-              type="text"
-              value={userType === 'students' ? (newUser.grade || '') : (newUser.years_of_experience || '')}
-              disabled
-              placeholder="Auto populated"
-              className="w-full border-none outline-none text-sm"
-            />
-          </div>
-
-          {/* School */}
-          <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
-            <input
-              type="text"
-              value={newUser.school}
-              disabled
-              placeholder="Auto populated"
-              className="w-full border-none outline-none text-sm"
-            />
-          </div>
-
-          {/* Location */}
-          <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
-            <input
-              type="text"
-              value={newUser.school_location}
-              disabled
-              placeholder="Auto populated"
-              className="w-full border-none outline-none text-sm"
-            />
-          </div>
-
-          {/* Role */}
-          <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
-            <input
-              type="text"
-              value={newUser.role}
-              disabled
-              placeholder="Auto populated"
-              className="w-full border-none outline-none text-sm"
-            />
-          </div>
-
-          {/* Date Created */}
-          <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
-            <input
-              type="text"
-              value={newUser.created_at?.split('T')[0] || 'N/A'}
-              className="w-full border-none outline-none text-sm"
-              disabled
-            />
-          </div>
-
-          {/* Last Updated */}
-          <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
-            <input
-              type="text"
-              value={newUser.updated_at?.split('T')[0] || 'N/A'}
-              className="w-full border-none outline-none text-sm"
-              disabled
-            />
-          </div>
-
-          {/* Status */}
-          <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
-            <span className="font-medium text-green-600">Active</span>
-          </div>
-
-          {/* Actions */}
-          <div className="px-3 py-2 text-sm font-medium relative">
-            <div className="flex space-x-2">
-              <img src={saveIcon} alt="Save" className="w-4 h-4" />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Add and Save Buttons */}
-      <div className="flex justify-start space-x-4 mt-6">
-        <button
-          onClick={handleAddNew}
-          disabled={isAddingNew}
-          className={`bg-[#C2A46D] text-white font-medium rounded-[30px] w-[105px] h-[44px] px-[10px] py-[10px] mr-[10px] transition-colors duration-200 ${isAddingNew
-            ? 'opacity-50 cursor-not-allowed'
-            : 'hover:bg-[#9a7849]'
-            }`}
-        >
-          Add
-        </button>
-        <button
-          onClick={handleSaveNew}
-          disabled={!isAddingNew}
-          className={`bg-[#C2A46D] text-white font-medium rounded-[30px] w-[105px] h-[44px] px-[10px] py-[10px] transition-colors duration-200 ${!isAddingNew
-            ? 'opacity-50 cursor-not-allowed'
-            : 'hover:bg-[#b89a6a]'
-            }`}
-        >
-          Save
-        </button>
-      </div>
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title="Confirm Delete"
+        message="Are you sure you want to delete this user? This action cannot be undone."
+        confirmText="Yes"
+        cancelText="No"
+        confirmButtonColor="text-red-600"
+      />
     </div>
   );
 };

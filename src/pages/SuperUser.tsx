@@ -173,13 +173,13 @@ const SuperUser: React.FC = () => {
 
   const renderContent = () => {
     if (activeTab === 'users' && usersSubSection) {
-      return <GlobalUserPage type="students" />
+      return <GlobalUserPage type="students" isSuperUser={false} />
     } else if (activeTab === 'users' && !usersSubSection) {
-      return <GlobalUserPage type="teachers" />
+      return <GlobalUserPage type="teachers" isSuperUser={false} />
     } else if (activeTab === 'superusers' && usersSubSection) {
-      return <GlobalUserPage type="students" />
+      return <GlobalUserPage type="students" isSuperUser={true} />
     } else if (activeTab === 'superusers' && !usersSubSection) {
-      return <GlobalUserPage type="teachers" />
+      return <GlobalUserPage type="teachers" isSuperUser={true} />
     }
     switch (activeTab) {
       case 'dashboard':

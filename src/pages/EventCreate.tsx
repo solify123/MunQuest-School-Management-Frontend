@@ -44,7 +44,6 @@ const EventCreate: React.FC = () => {
   useEffect(() => {
     async function getUserById() {
       const user = await getUserByIdApi();
-      console.log("user", user);
       setSchool(user.data.school.name);
       setLocality(user.data.school.code);
       setLocality_id(user.data.school.locality_id);

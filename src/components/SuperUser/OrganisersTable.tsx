@@ -421,7 +421,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
               {updatingOrganiserId === organiser?.id ? (
                 <div className="flex items-center space-x-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
-                  <span className="text-gray-500">Updating...</span>
+                  <span className="text-gray-500">Updating</span>
                 </div>
               ) : (
                 <span className={`font-medium ${getStatusColor(organiser?.status)}`}>

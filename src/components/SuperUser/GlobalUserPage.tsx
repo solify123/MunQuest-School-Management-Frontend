@@ -4,21 +4,44 @@ import { useApp } from '../../contexts/AppContext';
 
 interface GlobalUserPageProps {
   type?: 'students' | 'teachers';
+  isSuperUser?: boolean;
 }
 
-const GlobalUserPage: React.FC<GlobalUserPageProps> = ({ type = 'students' }) => {
+const GlobalUserPage: React.FC<GlobalUserPageProps> = ({ type = 'students', isSuperUser = false }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const { allUsers } = useApp();
 
   // Filter users based on type
   const getData = () => {
-    switch (type) {
-      case 'students':
-        return allUsers.filter(user => user.role === 'student') || [];
-      case 'teachers':
-        return allUsers.filter(user => user.role === 'teacher') || [];
-      default:
-        return allUsers || [];
+    if (isSuperUser) {
+      // For superusers, filter by global_role = superuser and then by role
+      const superUsers = allUsers.filter(user => 
+        user.global_role === 'superuser'
+      ) || [];
+
+      console.log("allUsers", allUsers);
+      console.log("superUsers", superUsers);
+      switch (type) {
+        case 'students':
+          return superUsers.filter(user => user.role === 'student') || [];
+        case 'teachers':
+          return superUsers.filter(user => user.role === 'teacher') || [];
+        default:
+          return superUsers || [];
+      }
+    } else {
+      // For regular users, filter by global_role = user and then by role
+      const regularUsers = allUsers.filter(user => 
+        user.global_role === 'user' || !user.global_role // fallback for users without global_role
+      ) || [];
+      switch (type) {
+        case 'students':
+          return regularUsers.filter(user => user.role === 'student') || [];
+        case 'teachers':
+          return regularUsers.filter(user => user.role === 'teacher') || [];
+        default:
+          return regularUsers || [];
+      }
     }
   };
 
