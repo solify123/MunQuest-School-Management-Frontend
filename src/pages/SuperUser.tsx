@@ -4,6 +4,7 @@ import PageLoader from '../components/PageLoader';
 import MasterlistsNavigation from '../components/SuperUser/MasterlistsNavigation';
 import EventsPage from '../components/SuperUser/EventsPage';
 import OrganisersPage from '../components/SuperUser/OrganisersPage';
+import GlobalUserPage from '../components/SuperUser/GlobalUserPage';
 import LeadershipRolesPage from '../components/SuperUser/LeadershipRolesPage';
 import CommitteesPage from '../components/SuperUser/CommitteesPage';
 import { useApp } from '../contexts/AppContext';
@@ -11,6 +12,7 @@ import { useApp } from '../contexts/AppContext';
 
 const SuperUser: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [usersSubSection, setUsersSubSection] = useState<boolean>(true);
   // const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   
   // Get auth context
@@ -84,6 +86,15 @@ const SuperUser: React.FC = () => {
 
 
   const getPageTitle = () => {
+    if (activeTab === 'users' && usersSubSection) {
+      return 'Masterlists > Users Related > Users > Students';
+    } else if (activeTab === 'users' && !usersSubSection) {
+      return 'Masterlists > Users Related > Users > Teachers';
+    } else if (activeTab === 'superusers' && usersSubSection) {
+      return 'Masterlists > Users Related > Superusers > Students';
+    } else if (activeTab === 'superusers' && !usersSubSection) {
+      return 'Masterlists > Users Related > Superusers > Teachers';
+    }
     switch (activeTab) {
       case 'dashboard':
         return 'Dashboard';
@@ -105,6 +116,10 @@ const SuperUser: React.FC = () => {
         return 'Masterlists > Events Related > Organisers > Teachers';
       case 'users-related':
         return 'Masterlists > Users Related';
+      case 'users':
+        return 'Masterlists > Users Related > Users';
+      case 'superusers':
+        return 'Masterlists > Users Related > Superusers';
       case 'schools-related':
         return 'Masterlists > Schools Related';
       default:
@@ -157,6 +172,15 @@ const SuperUser: React.FC = () => {
   };
 
   const renderContent = () => {
+    if (activeTab === 'users' && usersSubSection) {
+      return <GlobalUserPage type="students" />
+    } else if (activeTab === 'users' && !usersSubSection) {
+      return <GlobalUserPage type="teachers" />
+    } else if (activeTab === 'superusers' && usersSubSection) {
+      return <GlobalUserPage type="students" />
+    } else if (activeTab === 'superusers' && !usersSubSection) {
+      return <GlobalUserPage type="teachers" />
+    }
     switch (activeTab) {
       case 'dashboard':
         return renderDashboard();
@@ -220,6 +244,8 @@ const SuperUser: React.FC = () => {
             <MasterlistsNavigation 
               activeSection={activeTab}
               onSectionChange={setActiveTab}
+              usersSubSection={usersSubSection}
+              setUsersSubSection={setUsersSubSection}
             />
           </div>
 

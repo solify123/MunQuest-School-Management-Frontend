@@ -76,8 +76,6 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
     }
   }, [searchTerm, organisers]);
 
-  console.log('Filtered organisers:', filteredOrganisers);
-
   const handleDropdownToggle = (organiserId: string) => {
     setActiveDropdown(activeDropdown === organiserId ? null : organiserId);
   };

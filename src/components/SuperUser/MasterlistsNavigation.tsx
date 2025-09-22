@@ -1,13 +1,17 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 interface MasterlistsNavigationProps {
   activeSection: string;
   onSectionChange: (section: string) => void;
+  usersSubSection: boolean;
+  setUsersSubSection: (section: boolean) => void;
 }
 
-const MasterlistsNavigation: React.FC<MasterlistsNavigationProps> = ({ 
-  activeSection, 
-  onSectionChange 
+const MasterlistsNavigation: React.FC<MasterlistsNavigationProps> = ({
+  activeSection,
+  onSectionChange,
+  usersSubSection,
+  setUsersSubSection
 }) => {
   const sections = [
     { id: 'events-related', label: 'Events Related' },
@@ -22,9 +26,8 @@ const MasterlistsNavigation: React.FC<MasterlistsNavigationProps> = ({
       { id: 'committees', label: 'Committees' }
     ],
     'users-related': [
-      { id: 'students', label: 'Students' },
-      { id: 'teachers', label: 'Teachers' },
-      { id: 'parents', label: 'Parents' }
+      { id: 'users', label: 'Users' },
+      { id: 'superusers', label: 'Superusers' },
     ],
     'schools-related': [
       { id: 'schools', label: 'Schools' },
@@ -33,32 +36,31 @@ const MasterlistsNavigation: React.FC<MasterlistsNavigationProps> = ({
     ]
   };
 
+
   const getButtonStyle = (isActive: boolean, isSubSection: boolean = false, isParent: boolean = false) => {
     const baseStyle = "font-medium transition-colors duration-200";
-    
+
     if (isSubSection) {
-      return `${baseStyle} ${
-        isActive
+      return `${baseStyle} ${isActive
           ? 'bg-[#C6DAF4] text-white'
           : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'
-      }`;
+        }`;
     }
-    
+
     // Handle parent state with lighter blue
     if (isParent && !isActive) {
       return `${baseStyle} bg-[#607DA3] text-white`;
     }
-    
-    return `${baseStyle} ${
-      isActive
+
+    return `${baseStyle} ${isActive
         ? 'bg-[#1E395D] text-white'
         : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'
-    }`;
+      }`;
   };
 
   const isMainSectionActive = (sectionId: string) => {
-    return activeSection === sectionId || 
-           (sectionId === 'masterlists' && ['events-related', 'users-related', 'schools-related', 'events', 'organisers', 'leadership-roles', 'committees', 'students', 'teachers'].includes(activeSection));
+    return activeSection === sectionId ||
+      (sectionId === 'masterlists' && ['events-related', 'users-related', 'schools-related', 'events', 'organisers', 'leadership-roles', 'committees', 'students', 'teachers', 'users', 'superusers', 'global-students', 'global-teachers', 'users-students', 'users-teachers'].includes(activeSection));
   };
 
   const isSubSectionActive = (sectionId: string) => {
@@ -67,13 +69,19 @@ const MasterlistsNavigation: React.FC<MasterlistsNavigationProps> = ({
       return activeSection === 'events-related' || activeSection === 'events' || activeSection === 'organisers' || activeSection === 'leadership-roles' || activeSection === 'committees' || activeSection === 'students' || activeSection === 'teachers';
     }
     if (sectionId === 'users-related') {
-      return activeSection === 'users-related';
+      return activeSection === 'users-related' || activeSection === 'global-students' || activeSection === 'global-teachers';
     }
     if (sectionId === 'schools-related') {
       return activeSection === 'schools-related';
     }
     if (sectionId === 'organisers') {
       return activeSection === 'students' || activeSection === 'teachers';
+    }
+    if (sectionId === 'users') {
+      return activeSection === 'users' || activeSection === 'users-students';
+    }
+    if (sectionId === 'superusers') {
+      return activeSection === 'superusers' || activeSection === 'users-teachers';
     }
     return activeSection === sectionId;
   };
@@ -84,7 +92,7 @@ const MasterlistsNavigation: React.FC<MasterlistsNavigationProps> = ({
       return ['events', 'organisers', 'leadership-roles', 'committees', 'students', 'teachers'].includes(activeSection);
     }
     if (sectionId === 'users-related') {
-      return ['parents'].includes(activeSection);
+      return ['users', 'superusers', 'users-students', 'users-teachers'].includes(activeSection);
     }
     if (sectionId === 'schools-related') {
       return ['schools', 'departments', 'programs'].includes(activeSection);
@@ -94,7 +102,15 @@ const MasterlistsNavigation: React.FC<MasterlistsNavigationProps> = ({
     }
     return false;
   };
-
+  
+  useEffect(() => {
+    if (activeSection === 'users') {
+      setUsersSubSection(true);
+    } else {
+      setUsersSubSection(true);
+    }
+  }, [activeSection])
+  
   return (
     <div className="space-y-4">
       {/* Main Navigation Buttons */}
@@ -114,14 +130,16 @@ const MasterlistsNavigation: React.FC<MasterlistsNavigationProps> = ({
       </div>
 
       {/* Sub Navigation Buttons */}
-      {(isMainSectionActive('masterlists') || activeSection === 'events' || activeSection === 'students' || activeSection === 'teachers') && (
+      {(isMainSectionActive('masterlists') || activeSection === 'events' || activeSection === 'students' || activeSection === 'teachers' || activeSection === 'users' || activeSection === 'superusers' || activeSection === 'global-students' || activeSection === 'global-teachers' || activeSection === 'users-students' || activeSection === 'users-teachers') && (
         <div className="space-y-2">
           {/* First row of sub-sections */}
           <div className="flex space-x-2">
             {sections.map((section) => (
               <button
                 key={section.id}
-                onClick={() => onSectionChange(section.id)}
+                onClick={() => {
+                  onSectionChange(section.id === 'users-related' ? 'users' : section.id);
+                }}
                 className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] ${getButtonStyle(isSubSectionActive(section.id), false, isSubSectionParent(section.id))}`}
               >
                 {section.label}
@@ -143,7 +161,7 @@ const MasterlistsNavigation: React.FC<MasterlistsNavigationProps> = ({
               ))}
             </div>
           ) : null}
-
+          
           {/* Third row for Organisers sub-sections */}
           {activeSection === 'students' || activeSection === 'teachers' ? (
             <div className="flex space-x-2">
@@ -156,6 +174,47 @@ const MasterlistsNavigation: React.FC<MasterlistsNavigationProps> = ({
               <button
                 onClick={() => onSectionChange('teachers')}
                 className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] ${getButtonStyle(isSubSectionActive('teachers'), true)}`}
+              >
+                Teachers
+              </button>
+            </div>
+          ) : null}
+
+          {/* new users related sub-sections */}
+          {
+            (activeSection === 'users-related' || activeSection === 'users' || activeSection === 'superusers' || activeSection === 'users-students' || activeSection === 'users-teachers') ? (
+              <div className="flex space-x-2">
+                {subSections['users-related']?.map((subSection) => (
+                  <button
+                    key={subSection.id}
+                    onClick={() => {
+                      onSectionChange(subSection.id);
+                    }}
+                    className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] ${getButtonStyle(isSubSectionActive(subSection.id), true, isSubSectionParent(subSection.id))}`}
+                  >
+                    {subSection.label}
+                  </button>
+                ))}
+              </div>
+            ) : null
+          }
+
+          {/* new users related sub-sections */}
+          {(activeSection === 'users-related' || activeSection === 'users' || activeSection === 'superusers' || activeSection === 'users-students' || activeSection === 'users-teachers') ? (
+            <div className="flex space-x-2">
+              <button
+                onClick={() => {
+                  setUsersSubSection(true);
+                }}
+                className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] font-medium transition-colors duration-200 ${usersSubSection ? 'bg-[#C6DAF4] text-white' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'}`}
+              >
+                Students
+              </button>
+              <button
+                onClick={() => {
+                  setUsersSubSection(false);
+                }}
+                className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] font-medium transition-colors duration-200 ${!usersSubSection ? 'bg-[#C6DAF4] text-white' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'}`}
               >
                 Teachers
               </button>

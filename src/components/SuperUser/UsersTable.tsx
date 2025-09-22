@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { updateUserStatusApi } from '../../apis/Users';
 import { showToast } from '../../utils/toast';
 import saveIcon from '../../assets/save_icon.svg';
-
 interface UsersTableProps {
   users: any[];
   onRefresh: () => void;
@@ -33,8 +31,6 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, onRefresh, userType }) =
   });
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [filteredUsers, setFilteredUsers] = useState<any[]>([]);
-
-  console.log("users-------", users);
   
   // Filter users based on user type and search term
   useEffect(() => {
@@ -70,6 +66,7 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, onRefresh, userType }) =
     }
 
     try {
+      console.log('Saving user:', userId);
       // const response = await updateUserApi(userId, {
       //   username: editUser.username.trim(),
       //   fullname: editUser.fullname.trim(),
@@ -94,6 +91,7 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, onRefresh, userType }) =
   };
 
   const handleDelete = async (userId: string) => {
+    console.log('Deleting user:', userId);
     try {
       // const response = await deleteUserApi(userId);
       // if (response.success) {
@@ -108,6 +106,7 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, onRefresh, userType }) =
   };
 
   const handleBlock = async (userId: string) => {
+    console.log('Blocking user:', userId);
     try {
       // const response = await blockUserApi(userId);
       // if (response.success) {
@@ -122,6 +121,7 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, onRefresh, userType }) =
   };
 
   const handleUnblock = async (userId: string) => {
+    console.log('Unblocking user:', userId);
     try {
       // const response = await unblockUserApi(userId);
       // if (response.success) {
