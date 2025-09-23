@@ -60,8 +60,10 @@ interface AppProviderProps {
 }
 
 export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
+  console.log('AppProvider - Initializing...');
   // Get Supabase auth state
   const { user: supabaseUser, session, loading: authLoading } = useSupabaseAuth();
+  console.log('AppProvider - Supabase auth state:', { supabaseUser, session, authLoading });
 
   // User state
   const [userType, setUserType] = useState<string | null>(null);
@@ -134,7 +136,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
   const refreshSchoolsData = useCallback(async () => {
     try {
+      console.log('AppContext - Refreshing schools data...');
       const allSchoolsResponse = await getAllSchoolsApi();
+      console.log('AppContext - Schools API response:', allSchoolsResponse);
       setAllSchools(allSchoolsResponse.data);
     } catch (error) {
       console.error('Error refreshing schools data:', error);
@@ -173,8 +177,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       refreshUserData();
       refreshEventsData();
       refreshLeadershipRolesData();
+      refreshSchoolsData();
     }
-  }, [supabaseUser, session, authLoading, refreshUserData, refreshEventsData, refreshLeadershipRolesData]);
+  }, [supabaseUser, session, authLoading, refreshUserData, refreshEventsData, refreshLeadershipRolesData, refreshSchoolsData]);
 
   const value: AppContextType = {
     userType,
@@ -206,6 +211,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     refreshLeadershipRolesData,
   };
 
+
   return (
     <AppContext.Provider value={value}>
       {children}
@@ -217,6 +223,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 export const useApp = (): AppContextType => {
   const context = useContext(AppContext);
   if (context === undefined) {
+    console.error('useApp - Context is undefined, throwing error');
     throw new Error('useApp must be used within an AppProvider');
   }
   return context;

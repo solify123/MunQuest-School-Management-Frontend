@@ -17,8 +17,6 @@ const CommitteesTable: React.FC<CommitteesTableProps> = ({ committees, onRefresh
   const [editCommittee, setEditCommittee] = useState({ abbr: '', committee: '' });
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [filteredCommittees, setFilteredCommittees] = useState<any[]>([]);
-
-  console.log("committees-------", committees);
   
   // Filter committees based on committee type and search term
   useEffect(() => {

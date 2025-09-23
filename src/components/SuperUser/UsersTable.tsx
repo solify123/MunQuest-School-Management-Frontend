@@ -338,7 +338,7 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, onRefresh, userType }) =
             {/* User Status */}
             <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200 flex items-center justify-between">
               <span className={getStatusColor(user.status)}>
-                {user.status || 'Active'}
+                {user.status}
               </span>
               
               {/* Actions */}

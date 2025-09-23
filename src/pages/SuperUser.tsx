@@ -7,12 +7,14 @@ import OrganisersPage from '../components/SuperUser/OrganisersPage';
 import GlobalUserPage from '../components/SuperUser/GlobalUserPage';
 import LeadershipRolesPage from '../components/SuperUser/LeadershipRolesPage';
 import CommitteesPage from '../components/SuperUser/CommitteesPage';
+import SchoolsPage from '../components/SuperUser/SchoolsPage';
 import { useApp } from '../contexts/AppContext';
 // import { useSupabaseAuth } from '../contexts/SupabaseAuthContext';
 
 const SuperUser: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [usersSubSection, setUsersSubSection] = useState<boolean>(true);
+  const [schoolsSubSection, setSchoolsSubSection] = useState<number>(0);
   // const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   
   // Get auth context
@@ -94,6 +96,22 @@ const SuperUser: React.FC = () => {
       return 'Masterlists > Users Related > Superusers > Students';
     } else if (activeTab === 'superusers' && !usersSubSection) {
       return 'Masterlists > Users Related > Superusers > Teachers';
+    } else if (activeTab === 'schools' && schoolsSubSection === 0) {
+      return 'Masterlists > Schools Related > Schools > Dubai';
+    } else if (activeTab === 'schools' && schoolsSubSection === 1) {
+      return 'Masterlists > Schools Related > Schools > Abu Dhabi';
+    } else if (activeTab === 'schools' && schoolsSubSection === 2) {
+      return 'Masterlists > Schools Related > Schools > Al Ain';
+    } else if (activeTab === 'schools' && schoolsSubSection === 3) {
+      return 'Masterlists > Schools Related > Schools > Sharjah';
+    } else if (activeTab === 'schools' && schoolsSubSection === 4) {
+      return 'Masterlists > Schools Related > Schools > Ajman';
+    } else if (activeTab === 'schools' && schoolsSubSection === 5) {
+      return 'Masterlists > Schools Related > Schools > Ras Al Khaimah';
+    } else if (activeTab === 'schools' && schoolsSubSection === 6) {
+      return 'Masterlists > Schools Related > Schools > Umm Al Quwain';
+    } else if (activeTab === 'schools' && schoolsSubSection === 7) {
+      return 'Masterlists > Schools Related > Schools > Other';
     }
     switch (activeTab) {
       case 'dashboard':
@@ -122,6 +140,10 @@ const SuperUser: React.FC = () => {
         return 'Masterlists > Users Related > Superusers';
       case 'schools-related':
         return 'Masterlists > Schools Related';
+      case 'schools':
+        return 'Masterlists > Schools Related > Schools';
+      case 'localities':
+        return 'Masterlists > Schools Related > Localities';
       default:
         return 'Dashboard';
     }
@@ -181,6 +203,14 @@ const SuperUser: React.FC = () => {
     } else if (activeTab === 'superusers' && !usersSubSection) {
       return <GlobalUserPage type="teachers" isSuperUser={true} />
     }
+    if (activeTab === 'schools') {
+      console.log('SuperUser - Rendering Schools page with locality:', schoolsSubSection);
+      return <SchoolsPage type="schools" selectedLocality={schoolsSubSection} />
+    }
+    if (activeTab === 'localities') {
+      console.log('SuperUser - Rendering Localities page with locality:', schoolsSubSection);
+      return <SchoolsPage type="localities" selectedLocality={schoolsSubSection} />
+    }
     switch (activeTab) {
       case 'dashboard':
         return renderDashboard();
@@ -209,7 +239,7 @@ const SuperUser: React.FC = () => {
         return (
           <div className="text-center py-12">
             <h2 className="text-2xl font-bold text-gray-900">Schools Related</h2>
-            <p className="text-gray-500 mt-2">Schools management coming soon...</p>
+            <p className="text-gray-500 mt-2">Select a specific category to manage...</p>
           </div>
         );
       case 'events':
@@ -246,6 +276,8 @@ const SuperUser: React.FC = () => {
               onSectionChange={setActiveTab}
               usersSubSection={usersSubSection}
               setUsersSubSection={setUsersSubSection}
+              schoolsSubSection={schoolsSubSection}
+              setSchoolsSubSection={setSchoolsSubSection}
             />
           </div>
 

@@ -5,13 +5,17 @@ interface MasterlistsNavigationProps {
   onSectionChange: (section: string) => void;
   usersSubSection: boolean;
   setUsersSubSection: (section: boolean) => void;
+  schoolsSubSection: number;
+  setSchoolsSubSection: (section: number) => void;
 }
 
 const MasterlistsNavigation: React.FC<MasterlistsNavigationProps> = ({
   activeSection,
   onSectionChange,
   usersSubSection,
-  setUsersSubSection
+  setUsersSubSection,
+  schoolsSubSection,
+  setSchoolsSubSection
 }) => {
   const sections = [
     { id: 'events-related', label: 'Events Related' },
@@ -31,8 +35,17 @@ const MasterlistsNavigation: React.FC<MasterlistsNavigationProps> = ({
     ],
     'schools-related': [
       { id: 'schools', label: 'Schools' },
-      { id: 'departments', label: 'Departments' },
-      { id: 'programs', label: 'Programs' }
+      { id: 'localities', label: 'Localities' }
+    ],
+    'schools-city-related': [
+      { id: 'DU', label: 'Dubai' },
+      { id: 'AD', label: 'Abu Dhabi' },
+      { id: 'AIN', label: 'Al Ain' },
+      { id: 'SH', label: 'Sharjah' },
+      { id: 'AJ', label: 'Ajman' },
+      { id: 'RAK', label: 'Ras Al Khaimah' },
+      { id: 'UAQ', label: 'Umm Al Quwain' },
+      { id: 'other', label: 'Other' }
     ]
   };
 
@@ -42,8 +55,8 @@ const MasterlistsNavigation: React.FC<MasterlistsNavigationProps> = ({
 
     if (isSubSection) {
       return `${baseStyle} ${isActive
-          ? 'bg-[#C6DAF4] text-white'
-          : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'
+        ? 'bg-[#C6DAF4] text-white'
+        : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'
         }`;
     }
 
@@ -53,14 +66,36 @@ const MasterlistsNavigation: React.FC<MasterlistsNavigationProps> = ({
     }
 
     return `${baseStyle} ${isActive
-        ? 'bg-[#1E395D] text-white'
-        : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'
+      ? 'bg-[#1E395D] text-white'
+      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'
       }`;
   };
 
   const isMainSectionActive = (sectionId: string) => {
     return activeSection === sectionId ||
-      (sectionId === 'masterlists' && ['events-related', 'users-related', 'schools-related', 'events', 'organisers', 'leadership-roles', 'committees', 'students', 'teachers', 'users', 'superusers', 'global-students', 'global-teachers', 'users-students', 'users-teachers'].includes(activeSection));
+      (sectionId === 'masterlists' && ['events-related',
+        'users-related',
+        'schools-related',
+        'events',
+        'organisers',
+        'leadership-roles',
+        'committees',
+        'students',
+        'teachers',
+        'users',
+        'superusers',
+        'users-students',
+        'users-teachers',
+        'schools',
+        'localities',
+        'dubai',
+        'abu-dhabi',
+        'al-ain',
+        'sharjah',
+        'ajman',
+        'ras-al-khaimah',
+        'umm-al-quwain',
+        'other'].includes(activeSection));
   };
 
   const isSubSectionActive = (sectionId: string) => {
@@ -69,10 +104,10 @@ const MasterlistsNavigation: React.FC<MasterlistsNavigationProps> = ({
       return activeSection === 'events-related' || activeSection === 'events' || activeSection === 'organisers' || activeSection === 'leadership-roles' || activeSection === 'committees' || activeSection === 'students' || activeSection === 'teachers';
     }
     if (sectionId === 'users-related') {
-      return activeSection === 'users-related' || activeSection === 'global-students' || activeSection === 'global-teachers';
+      return activeSection === 'users-related' || activeSection === 'users' || activeSection === 'superusers';
     }
     if (sectionId === 'schools-related') {
-      return activeSection === 'schools-related';
+      return activeSection === 'schools-related' || activeSection === 'schools' || activeSection === 'localities' || activeSection === 'dubai' || activeSection === 'abu-dhabi' || activeSection === 'al-ain' || activeSection === 'sharjah' || activeSection === 'ajman' || activeSection === 'ras-al-khaimah' || activeSection === 'umm-al-quwain' || activeSection === 'other';
     }
     if (sectionId === 'organisers') {
       return activeSection === 'students' || activeSection === 'teachers';
@@ -83,6 +118,13 @@ const MasterlistsNavigation: React.FC<MasterlistsNavigationProps> = ({
     if (sectionId === 'superusers') {
       return activeSection === 'superusers' || activeSection === 'users-teachers';
     }
+    if (sectionId === 'schools') {
+      return activeSection === 'schools' || activeSection === 'dubai' || activeSection === 'abu-dhabi' || activeSection === 'al-ain' || activeSection === 'sharjah' || activeSection === 'ajman' || activeSection === 'ras-al-khaimah' || activeSection === 'umm-al-quwain' || activeSection === 'other';
+    }
+    if (sectionId === 'localities') {
+      return activeSection === 'localities' || activeSection === 'dubai' || activeSection === 'abu-dhabi' || activeSection === 'al-ain' || activeSection === 'sharjah' || activeSection === 'ajman' || activeSection === 'ras-al-khaimah' || activeSection === 'umm-al-quwain' || activeSection === 'other';
+    }
+
     return activeSection === sectionId;
   };
 
@@ -95,22 +137,19 @@ const MasterlistsNavigation: React.FC<MasterlistsNavigationProps> = ({
       return ['users', 'superusers', 'users-students', 'users-teachers'].includes(activeSection);
     }
     if (sectionId === 'schools-related') {
-      return ['schools', 'departments', 'programs'].includes(activeSection);
+      return ['schools', 'localities'].includes(activeSection);
     }
     if (sectionId === 'organisers') {
       return ['students', 'teachers'].includes(activeSection);
     }
     return false;
   };
-  
+
   useEffect(() => {
-    if (activeSection === 'users') {
-      setUsersSubSection(true);
-    } else {
-      setUsersSubSection(true);
-    }
+    setSchoolsSubSection(0);
+    setUsersSubSection(true);
   }, [activeSection])
-  
+
   return (
     <div className="space-y-4">
       {/* Main Navigation Buttons */}
@@ -130,61 +169,132 @@ const MasterlistsNavigation: React.FC<MasterlistsNavigationProps> = ({
       </div>
 
       {/* Sub Navigation Buttons */}
-      {(isMainSectionActive('masterlists') || activeSection === 'events' || activeSection === 'students' || activeSection === 'teachers' || activeSection === 'users' || activeSection === 'superusers' || activeSection === 'global-students' || activeSection === 'global-teachers' || activeSection === 'users-students' || activeSection === 'users-teachers') && (
-        <div className="space-y-2">
-          {/* First row of sub-sections */}
-          <div className="flex space-x-2">
-            {sections.map((section) => (
-              <button
-                key={section.id}
-                onClick={() => {
-                  onSectionChange(section.id === 'users-related' ? 'users' : section.id);
-                }}
-                className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] ${getButtonStyle(isSubSectionActive(section.id), false, isSubSectionParent(section.id))}`}
-              >
-                {section.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Second row of sub-sections */}
-          {(activeSection === 'events-related' || activeSection === 'events' || activeSection === 'organisers' || activeSection === 'leadership-roles' || activeSection === 'committees' || activeSection === 'students' || activeSection === 'teachers') ? (
+      {(isMainSectionActive('masterlists') ||
+        activeSection === 'events' ||
+        activeSection === 'students' ||
+        activeSection === 'teachers' ||
+        activeSection === 'users' ||
+        activeSection === 'superusers' ||
+        activeSection === 'global-students' ||
+        activeSection === 'global-teachers' ||
+        activeSection === 'users-students' ||
+        activeSection === 'users-teachers' ||
+        activeSection === 'schools' ||
+        activeSection === 'localities' ||
+        activeSection === 'dubai' ||
+        activeSection === 'abu-dhabi' ||
+        activeSection === 'al-ain' ||
+        activeSection === 'sharjah' ||
+        activeSection === 'ajman' ||
+        activeSection === 'ras-al-khaimah' ||
+        activeSection === 'umm-al-quwain' ||
+        activeSection === 'other') && (
+          <div className="space-y-2">
+            {/* First row of sub-sections */}
             <div className="flex space-x-2">
-              {subSections['events-related']?.map((subSection) => (
+              {sections.map((section) => (
                 <button
-                  key={subSection.id}
-                  onClick={() => onSectionChange(subSection.id === 'organisers' ? 'students' : subSection.id)}
-                  className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] ${getButtonStyle(isSubSectionActive(subSection.id), true, isSubSectionParent(subSection.id))}`}
+                  key={section.id}
+                  onClick={() => {
+                    onSectionChange(section.id === 'users-related' ? 'users' : section.id === 'schools-related' ? 'schools' : section.id);
+                  }}
+                  className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] ${getButtonStyle(isSubSectionActive(section.id), false, isSubSectionParent(section.id))}`}
                 >
-                  {subSection.label}
+                  {section.label}
                 </button>
               ))}
             </div>
-          ) : null}
-          
-          {/* Third row for Organisers sub-sections */}
-          {activeSection === 'students' || activeSection === 'teachers' ? (
-            <div className="flex space-x-2">
-              <button
-                onClick={() => onSectionChange('students')}
-                className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] ${getButtonStyle(isSubSectionActive('students'), true)}`}
-              >
-                Students
-              </button>
-              <button
-                onClick={() => onSectionChange('teachers')}
-                className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] ${getButtonStyle(isSubSectionActive('teachers'), true)}`}
-              >
-                Teachers
-              </button>
-            </div>
-          ) : null}
 
-          {/* new users related sub-sections */}
-          {
-            (activeSection === 'users-related' || activeSection === 'users' || activeSection === 'superusers' || activeSection === 'users-students' || activeSection === 'users-teachers') ? (
+            {/* Events related second row of sub-sections */}
+            {(activeSection === 'events-related' || activeSection === 'events' || activeSection === 'organisers' || activeSection === 'leadership-roles' || activeSection === 'committees' || activeSection === 'students' || activeSection === 'teachers') ? (
               <div className="flex space-x-2">
-                {subSections['users-related']?.map((subSection) => (
+                {subSections['events-related']?.map((subSection) => (
+                  <button
+                    key={subSection.id}
+                    onClick={() => onSectionChange(subSection.id === 'organisers' ? 'students' : subSection.id)}
+                    className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] ${getButtonStyle(isSubSectionActive(subSection.id), true, isSubSectionParent(subSection.id))}`}
+                  >
+                    {subSection.label}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+
+            {/* Events related third row for Organisers sub-sections */}
+            {activeSection === 'students' || activeSection === 'teachers' ? (
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => onSectionChange('students')}
+                  className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] ${getButtonStyle(isSubSectionActive('students'), true)}`}
+                >
+                  Students
+                </button>
+                <button
+                  onClick={() => onSectionChange('teachers')}
+                  className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] ${getButtonStyle(isSubSectionActive('teachers'), true)}`}
+                >
+                  Teachers
+                </button>
+              </div>
+            ) : null}
+
+            {/* Users related second row of sub-sections */}
+            {
+              (activeSection === 'users-related' || activeSection === 'users' || activeSection === 'superusers' || activeSection === 'users-students' || activeSection === 'users-teachers') ? (
+                <div className="flex space-x-2">
+                  {subSections['users-related']?.map((subSection) => (
+                    <button
+                      key={subSection.id}
+                      onClick={() => {
+                        onSectionChange(subSection.id);
+                      }}
+                      className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] ${getButtonStyle(isSubSectionActive(subSection.id), true, isSubSectionParent(subSection.id))}`}
+                    >
+                      {subSection.label}
+                    </button>
+                  ))}
+                </div>
+              ) : null
+            }
+
+            {/* Users related third row of sub-sections */}
+            {(activeSection === 'users-related' || activeSection === 'users' || activeSection === 'superusers' || activeSection === 'users-students' || activeSection === 'users-teachers') ? (
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => {
+                    setUsersSubSection(true);
+                  }}
+                  className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] font-medium transition-colors duration-200 ${usersSubSection ? 'bg-[#C6DAF4] text-white' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'}`}
+                >
+                  Students
+                </button>
+                <button
+                  onClick={() => {
+                    setUsersSubSection(false);
+                  }}
+                  className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] font-medium transition-colors duration-200 ${!usersSubSection ? 'bg-[#C6DAF4] text-white' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'}`}
+                >
+                  Teachers
+                </button>
+              </div>
+            ) : null}
+
+            {/* Schools related second row of sub-sections */}
+            {(activeSection === 'schools-related' ||
+              activeSection === 'schools' ||
+              activeSection === 'departments' ||
+              activeSection === 'programs' ||
+              activeSection === 'localities' ||
+              activeSection === 'dubai' ||
+              activeSection === 'abu-dhabi' ||
+              activeSection === 'al-ain' ||
+              activeSection === 'sharjah' ||
+              activeSection === 'ajman' ||
+              activeSection === 'ras-al-khaimah' ||
+              activeSection === 'umm-al-quwain' ||
+              activeSection === 'other') ? (
+              <div className="flex space-x-2">
+                {subSections['schools-related']?.map((subSection) => (
                   <button
                     key={subSection.id}
                     onClick={() => {
@@ -196,32 +306,39 @@ const MasterlistsNavigation: React.FC<MasterlistsNavigationProps> = ({
                   </button>
                 ))}
               </div>
-            ) : null
-          }
+            ) : null}
 
-          {/* new users related sub-sections */}
-          {(activeSection === 'users-related' || activeSection === 'users' || activeSection === 'superusers' || activeSection === 'users-students' || activeSection === 'users-teachers') ? (
-            <div className="flex space-x-2">
-              <button
-                onClick={() => {
-                  setUsersSubSection(true);
-                }}
-                className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] font-medium transition-colors duration-200 ${usersSubSection ? 'bg-[#C6DAF4] text-white' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'}`}
-              >
-                Students
-              </button>
-              <button
-                onClick={() => {
-                  setUsersSubSection(false);
-                }}
-                className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] font-medium transition-colors duration-200 ${!usersSubSection ? 'bg-[#C6DAF4] text-white' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'}`}
-              >
-                Teachers
-              </button>
-            </div>
-          ) : null}
-        </div>
-      )}
+            {/* Schools related third row of sub-sections */}
+            {(activeSection === 'schools-related' ||
+              activeSection === 'schools' ||
+              activeSection === 'departments' ||
+              activeSection === 'programs' ||
+              activeSection === 'localities' ||
+              activeSection === 'dubai' ||
+              activeSection === 'abu-dhabi' ||
+              activeSection === 'al-ain' ||
+              activeSection === 'sharjah' ||
+              activeSection === 'ajman' ||
+              activeSection === 'ras-al-khaimah' ||
+              activeSection === 'umm-al-quwain' ||
+              activeSection === 'other') ? (
+              <div className="flex space-x-2">
+                {subSections['schools-city-related']?.map((subSection, index) => (
+                  <button
+                    key={subSection.id}
+                    onClick={() => {
+                      console.log('MasterlistsNavigation - School locality clicked:', subSection.label, 'index:', index);
+                      setSchoolsSubSection(index);
+                    }}
+                    className={`w-[130px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] font-medium transition-colors duration-200 ${schoolsSubSection === index ? 'bg-[#C6DAF4] text-white' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'}`}
+                  >
+                    {subSection.label}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        )}
     </div>
   );
 };
