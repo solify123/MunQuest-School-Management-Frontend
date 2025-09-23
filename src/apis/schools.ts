@@ -68,3 +68,18 @@ export const updateSchoolApi = async (schoolId: string, schoolData: any) => {
         throw new Error(error.response.data.message);
     }
 };
+
+export const createSchoolApi = async (schoolData: any) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.post(`${backendUrl}/api/v1/schools/create-school`, schoolData, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+};

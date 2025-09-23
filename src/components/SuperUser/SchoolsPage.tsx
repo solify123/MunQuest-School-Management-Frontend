@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import SchoolsTable from './SchoolsTable';
+import SchoolsLocalitiesTable from './Schools-LocalitiesTable';
 import { useApp } from '../../contexts/AppContext';
 
 interface SchoolsPageProps {
@@ -9,7 +10,8 @@ interface SchoolsPageProps {
 
 const SchoolsPage: React.FC<SchoolsPageProps> = ({ type = 'schools', selectedLocality = 0 }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const { allSchools } = useApp();
+  
+  const { allSchools, allLocalities, allUsers } = useApp();
 
   // Define locality mapping
   const localityMapping = [
@@ -22,49 +24,140 @@ const SchoolsPage: React.FC<SchoolsPageProps> = ({ type = 'schools', selectedLoc
     'Umm Al Quwain',
     'Other'
   ];
-
   // Debug logging
-  console.log('SchoolsPage - Props:', { type, selectedLocality });
-  console.log('SchoolsPage - allSchools:', allSchools);
-  console.log('SchoolsPage - Selected Locality Name:', localityMapping[selectedLocality]);
-
-  // Filter schools based on type, locality, and search term
+  // Filter data based on type, locality, and search term
   const filteredData = useMemo(() => {
-    console.log('SchoolsPage - Filtering data...');
-    if (!allSchools || allSchools.length === 0) {
-      console.log('SchoolsPage - No schools data available');
-      return [];
+    let data: any[] = [];
+    
+    if (type === 'localities') {
+      // Create localities data from schools data if allLocalities is empty
+      if (!allLocalities || allLocalities.length === 0) {
+        if (allSchools && allSchools.length > 0) {
+          // Group schools by locality and area to create localities data
+          const localityMap = new Map();
+          console.log('----------------------allSchools:', allSchools);
+          allSchools.forEach((school: any) => {
+            const localityName = school?.locality?.name || 'Unknown';
+            const areaName = school?.area?.name || 'Unknown';
+            const localityCode = school?.locality?.code || localityName.substring(0, 2).toUpperCase();
+            const areaCode = school?.area?.code || areaName.substring(0, 3).toUpperCase();
+            
+            const key = `${localityName}-${areaName}`;
+            
+            if (!localityMap.has(key)) {
+              localityMap.set(key, {
+                id: key,
+                locality: {
+                  code: localityCode,
+                  name: localityName
+                },
+                area: {
+                  code: areaCode,
+                  name: areaName
+                },
+                linkedSchoolsCount: 0,
+                linkedStudentsCount: 0,
+                status: 'Active'
+              });
+            }
+            
+            // Count schools in this area
+            localityMap.get(key).linkedSchoolsCount += 1;
+          });
+          
+          data = Array.from(localityMap.values());
+          
+          // Calculate actual student count by checking user.school relationships
+          if (allUsers && allUsers.length > 0) {
+            console.log('Calculating student counts for localities...');
+            data.forEach((localityItem: any) => {
+              const areaCode = localityItem.area.code;
+              const localityCode = localityItem.locality.code;
+              
+              // Find schools in this area and locality
+              const schoolsInArea = allSchools.filter((school: any) => {
+                return school.area && school.area.code === areaCode && 
+                       school.locality && school.locality.code === localityCode;
+              });
+              
+              // Count students who belong to schools in this area and locality
+              const studentCount = allUsers.filter((user: any) => {
+                if (!user.school || typeof user.school !== 'object') return false;
+                
+                // Check if user's school is in the current area and locality
+                return schoolsInArea.some((school: any) => {
+                  return user.school.id === school.id && 
+                         user.school.area_id === school.area_id && 
+                         user.school.locality_id === school.locality_id;
+                });
+              }).length;
+              
+              localityItem.linkedStudentsCount = studentCount;
+              console.log(`Area ${areaCode}, Locality ${localityCode}: ${studentCount} students`);
+            });
+          }
+        } else {
+          // Mock localities data for demonstration
+          data = [
+            {
+              id: 'DU-NAS',
+              locality: { code: 'DU', name: 'Dubai' },
+              area: { code: 'NAS', name: 'Nad Al Shiba' },
+              linkedSchoolsCount: 20,
+              linkedStudentsCount: 300,
+              status: 'Active'
+            },
+            {
+              id: 'DU-ALQ',
+              locality: { code: 'DU', name: 'Dubai' },
+              area: { code: 'ALQ', name: 'Al Quoz' },
+              linkedSchoolsCount: 10,
+              linkedStudentsCount: 200,
+              status: 'Active'
+            },
+            {
+              id: 'AD-COR',
+              locality: { code: 'AD', name: 'Abu Dhabi' },
+              area: { code: 'COR', name: 'Corniche' },
+              linkedSchoolsCount: 15,
+              linkedStudentsCount: 250,
+              status: 'Active'
+            }
+          ];
+        }
+      } else {
+        data = allLocalities;
+      }
+    } else {
+      if (!allSchools || allSchools.length === 0) {
+        return [];
+      }
+      data = allSchools;
     }
 
-    let data = allSchools;
     const selectedLocalityName = localityMapping[selectedLocality];
-    console.log('SchoolsPage - Filtering by locality:', selectedLocalityName);
 
-    // Filter by locality first
+    // Filter by locality first (for both schools and localities)
     if (selectedLocalityName && selectedLocalityName !== 'Other') {
-      data = allSchools.filter((school: any) => {
-        const schoolLocality = school?.locality?.name || '';
-        const matches = schoolLocality.toLowerCase() === selectedLocalityName.toLowerCase();
-        if (matches) {
-          console.log('SchoolsPage - Matching school found:', school.name, 'in', schoolLocality);
-        }
+      data = data.filter((item: any) => {
+        const itemLocality = type === 'localities' ? item?.locality?.name : item?.locality?.name || '';
+        const matches = itemLocality.toLowerCase() === selectedLocalityName.toLowerCase();
         return matches;
       });
-      console.log('SchoolsPage - Schools after locality filter:', data.length);
     } else if (selectedLocalityName === 'Other') {
-      // For 'Other', show schools that don't match any of the main localities
+      // For 'Other', show items that don't match any of the main localities
       const mainLocalities = ['Dubai', 'Abu Dhabi', 'Al Ain', 'Sharjah', 'Ajman', 'Ras Al Khaimah', 'Umm Al Quwain'];
-      data = allSchools.filter((school: any) => {
-        const schoolLocality = school?.locality?.name || '';
+      data = data.filter((item: any) => {
+        const itemLocality = type === 'localities' ? item?.locality?.name : item?.locality?.name || '';
         const isOther = !mainLocalities.some(locality => 
-          schoolLocality.toLowerCase() === locality.toLowerCase()
+          itemLocality.toLowerCase() === locality.toLowerCase()
         );
         if (isOther) {
-          console.log('SchoolsPage - Other locality school found:', school.name, 'in', schoolLocality);
+          console.log(`SchoolsPage - Other locality ${type} found:`, type === 'localities' ? item.area?.name : item.name, 'in', itemLocality);
         }
         return isOther;
       });
-      console.log('SchoolsPage - Other locality schools:', data.length);
+      console.log(`SchoolsPage - Other locality ${type}:`, data.length);
     }
 
     // Apply search filter if search term exists
@@ -76,29 +169,52 @@ const SchoolsPage: React.FC<SchoolsPageProps> = ({ type = 'schools', selectedLoc
     console.log('SchoolsPage - Applying search filter:', searchTerm);
     const searchLower = searchTerm.toLowerCase();
     const searchFiltered = data.filter((item: any) => {
-      const schoolId = item?.id?.toString().toLowerCase() || '';
-      const schoolCode = item?.code?.toLowerCase() || '';
-      const schoolName = item?.name?.toLowerCase() || '';
-      const locality = item?.locality?.name?.toLowerCase() || '';
-      const area = item?.area?.name?.toLowerCase() || '';
-      const status = item?.status?.toLowerCase() || '';
+      if (type === 'localities') {
+        const localityCode = item?.localityCode || item?.code || '';
+        const localityName = item?.localityName || item?.locality?.name || '';
+        const areaCode = item?.areaCode || item?.area?.code || '';
+        const areaName = item?.areaName || item?.area?.name || '';
+        const linkedSchools = item?.linkedSchools || item?.schoolsCount || '';
+        const linkedStudents = item?.linkedStudents || item?.studentsCount || '';
+        const status = item?.status || '';
 
-      const matches = schoolId.includes(searchLower) ||
-        schoolCode.includes(searchLower) ||
-        schoolName.includes(searchLower) ||
-        locality.includes(searchLower) ||
-        area.includes(searchLower) ||
-        status.includes(searchLower);
-      
-      if (matches) {
-        console.log('SchoolsPage - Search match found:', item.name);
+        const matches = localityCode.toLowerCase().includes(searchLower) ||
+          localityName.toLowerCase().includes(searchLower) ||
+          areaCode.toLowerCase().includes(searchLower) ||
+          areaName.toLowerCase().includes(searchLower) ||
+          linkedSchools.toString().includes(searchLower) ||
+          linkedStudents.toString().includes(searchLower) ||
+          status.toLowerCase().includes(searchLower);
+        
+        if (matches) {
+          console.log('SchoolsPage - Search match found:', item.localityName || item.name);
+        }
+        return matches;
+      } else {
+        const schoolId = item?.id?.toString().toLowerCase() || '';
+        const schoolCode = item?.code?.toLowerCase() || '';
+        const schoolName = item?.name?.toLowerCase() || '';
+        const locality = item?.locality?.name?.toLowerCase() || '';
+        const area = item?.area?.name?.toLowerCase() || '';
+        const status = item?.status?.toLowerCase() || '';
+
+        const matches = schoolId.includes(searchLower) ||
+          schoolCode.includes(searchLower) ||
+          schoolName.includes(searchLower) ||
+          locality.includes(searchLower) ||
+          area.includes(searchLower) ||
+          status.includes(searchLower);
+        
+        if (matches) {
+          console.log('SchoolsPage - Search match found:', item.name);
+        }
+        return matches;
       }
-      return matches;
     });
     
     console.log('SchoolsPage - Final filtered data:', searchFiltered.length);
     return searchFiltered;
-  }, [type, allSchools, searchTerm, selectedLocality]);
+  }, [type, allSchools, allLocalities, searchTerm, selectedLocality]);
 
   const handleSchoolAction = (action: string, schoolId: string) => {
     console.log(`Action: ${action} on School: ${schoolId}`);
@@ -142,11 +258,19 @@ const SchoolsPage: React.FC<SchoolsPageProps> = ({ type = 'schools', selectedLoc
       </div>
 
       {/* Data Table */}
-      <SchoolsTable
-        schools={filteredData}
-        onAction={handleSchoolAction}
-        schoolType={type}
-      />
+      {type === 'localities' ? (
+        <SchoolsLocalitiesTable
+          localities={filteredData}
+          onAction={handleSchoolAction}
+          localityType={type}
+        />
+      ) : (
+        <SchoolsTable
+          schools={filteredData}
+          onAction={handleSchoolAction}
+          schoolType={type}
+        />
+      )}
     </div>
   );
 };

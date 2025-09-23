@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { useApp } from '../../contexts/AppContext';
 import { ConfirmationModal } from '../ui';
-import { updateSchoolStatusApi, deleteSchoolApi } from '../../apis/schools';
+import { updateSchoolStatusApi, deleteSchoolApi, createSchoolApi } from '../../apis/schools';
 
 interface School {
     id: string;
@@ -32,6 +32,15 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
     const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
     const [schoolToDelete, setSchoolToDelete] = useState<string | null>(null);
     const [filteredSchools, setFilteredSchools] = useState<any[]>([]);
+    const [showNewRow, setShowNewRow] = useState<boolean>(false);
+    const [isAddingNew, setIsAddingNew] = useState<boolean>(false);
+    const [newRowData, setNewRowData] = useState({
+        schoolCode: '',
+        schoolName: '',
+        locality: '',
+        area: '',
+        status: 'Active'
+    });
     const { refreshSchoolsData } = useApp();
     const dropdownRef = useRef<HTMLDivElement>(null);
     // Filter schools based on search term
@@ -98,9 +107,6 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
 
     const handleAction = async (action: string, schoolId: string) => {
         try {
-
-            console.log('----------------------handleAction - Action:', action);
-            console.log('----------------------handleAction - School ID:', schoolId);
             setActiveDropdown(null); // Close dropdown immediately when action is triggered
             setUpdatingSchoolId(schoolId);
             if (action === 'delete') {
@@ -130,7 +136,55 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
         }
     };
 
-    const getStatusColor = (status: string | undefined) => {
+
+    const handleNewRowInputChange = (field: string, value: string) => {
+        setNewRowData(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
+
+    const handleSaveNewRow = async () => {
+        try {
+            // Validate required fields
+            if (!newRowData.schoolCode.trim() || !newRowData.schoolName.trim() || !newRowData.locality.trim() || !newRowData.area.trim()) {
+                toast.error('Please fill in all required fields');
+                return;
+            }
+
+            // Create school data object
+            const schoolData = {
+                code: newRowData.schoolCode.trim(),
+                name: newRowData.schoolName.trim(),
+                locality: newRowData.locality.trim(),
+                area: newRowData.area.trim(),
+                status: newRowData.status
+            };
+
+            const response = await createSchoolApi(schoolData);
+            if (response.success) {
+                toast.success('New school added successfully');
+                setShowNewRow(false);
+                setIsAddingNew(false);
+                setNewRowData({
+                    schoolCode: '',
+                    schoolName: '',
+                    locality: '',
+                    area: '',
+                    status: 'Active'
+                });
+                // Refresh data
+                await refreshSchoolsData();
+            } else {
+                toast.error(response.message || 'Failed to save new school');
+            }
+        } catch (error: any) {
+            console.error('Error saving new school:', error);
+            toast.error(error.message || 'Failed to save new school');
+        }
+    };
+
+        const getStatusColor = (status: string | undefined) => {
         if (!status) return 'text-gray-600';
 
         switch (status.toLowerCase()) {
@@ -143,6 +197,18 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
             default:
                 return 'text-gray-600';
         }
+    };
+
+    const handleAddNewRow = () => {
+        setShowNewRow(true);
+        setIsAddingNew(true);
+        setNewRowData({
+            schoolCode: '',
+            schoolName: '',
+            locality: '',
+            area: '',
+            status: 'Active'
+        });
     };
 
     return (
@@ -236,7 +302,7 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
 
                             {/* Area */}
                             <div className="w-28 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-                                {school?.code || 'N/A'}
+                                {school?.area?.code || 'N/A'}
                             </div>
 
                             {/* Status */}
@@ -374,6 +440,101 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
                     );
                 })
             ) : null}
+
+            {/* New Row Input Fields */}
+            {showNewRow && (
+                <div className="flex gap-2 mb-2">
+                    {/* School ID - Auto generated */}
+                    <div className="w-24 bg-gray-100 px-3 py-2 text-sm text-gray-500 rounded-md border border-gray-200">
+                        Auto
+                    </div>
+
+                    {/* School Code */}
+                    <div className="w-32 bg-white px-3 py-2 rounded-md border border-gray-200">
+                        <input
+                            type="text"
+                            value={newRowData.schoolCode}
+                            onChange={(e) => handleNewRowInputChange('schoolCode', e.target.value)}
+                            placeholder="Enter code"
+                            className="w-full text-sm text-gray-900 focus:outline-none"
+                        />
+                    </div>
+
+                    {/* School Name */}
+                    <div className="flex-1 bg-white px-3 py-2 rounded-md border border-gray-200">
+                        <input
+                            type="text"
+                            value={newRowData.schoolName}
+                            onChange={(e) => handleNewRowInputChange('schoolName', e.target.value)}
+                            placeholder="Enter school name"
+                            className="w-full text-sm text-gray-900 focus:outline-none"
+                        />
+                    </div>
+
+                    {/* Locality */}
+                    <div className="w-28 bg-white px-3 py-2 rounded-md border border-gray-200">
+                        <input
+                            type="text"
+                            value={newRowData.locality}
+                            onChange={(e) => handleNewRowInputChange('locality', e.target.value)}
+                            placeholder="Enter locality"
+                            className="w-full text-sm text-gray-900 focus:outline-none"
+                        />
+                    </div>
+
+                    {/* Area */}
+                    <div className="w-28 bg-white px-3 py-2 rounded-md border border-gray-200">
+                        <input
+                            type="text"
+                            value={newRowData.area}
+                            onChange={(e) => handleNewRowInputChange('area', e.target.value)}
+                            placeholder="Enter area"
+                            className="w-full text-sm text-gray-900 focus:outline-none"
+                        />
+                    </div>
+
+                    {/* Status */}
+                    <div className="w-24 bg-white px-3 py-2 rounded-md border border-gray-200">
+                        <select
+                            value={newRowData.status}
+                            onChange={(e) => handleNewRowInputChange('status', e.target.value)}
+                            className="w-full text-sm text-gray-900 focus:outline-none"
+                        >
+                            <option value="Active">Active</option>
+                            <option value="Blocked">Blocked</option>
+                            <option value="Flagged">Flagged</option>
+                        </select>
+                    </div>
+
+                    {/* Actions - Empty for new row */}
+                    <div className="w-16 px-3 py-2 text-sm font-medium">
+                        <span></span>
+                    </div>
+                </div>
+            )}
+
+            <div className="flex justify-start space-x-4 mt-6">
+                <button
+                    onClick={handleAddNewRow}
+                    disabled={isAddingNew}
+                    className={`bg-[#C2A46D] text-white font-medium rounded-[30px] w-[105px] h-[44px] px-[10px] py-[10px] mr-[10px] transition-colors duration-200 ${isAddingNew
+                        ? 'opacity-50 cursor-not-allowed'
+                        : 'hover:bg-[#9a7849]'
+                        }`}
+                >
+                    Add
+                </button>
+                <button
+                    onClick={handleSaveNewRow}
+                    disabled={!isAddingNew}
+                    className={`bg-[#C2A46D] text-white font-medium rounded-[30px] w-[105px] h-[44px] px-[10px] py-[10px] mr-[10px] transition-colors duration-200 ${!isAddingNew
+                        ? 'opacity-50 cursor-not-allowed'
+                        : 'hover:bg-[#b89a6a]'
+                        }`}
+                >
+                    Save
+                </button>
+            </div>
 
             {/* Delete Confirmation Modal */}
             <ConfirmationModal
