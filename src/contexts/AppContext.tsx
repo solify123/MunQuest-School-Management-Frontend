@@ -175,8 +175,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       refreshEventsData();
       refreshLeadershipRolesData();
       refreshSchoolsData();
+      refreshLocalitiesData();
+      refreshAreasData();
     }
-  }, [supabaseUser, session, authLoading, refreshUserData, refreshEventsData, refreshLeadershipRolesData, refreshSchoolsData]);
+  }, [supabaseUser, session, authLoading, refreshUserData, refreshEventsData, refreshLeadershipRolesData, refreshSchoolsData, refreshLocalitiesData, refreshAreasData]);
 
   const value: AppContextType = {
     userType,

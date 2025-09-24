@@ -101,7 +101,6 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, user
 
   const handleAction = async (action: string, userId: string) => {
     setActiveDropdown(null); // Close dropdown immediately when action is triggered
-    setUpdatingUserId(userId);
     
     try {
       if (action === 'delete') {
@@ -113,6 +112,7 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, user
           toast.error(response.message);
         }
       } else {
+        setUpdatingUserId(userId);
         const response = await updateUserStatusApi(userId, action);
         if (response.success) {
           toast.success(response.message);

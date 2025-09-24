@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import SchoolsTable from './SchoolsTable';
 import SchoolsLocalitiesTable from './Schools-LocalitiesTable';
 import { useApp } from '../../contexts/AppContext';
@@ -9,8 +9,14 @@ interface SchoolsPageProps {
 
 const SchoolsPage: React.FC<SchoolsPageProps> = ({ type = 'schools', selectedLocality = 0 }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const { allSchools, allLocalities, allUsers } = useApp();
+  const { allSchools, allLocalities, allUsers, refreshLocalitiesData, refreshAreasData } = useApp();
   const localityMapping = ['Dubai', 'Abu Dhabi', 'Al Ain', 'Sharjah', 'Ajman', 'Ras Al Khaimah', 'Umm Al Quwain', 'Other'];
+
+  // Fetch localities and areas data when component mounts
+  useEffect(() => {
+    refreshLocalitiesData();
+    refreshAreasData();
+  }, [refreshLocalitiesData, refreshAreasData]);
 
   const filteredData = useMemo(() => {
     let data: any[] = [];

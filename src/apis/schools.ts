@@ -54,25 +54,34 @@ export const deleteSchoolApi = async (schoolId: string) => {
     }
 };
 
-export const updateSchoolApi = async (schoolId: string, schoolData: any) => {
+export const updateSchoolApi = async (schoolId: string, code: string, name: string, locality_id: string, area_id: string) => {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.patch(`${backendUrl}/api/v1/schools/update-school/${schoolId}`, schoolData, {
+        const response = await axios.patch(`${backendUrl}/api/v1/schools/update-school/${schoolId}`, {
+            code,
+            name,
+            locality_id,
+            area_id
+        }, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
         });
-
         return response.data;
     } catch (error: any) {
         throw new Error(error.response.data.message);
     }
 };
 
-export const createSchoolApi = async (schoolData: any) => {
+export const createSchoolApi = async (code: string, name: string, locality_id: string, area_id: string) => {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.post(`${backendUrl}/api/v1/schools/create-school`, schoolData, {
+        const response = await axios.post(`${backendUrl}/api/v1/schools/create-school`, {
+            code,
+            name,
+            locality_id,
+            area_id
+        }, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }

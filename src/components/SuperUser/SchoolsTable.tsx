@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { useApp } from '../../contexts/AppContext';
 import { ConfirmationModal } from '../ui';
-import { updateSchoolStatusApi, deleteSchoolApi, createSchoolApi } from '../../apis/schools';
+import { updateSchoolStatusApi, deleteSchoolApi, createSchoolApi, updateSchoolApi } from '../../apis/schools';
+import saveIcon from '../../assets/save_icon.svg'
 
 interface School {
     id: string;
@@ -38,12 +39,38 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
         schoolCode: '',
         schoolName: '',
         locality: '',
+        locality_id: '',
         area: '',
+        area_id: '',
         status: 'Active'
     });
-    const { refreshSchoolsData } = useApp();
+    const [editingSchoolId, setEditingSchoolId] = useState<string | null>(null);
+    const [editingRowData, setEditingRowData] = useState<any>(null);
+    const [editValidationErrors, setEditValidationErrors] = useState<{ [key: string]: string }>({});
+    const { refreshSchoolsData, allLocalities, allAreas, refreshLocalitiesData, refreshAreasData } = useApp();
     const dropdownRef = useRef<HTMLDivElement>(null);
-    // Filter schools based on search term
+
+    // Fetch localities and areas data when component mounts
+    useEffect(() => {
+        if (allLocalities.length === 0) {
+            refreshLocalitiesData();
+        }
+        if (allAreas.length === 0) {
+            refreshAreasData();
+        }
+    }, [allLocalities.length, allAreas.length, refreshLocalitiesData, refreshAreasData]);
+
+    // Debug: Log the data structure
+    useEffect(() => {
+        console.log('allLocalities structure:', allLocalities);
+        console.log('allAreas structure:', allAreas);
+        if (allLocalities.length > 0) {
+            console.log('First locality item:', allLocalities[0]);
+        }
+        if (allAreas.length > 0) {
+            console.log('First area item:', allAreas[0]);
+        }
+    }, [allLocalities, allAreas]);
     useEffect(() => {
         if (!searchTerm.trim()) {
             setFilteredSchools(schools);
@@ -71,21 +98,21 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
     }, [searchTerm, schools]);
 
     // Handle clicking outside dropdown to close it
-    // useEffect(() => {
-    //     const handleClickOutside = (event: MouseEvent) => {
-    //         if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-    //             setActiveDropdown(null);
-    //         }
-    //     };
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setActiveDropdown(null);
+            }
+        };
 
-    //     if (activeDropdown) {
-    //         document.addEventListener('mousedown', handleClickOutside);
-    //     }
+        if (activeDropdown) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
 
-    //     return () => {
-    //         document.removeEventListener('mousedown', handleClickOutside);
-    //     };
-    // }, [activeDropdown]);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [activeDropdown]);
 
     const handleDropdownToggle = (schoolId: string) => {
         setActiveDropdown(activeDropdown === schoolId ? null : schoolId);
@@ -136,31 +163,13 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
         }
     };
 
-    const handleNewRowInputChange = (field: string, value: string) => {
-        setNewRowData(prev => ({
-            ...prev,
-            [field]: value
-        }));
-    };
-
     const handleSaveNewRow = async () => {
         try {
-            // Validate required fields
-            if (!newRowData.schoolCode.trim() || !newRowData.schoolName.trim() || !newRowData.locality.trim() || !newRowData.area.trim()) {
+            if (!newRowData.schoolCode.trim() || !newRowData.schoolName.trim() || !newRowData.locality_id.trim() || !newRowData.area_id.trim()) {
                 toast.error('Please fill in all required fields');
                 return;
             }
-
-            // Create school data object
-            const schoolData = {
-                code: newRowData.schoolCode.trim(),
-                name: newRowData.schoolName.trim(),
-                locality: newRowData.locality.trim(),
-                area: newRowData.area.trim(),
-                status: newRowData.status
-            };
-
-            const response = await createSchoolApi(schoolData);
+            const response = await createSchoolApi(newRowData.schoolCode.trim(), newRowData.schoolName.trim(), newRowData.locality_id.trim(), newRowData.area_id.trim());
             if (response.success) {
                 toast.success('New school added successfully');
                 setShowNewRow(false);
@@ -169,10 +178,11 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
                     schoolCode: '',
                     schoolName: '',
                     locality: '',
+                    locality_id: '',
                     area: '',
+                    area_id: '',
                     status: 'Active'
                 });
-                // Refresh data
                 await refreshSchoolsData();
             } else {
                 toast.error(response.message || 'Failed to save new school');
@@ -193,6 +203,8 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
                 return 'text-red-600';
             case 'flagged':
                 return 'text-yellow-500';
+            case 'unlisted':
+                return 'text-red-500';
             default:
                 return 'text-gray-600';
         }
@@ -205,14 +217,57 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
             schoolCode: '',
             schoolName: '',
             locality: '',
+            locality_id: '',
             area: '',
+            area_id: '',
             status: 'Active'
         });
     };
 
+    const handleEditRow = (school: any) => {
+        setEditingSchoolId(school?.id);
+        setEditingRowData({
+            id: school?.id,
+            code: school?.code || '',
+            name: school?.name || '',
+            locality: school?.locality?.name || '',
+            locality_id: school?.locality_id || '',
+            area: school?.area?.name || '',
+            area_id: school?.area_id || '',
+            status: school?.status || 'Active'
+        });
+        setEditValidationErrors({});
+        setActiveDropdown(null);
+    };
+
+    const handleSaveEdit = async () => {
+        try {
+            console.log("editingRowData----", editingRowData.name, editingRowData.code, editingRowData.locality_id, editingRowData.area_id);
+
+            const response = await updateSchoolApi(editingRowData?.id, editingRowData?.code, editingRowData?.name, editingRowData?.locality_id, editingRowData?.area_id)
+            if (response.success) {
+                toast.success('School updated successfully');
+                setEditingSchoolId(null);
+                setEditingRowData(null);
+                setEditValidationErrors({});
+                await refreshSchoolsData();
+            } else {
+                toast.error(response.message || 'Failed to update school');
+            }
+        } catch (error: any) {
+            console.error('Error updating school:', error);
+            toast.error(error.message || 'Failed to update school');
+        }
+    };
+
+    const handleCancelEdit = () => {
+        setEditingSchoolId(null);
+        setEditingRowData(null);
+        setEditValidationErrors({});
+    };
+
     return (
         <div>
-            {/* Search Input - Hidden as search is handled in parent */}
             <div className="mb-4" style={{ display: 'none' }}>
                 <input
                     type="text"
@@ -223,9 +278,7 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
                 />
             </div>
 
-            {/* Header Row */}
             <div className="flex gap-2 mb-2">
-                {/* School ID */}
                 <div className="w-24 px-3 py-2 text-xs font-medium text-gray-900 uppercase tracking-wider rounded-md bg-[#C6DAF4] border border-[#4A5F7A] flex items-center justify-between">
                     <span>School ID</span>
                     <svg className="w-3 h-3 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -277,6 +330,8 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
                 </div>
             ) : filteredSchools.length > 0 ? (
                 filteredSchools.map((school: any) => {
+                    const isEditing = editingSchoolId === school?.id;
+
                     return (
                         <div key={school?.id || Math.random()} className="flex gap-2 mb-2">
                             {/* School ID */}
@@ -286,22 +341,96 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
 
                             {/* School Code */}
                             <div className="w-32 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-                                {school?.code || 'N/A'}
+                                {isEditing ? (
+                                    <div>
+                                        <input
+                                            type="text"
+                                            value={editingRowData?.code || ''}
+                                            className="w-full text-sm text-gray-500 focus:outline-none border-0 p-0 bg-transparent cursor-not-allowed"
+                                            placeholder="Auto-generated"
+                                            readOnly
+                                            disabled
+                                        />
+                                    </div>
+                                ) : (
+                                    school?.code || 'N/A'
+                                )}
                             </div>
 
                             {/* School Name */}
                             <div className="flex-1 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-                                {school?.name || 'N/A'}
+                                {isEditing ? (
+                                    <div>
+                                        <input
+                                            type="text"
+                                            value={editingRowData?.name || ''}
+                                            onChange={(e) => setEditingRowData({ ...editingRowData, name: e.target.value })}
+                                            className={`w-full text-sm text-gray-900 focus:outline-none border-0 p-0 ${editValidationErrors.name ? 'border-red-500' : ''}`}
+                                            placeholder="Enter school name"
+                                        />
+                                        {editValidationErrors.name && (
+                                            <div className="text-xs text-red-500 mt-1">{editValidationErrors.name}</div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    school?.name || 'N/A'
+                                )}
                             </div>
 
                             {/* Locality */}
                             <div className="w-28 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-                                {school?.locality?.name || 'N/A'}
+                                {isEditing ? (
+                                    <div>
+                                        <select
+                                            value={editingRowData?.locality_id || ''}
+                                            onChange={(e) => {
+                                                const selectedLocality = allLocalities.find(loc => loc.id === e.target.value);
+                                                setEditingRowData({ ...editingRowData, locality_id: e.target.value, locality: selectedLocality?.locality?.name || selectedLocality?.name || '' });
+                                            }}
+                                            className={`w-full text-sm text-gray-900 focus:outline-none border-0 p-0 ${editValidationErrors.locality_id ? 'border-red-500' : ''}`}
+                                        >
+                                            <option value="">Select locality</option>
+                                            {allLocalities.map((locality) => (
+                                                <option key={locality.id} value={locality.id}>
+                                                    {locality.locality?.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {editValidationErrors.locality_id && (
+                                            <div className="text-xs text-red-500 mt-1">{editValidationErrors.locality_id}</div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    school?.locality?.name || 'N/A'
+                                )}
                             </div>
 
                             {/* Area */}
                             <div className="w-28 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-                                {school?.area?.code || 'N/A'}
+                                {isEditing ? (
+                                    <div>
+                                        <select
+                                            value={editingRowData?.area_id || ''}
+                                            onChange={(e) => {
+                                                const selectedArea = allAreas.find(area => area.id === e.target.value);
+                                                setEditingRowData({ ...editingRowData, area_id: e.target.value, area: selectedArea?.area?.name || selectedArea?.name || '' });
+                                            }}
+                                            className={`w-full text-sm text-gray-900 focus:outline-none border-0 p-0 ${editValidationErrors.area_id ? 'border-red-500' : ''}`}
+                                        >
+                                            <option value="">Select area</option>
+                                            {allAreas.map((area) => (
+                                                <option key={area.id} value={area.id}>
+                                                    {area.area?.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {editValidationErrors.area_id && (
+                                            <div className="text-xs text-red-500 mt-1">{editValidationErrors.area_id}</div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    school?.area?.code || 'N/A'
+                                )}
                             </div>
 
                             {/* Status */}
@@ -323,20 +452,42 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
                             {/* Actions */}
                             <div className="w-16 px-3 py-2 text-sm font-medium relative" ref={dropdownRef}>
                                 <div className="relative flex items-center justify-left">
-                                    <button
-                                        onClick={() => handleDropdownToggle(school?.id || '')}
-                                        className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                    >
-                                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                                        </svg>
-                                    </button>
+                                    {isEditing ? (
+                                        <div className="flex space-x-1">
+                                            <button
+                                                onClick={handleSaveEdit}
+                                                className="text-green-600 hover:text-green-800 focus:outline-none"
+                                                title="Save changes"
+                                            >
+                                                <img src={saveIcon} />
+                                            </button>
+                                            <button
+                                                onClick={handleCancelEdit}
+                                                className="text-red-600 hover:text-red-800 focus:outline-none"
+                                                title="Cancel editing"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            onClick={() => handleDropdownToggle(school?.id || '')}
+                                            className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                        >
+                                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                                            </svg>
+                                        </button>
+                                    )}
 
-                                    {activeDropdown === school?.id && (
+                                    {activeDropdown === school?.id && !isEditing && (
                                         <div className="absolute top-full right-0 mt-1 w-48 bg-white rounded-md shadow-lg z-50 border-2">
                                             <div className="py-1">
                                                 {/* Main management options - always show for all statuses */}
                                                 <button
+                                                    onClick={() => handleEditRow(school)}
                                                     disabled={updatingSchoolId === school?.id}
                                                     className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingSchoolId === school?.id
                                                         ? 'text-gray-400 cursor-not-allowed'
@@ -347,6 +498,10 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
                                                 </button>
 
                                                 <button
+                                                    onClick={() => {
+                                                        setActiveDropdown(null);
+                                                        handleAddNewRow();
+                                                    }}
                                                     disabled={updatingSchoolId === school?.id}
                                                     className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingSchoolId === school?.id
                                                         ? 'text-gray-400 cursor-not-allowed'
@@ -362,6 +517,7 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
                                                         ? 'text-gray-400 cursor-not-allowed'
                                                         : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
                                                         }`}
+                                                        onClick={() => { handleAction('unlisted', school?.id || ''); }}
                                                 >
                                                     List
                                                 </button>
@@ -421,7 +577,10 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
 
                                                 {/* Delete button - always show */}
                                                 <button
-                                                    onClick={() => { handleAction('delete', school?.id || ''); }}
+                                                    onClick={() => {
+                                                        setSchoolToDelete(school?.id || '');
+                                                        setShowDeleteModal(true);
+                                                    }}
                                                     disabled={updatingSchoolId === school?.id}
                                                     className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingSchoolId === school?.id
                                                         ? 'text-gray-400 cursor-not-allowed'
@@ -448,13 +607,12 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
                         Auto
                     </div>
 
-                    {/* School Code */}
+                    {/* School Code - Auto-generated and read-only */}
                     <div className="w-32 bg-white px-3 py-2 rounded-md border border-gray-200">
                         <input
                             type="text"
                             value={newRowData.schoolCode}
-                            onChange={(e) => handleNewRowInputChange('schoolCode', e.target.value)}
-                            placeholder="Enter code"
+                            onChange={(e) => setNewRowData({ ...newRowData, schoolCode: e.target.value })}
                             className="w-full text-sm text-gray-900 focus:outline-none"
                         />
                     </div>
@@ -464,7 +622,7 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
                         <input
                             type="text"
                             value={newRowData.schoolName}
-                            onChange={(e) => handleNewRowInputChange('schoolName', e.target.value)}
+                            onChange={(e) => setNewRowData({ ...newRowData, schoolName: e.target.value })}
                             placeholder="Enter school name"
                             className="w-full text-sm text-gray-900 focus:outline-none"
                         />
@@ -472,37 +630,50 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
 
                     {/* Locality */}
                     <div className="w-28 bg-white px-3 py-2 rounded-md border border-gray-200">
-                        <input
-                            type="text"
-                            value={newRowData.locality}
-                            onChange={(e) => handleNewRowInputChange('locality', e.target.value)}
-                            placeholder="Enter locality"
+                        <select
+                            value={newRowData.locality_id || ''}
+                            onChange={(e) => {
+                                const selectedLocality = allLocalities.find(loc => loc.id === e.target.value);
+                                setNewRowData({ ...newRowData, locality_id: e.target.value, locality: selectedLocality?.locality?.name || selectedLocality?.name || '' });
+                            }}
                             className="w-full text-sm text-gray-900 focus:outline-none"
-                        />
+                        >
+                            <option value="">Select locality</option>
+                            {allLocalities.map((locality) => (
+                                <option key={locality.id} value={locality.id}>
+                                    {locality.name}
+                                </option>
+                            ))}
+                        </select>
                     </div>
 
                     {/* Area */}
                     <div className="w-28 bg-white px-3 py-2 rounded-md border border-gray-200">
-                        <input
-                            type="text"
-                            value={newRowData.area}
-                            onChange={(e) => handleNewRowInputChange('area', e.target.value)}
-                            placeholder="Enter area"
+                        <select
+                            value={newRowData.area_id || ''}
+                            onChange={(e) => {
+                                const selectedArea = allAreas.find(area => area.id === e.target.value);
+                                setNewRowData({ ...newRowData, area_id: e.target.value, area: selectedArea?.area?.name || selectedArea?.name || '' });
+                            }}
                             className="w-full text-sm text-gray-900 focus:outline-none"
-                        />
+                        >
+                            <option value="">Select area</option>
+                            {allAreas.map((area) => (
+                                <option key={area.id} value={area.id}>
+                                    {area.name}
+                                </option>
+                            ))}
+                        </select>
                     </div>
 
                     {/* Status */}
                     <div className="w-24 bg-white px-3 py-2 rounded-md border border-gray-200">
-                        <select
-                            value={newRowData.status}
-                            onChange={(e) => handleNewRowInputChange('status', e.target.value)}
+                         <input
+                            type="text"
+                            value={"Active"}
+                            placeholder="Enter status"
                             className="w-full text-sm text-gray-900 focus:outline-none"
-                        >
-                            <option value="Active">Active</option>
-                            <option value="Blocked">Blocked</option>
-                            <option value="Flagged">Flagged</option>
-                        </select>
+                        />
                     </div>
 
                     {/* Actions - Empty for new row */}

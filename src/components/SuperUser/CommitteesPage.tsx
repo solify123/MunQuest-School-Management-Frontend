@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getAllCommitteesApi } from '../../apis/Committees';
 import { showToast } from '../../utils/toast';
+import { LoadingSpinner } from '../ui';
 import CommitteesTable from './CommitteesTable';
 
 const CommitteesPage: React.FC = () => {
@@ -44,10 +45,7 @@ const CommitteesPage: React.FC = () => {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading committees...</p>
-        </div>
+        <LoadingSpinner size="large" text="Loading committees..." />
       </div>
     );
   }
