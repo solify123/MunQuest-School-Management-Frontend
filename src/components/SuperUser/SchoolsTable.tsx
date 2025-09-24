@@ -71,21 +71,21 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
     }, [searchTerm, schools]);
 
     // Handle clicking outside dropdown to close it
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                setActiveDropdown(null);
-            }
-        };
+    // useEffect(() => {
+    //     const handleClickOutside = (event: MouseEvent) => {
+    //         if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+    //             setActiveDropdown(null);
+    //         }
+    //     };
 
-        if (activeDropdown) {
-            document.addEventListener('mousedown', handleClickOutside);
-        }
+    //     if (activeDropdown) {
+    //         document.addEventListener('mousedown', handleClickOutside);
+    //     }
 
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [activeDropdown]);
+    //     return () => {
+    //         document.removeEventListener('mousedown', handleClickOutside);
+    //     };
+    // }, [activeDropdown]);
 
     const handleDropdownToggle = (schoolId: string) => {
         setActiveDropdown(activeDropdown === schoolId ? null : schoolId);
@@ -136,7 +136,6 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
         }
     };
 
-
     const handleNewRowInputChange = (field: string, value: string) => {
         setNewRowData(prev => ({
             ...prev,
@@ -184,7 +183,7 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
         }
     };
 
-        const getStatusColor = (status: string | undefined) => {
+    const getStatusColor = (status: string | undefined) => {
         if (!status) return 'text-gray-600';
 
         switch (status.toLowerCase()) {

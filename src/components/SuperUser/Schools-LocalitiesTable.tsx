@@ -2,8 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { useApp } from '../../contexts/AppContext';
 import { ConfirmationModal } from '../ui';
-import { updateSchoolStatusApi, deleteSchoolApi } from '../../apis/schools';
-
+import { updateAreaStatusApi, deleteAreaApi } from '../../apis/areas';
 interface Locality {
     id: string;
     code: string;
@@ -43,10 +42,9 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
         linkedStudents: '',
         status: 'Active'
     });
-    const { refreshAreasData, refreshLocalitiesData } = useApp();
+    const { refreshAreasData, refreshLocalitiesData, refreshSchoolsData } = useApp();
     const dropdownRef = useRef<HTMLDivElement>(null);
     // Filter localities based on search term
-    console.log('----------------------localities:', localities);
     useEffect(() => {
         if (!localities || !Array.isArray(localities)) {
             setFilteredLocalities([]);
@@ -62,6 +60,7 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
                 const localityCode = locality.locality?.code || '';
                 const localityName = locality.locality?.name || '';
                 const areaCode = locality.area?.code || '';
+                const areaId = locality.area?.id || '';
                 const areaName = locality.area?.name || '';
                 const linkedSchools = locality?.linkedSchoolsCount?.toString() || '';
                 const linkedStudents = locality?.linkedStudentsCount?.toString() || '';
@@ -72,6 +71,7 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
                     localityCode.toLowerCase().includes(searchLower) ||
                     localityName.toLowerCase().includes(searchLower) ||
                     areaCode.toLowerCase().includes(searchLower) ||
+                    areaId.toLowerCase().includes(searchLower) ||
                     areaName.toLowerCase().includes(searchLower) ||
                     linkedSchools.includes(searchLower) ||
                     linkedStudents.includes(searchLower) ||
@@ -83,21 +83,21 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
     }, [searchTerm, localities]);
 
     // Handle clicking outside dropdown to close it
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                setActiveDropdown(null);
-            }
-        };
+    // useEffect(() => {
+    //     const handleClickOutside = (event: MouseEvent) => {
+    //         if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+    //             setActiveDropdown(null);
+    //         }
+    //     };
 
-        if (activeDropdown) {
-            document.addEventListener('mousedown', handleClickOutside);
-        }
+    //     if (activeDropdown) {
+    //         document.addEventListener('mousedown', handleClickOutside);
+    //     }
 
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [activeDropdown]);
+    //     return () => {
+    //         document.removeEventListener('mousedown', handleClickOutside);
+    //     };
+    // }, [activeDropdown]);
 
     const handleDropdownToggle = (localityId: string) => {
         setActiveDropdown(activeDropdown === localityId ? null : localityId);
@@ -119,29 +119,30 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
 
     const handleAction = async (action: string, localityId: string) => {
         try {
-
-            console.log('----------------------handleAction - Action:', action);
-            console.log('----------------------handleAction - Locality ID:', localityId);
             setActiveDropdown(null); // Close dropdown immediately when action is triggered
             setUpdatingLocalityId(localityId);
             if (action === 'delete') {
-                // Note: Using school API for locality deletion - may need locality-specific API
-                const response = await deleteSchoolApi(localityId);
+                const response = await deleteAreaApi(localityId);
                 if (response.success) {
                     toast.success(response.message || 'Locality deleted successfully');
-                    await refreshAreasData();
-                    await refreshLocalitiesData();
+                    await Promise.all([
+                        refreshAreasData(),
+                        refreshLocalitiesData(),
+                        refreshSchoolsData()
+                    ]);
                     onAction(action, localityId);
                 } else {
                     toast.error(response.message || 'Failed to delete locality');
                 }
             } else {
-                // Note: Using school API for locality status update - may need locality-specific API
-                const response = await updateSchoolStatusApi(localityId, action);
+                const response = await updateAreaStatusApi(localityId, action);
                 if (response.success) {
                     toast.success(response.message || `Locality ${action} successfully`);
-                    await refreshAreasData();
-                    await refreshLocalitiesData();
+                    await Promise.all([
+                        refreshAreasData(),
+                        refreshLocalitiesData(),
+                        refreshSchoolsData()
+                    ]);
                     onAction(action, localityId);
                 } else {
                     toast.error(response.message || 'Failed to update locality');
@@ -204,8 +205,11 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
             });
 
             // Refresh data
-            await refreshAreasData();
-            await refreshLocalitiesData();
+            await Promise.all([
+                refreshAreasData(),
+                refreshLocalitiesData(),
+                refreshSchoolsData()
+            ]);
         } catch (error: any) {
             console.error('Error saving new row:', error);
             toast.error('Failed to save new area');
@@ -346,7 +350,7 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
 
                             {/* Status */}
                             <div className="w-24 bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
-                                {updatingLocalityId === locality?.id ? (
+                                {updatingLocalityId === (locality?.id || locality?.area?.id) ? (
                                     <div className="flex items-center space-x-2">
                                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
                                         <span className="text-gray-500">Updating</span>
@@ -361,10 +365,10 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
                             </div>
 
                             {/* Actions */}
-                            <div className="w-16 px-3 py-2 text-sm font-medium relative" ref={dropdownRef}>
-                                <div className="relative flex items-center justify-left">
+                            <div className="w-16 px-3 py-2 text-sm font-medium relative">
+                                <div className="relative flex items-center justify-left" ref={dropdownRef}>
                                     <button
-                                        onClick={() => handleDropdownToggle(locality?.id || '')}
+                                        onClick={() => handleDropdownToggle(locality?.id || locality?.area?.id || '')}
                                         className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                                     >
                                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -372,13 +376,13 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
                                         </svg>
                                     </button>
 
-                                    {activeDropdown === locality?.id && (
-                                        <div className="absolute top-full right-0 mt-1 w-48 bg-white rounded-md shadow-lg z-50 border-2">
+                                    {activeDropdown === (locality?.id || locality?.area?.id) && (
+                                        <div className="absolute top-full right-0 mt-1 w-48 bg-white rounded-md shadow-lg z-[9999] border border-gray-300">
                                             <div className="py-1">
                                                 {/* Main management options - always show for all statuses */}
                                                 <button
-                                                    disabled={updatingLocalityId === locality?.id}
-                                                    className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === locality?.id
+                                                    disabled={updatingLocalityId === (locality?.id || locality?.area?.id)}
+                                                    className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.id || locality?.area?.id)
                                                         ? 'text-gray-400 cursor-not-allowed'
                                                         : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
                                                         }`}
@@ -387,8 +391,8 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
                                                 </button>
 
                                                 <button
-                                                    disabled={updatingLocalityId === locality?.id}
-                                                    className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === locality?.id
+                                                    disabled={updatingLocalityId === (locality?.id || locality?.area?.id)}
+                                                    className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.id || locality?.area?.id)
                                                         ? 'text-gray-400 cursor-not-allowed'
                                                         : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
                                                         }`}
@@ -397,8 +401,8 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
                                                 </button>
 
                                                 <button
-                                                    disabled={updatingLocalityId === locality?.id}
-                                                    className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === locality?.id
+                                                    disabled={updatingLocalityId === (locality?.id || locality?.area?.id)}
+                                                    className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.id || locality?.area?.id)
                                                         ? 'text-gray-400 cursor-not-allowed'
                                                         : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
                                                         }`}
@@ -407,8 +411,8 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
                                                 </button>
 
                                                 <button
-                                                    disabled={updatingLocalityId === locality?.id}
-                                                    className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === locality?.id
+                                                    disabled={updatingLocalityId === (locality?.id || locality?.area?.id)}
+                                                    className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.id || locality?.area?.id)
                                                         ? 'text-gray-400 cursor-not-allowed'
                                                         : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
                                                         }`}
@@ -420,9 +424,9 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
                                                 {/* Show Active button when status is not active */}
                                                 {locality?.status?.toLowerCase() !== 'active' && (
                                                     <button
-                                                        onClick={() => handleAction('active', locality?.id || '')}
-                                                        disabled={updatingLocalityId === locality?.id}
-                                                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === locality?.id
+                                                        onClick={() => handleAction('active', locality?.area?.id || locality?.id || '')}
+                                                        disabled={updatingLocalityId === (locality?.id || locality?.area?.id)}
+                                                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.id || locality?.area?.id)
                                                             ? 'text-gray-400 cursor-not-allowed'
                                                             : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
                                                             }`}
@@ -434,9 +438,9 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
                                                 {/* Show Flag button when status is not flagged */}
                                                 {locality?.status?.toLowerCase() !== 'flagged' && (
                                                     <button
-                                                        onClick={() => handleAction('flagged', locality?.id || '')}
-                                                        disabled={updatingLocalityId === locality?.id}
-                                                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === locality?.id
+                                                        onClick={() => handleAction('flagged', locality?.area?.id || locality?.id || '')}
+                                                        disabled={updatingLocalityId === (locality?.id || locality?.area?.id)}
+                                                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.id || locality?.area?.id)
                                                             ? 'text-gray-400 cursor-not-allowed'
                                                             : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
                                                             }`}
@@ -448,9 +452,9 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
                                                 {/* Show Block button when status is not blocked */}
                                                 {locality?.status?.toLowerCase() !== 'blocked' && (
                                                     <button
-                                                        onClick={() => handleAction('blocked', locality?.id || '')}
-                                                        disabled={updatingLocalityId === locality?.id}
-                                                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === locality?.id
+                                                        onClick={() => handleAction('blocked', locality?.area?.id || locality?.id || '')}
+                                                        disabled={updatingLocalityId === (locality?.id || locality?.area?.id)}
+                                                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.id || locality?.area?.id)
                                                             ? 'text-gray-400 cursor-not-allowed'
                                                             : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
                                                             }`}
@@ -461,9 +465,9 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
 
                                                 {/* Delete button - always show */}
                                                 <button
-                                                    onClick={() => { handleAction('delete', locality?.id || ''); }}
-                                                    disabled={updatingLocalityId === locality?.id}
-                                                    className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === locality?.id
+                                                    onClick={() => { handleAction('delete', locality?.area?.id || locality?.id || ''); }}
+                                                    disabled={updatingLocalityId === (locality?.id || locality?.area?.id)}
+                                                    className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.id || locality?.area?.id)
                                                         ? 'text-gray-400 cursor-not-allowed'
                                                         : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
                                                         }`}

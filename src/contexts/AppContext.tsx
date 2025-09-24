@@ -134,6 +134,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const refreshSchoolsData = useCallback(async () => {
     try {
       const allSchoolsResponse = await getAllSchoolsApi();
+      console.log('allSchoolsResponse', allSchoolsResponse);
       setAllSchools(allSchoolsResponse.data);
     } catch (error) {
       console.error('Error refreshing schools data:', error);
@@ -143,6 +144,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const refreshAreasData = useCallback(async () => {
     try {
       const allAreasResponse = await getAllAreasApi();
+      console.log('allAreasResponse', allAreasResponse);
       setAllAreas(allAreasResponse.data);
     } catch (error) {
       console.error('Error refreshing areas data:', error);
