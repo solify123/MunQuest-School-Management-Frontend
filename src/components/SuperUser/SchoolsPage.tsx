@@ -20,7 +20,6 @@ const SchoolsPage: React.FC<SchoolsPageProps> = ({ type = 'schools', selectedLoc
 
   const filteredData = useMemo(() => {
     let data: any[] = [];
-    console.log(allLocalities, allSchools, allUsers);
     if (type === 'localities') {
       // if (!allLocalities || allLocalities.length === 0) {
       if (allSchools && allSchools.length > 0) {

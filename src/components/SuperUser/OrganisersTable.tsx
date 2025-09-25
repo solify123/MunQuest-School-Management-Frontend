@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { updateOrganiserStatusApi, deleteOrganiserApi, addOrganiserBySuperUserApi } from '../../apis/Organisers';
 import { toast } from 'sonner';
 import { useApp } from '../../contexts/AppContext';
+import { ConfirmationModal } from '../ui';
 import saveIcon from '../../assets/save_icon.svg';
 
 interface Organiser {
@@ -34,6 +35,8 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
   const [userFound, setUserFound] = useState<boolean | null>(null);
   const [showUsernameDropdown, setShowUsernameDropdown] = useState<boolean>(false);
   const [filteredUsers, setFilteredUsers] = useState<any[]>([]);
+  const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
+  const [organiserToDelete, setOrganiserToDelete] = useState<string | null>(null);
   const usernameDropdownRef = useRef<HTMLDivElement>(null);
   const { refreshUserData, allUsers } = useApp();
 
@@ -87,14 +90,18 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
     setFilteredUsers([]);
     setNewOrganiser({
       id: '',
-      organiser_id: '',
       username: '',
-      fullname: '',
       locality: '',
+      fullname: '',
       school: '',
       role: '',
       evidence: '',
-      status: 'pending'
+      status: 'pending',
+      users: {
+        id: ''
+      },
+      created_at: null,
+      actioned_at: null
     });
   };
 
@@ -117,7 +124,6 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
         // Clear fields if username is empty
         setNewOrganiser((prev: any) => ({
           ...prev,
-          organiser_id: '',
           fullname: '',
           locality: '',
           school: '',
@@ -129,35 +135,26 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
   };
   // Function to filter users by username
   const filterUsersByUsername = (username: string) => {
-    // Get all user IDs that are already organisers
-    // The organisers data has users.id field, not just id
     const organiserUserIds = new Set(organisers.map((org: any) => org.users?.id || org.id));
 
-    // Filter users who are not already organisers and match the username
-    // Also filter by role based on the organiser type context
     const filtered = allUsers.filter(user => {
       const matchesUsername = user.username?.toLowerCase().includes(username.toLowerCase());
       const notAlreadyOrganiser = !organiserUserIds.has(user.id);
 
-      // Fix role matching logic
       let matchesRole = true;
       if (organiserType === 'students') {
         matchesRole = user.role === 'student';
       } else if (organiserType === 'teachers') {
         matchesRole = user.role === 'teacher';
       }
-      // If organiserType is 'all', we don't filter by role
 
       return matchesUsername && notAlreadyOrganiser && matchesRole;
     });
 
-    console.log('Filtering users:', { username, organiserType, filteredUsers: filtered.length, totalUsers: allUsers.length });
     setFilteredUsers(filtered);
   };
 
-  // Function to handle username selection from dropdown
   const handleUsernameSelect = (selectedUser: any) => {
-    console.log('Selected user:', selectedUser);
 
     setNewOrganiser((prev: any) => ({
       ...prev,
@@ -165,14 +162,15 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
       school_id: selectedUser.school_id || '',
       locality_id: selectedUser.school.locality_id || '',
       username: selectedUser.username || '',
-      organiser_id: selectedUser.id || '',
       fullname: selectedUser.fullname || '',
       locality: selectedUser.school.code || '',
       school: selectedUser.school?.name || '',
       role: selectedUser.role_in_event || selectedUser.role || '',
       evidence: selectedUser.evidence || 'Internal',
-      // Set appropriate field based on organiser type
-      ...(organiserType === 'students' 
+      users: {
+        id: selectedUser.id || ''
+      },
+      ...(organiserType === 'students'
         ? { grade: selectedUser.grade || '' }
         : { years_of_experience: selectedUser.years_of_experience || '' }
       )
@@ -186,7 +184,6 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
 
   const handleSaveNew = async () => {
     try {
-      // Validate required fields
       if (!newOrganiser.username || !newOrganiser.fullname || !newOrganiser.school) {
         toast.error('Please fill in all required fields (Username, Name, School)');
         return;
@@ -211,21 +208,22 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
         setFilteredUsers([]);
         setNewOrganiser({
           id: '',
-          organiser_id: '',
           username: '',
           fullname: '',
           locality: '',
           school: '',
           role: '',
           evidence: '',
-          status: 'pending'
+          status: 'pending',
+          users: {
+            id: ''
+          },
+          created_at: null,
+          actioned_at: null
         });
 
-        // Refresh data to update both organisers and users lists
         await refreshUserData();
 
-        // Debug: Check if the user was properly excluded after refresh
-        console.log('After refresh - checking if user is excluded from dropdown');
       } else {
         toast.error(response.message || 'Failed to save new organiser');
       }
@@ -235,25 +233,49 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
     }
   };
 
+  const handleDeleteClick = (organiserId: string) => {
+    setOrganiserToDelete(organiserId);
+    setShowDeleteModal(true);
+    setActiveDropdown(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!organiserToDelete) return;
+
+    setUpdatingOrganiserId(organiserToDelete);
+    try {
+      const response = await deleteOrganiserApi(organiserToDelete);
+      if (response.success) {
+        toast.success(response.message);
+        await refreshUserData();
+        onAction('delete', organiserToDelete);
+      } else {
+        toast.error(response.message);
+      }
+    } catch (error) {
+      console.error('Error deleting organiser:', error);
+      toast.error('Failed to delete organiser');
+    } finally {
+      setUpdatingOrganiserId(null);
+      setShowDeleteModal(false);
+      setOrganiserToDelete(null);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteModal(false);
+    setOrganiserToDelete(null);
+  };
+
   const handleAction = async (action: string, organiserId: string) => {
     setUpdatingOrganiserId(organiserId);
     try {
-      if (action === 'delete') {
-        const response = await deleteOrganiserApi(organiserId);
-        if (response.success) {
-          toast.success(response.message);
-          await refreshUserData();
-        } else {
-          toast.error(response.message);
-        }
+      const response = await updateOrganiserStatusApi(organiserId, action);
+      if (response.success) {
+        toast.success(response.message);
+        await refreshUserData();
       } else {
-        const response = await updateOrganiserStatusApi(organiserId, action);
-        if (response.success) {
-          toast.success(response.message);
-          await refreshUserData();
-        } else {
-          toast.error(response.message);
-        }
+        toast.error(response.message);
       }
       onAction(action, organiserId);
     } catch (error) {
@@ -353,7 +375,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
 
             {/* Grade/Teaching Experience */}
             <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-              {organiserType === 'students' 
+              {organiserType === 'students'
                 ? (organiser?.users?.grade || 'N/A')
                 : (organiser?.users?.years_of_experience || 'N/A')
               }
@@ -374,29 +396,22 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
               {organiser?.evidence ? (
                 typeof organiser.evidence === 'object' && organiser.evidence.file_url ? (
                   <div className="flex items-center justify-center">
-                    <button
-                      onClick={() => window.open(organiser.evidence.file_url, '_blank')}
-                      className="flex items-center justify-center p-1 rounded hover:bg-gray-100 transition-colors duration-200"
-                      title="Click to open document"
-                    >
-                      Document
-                      <svg className="w-5 h-5 text-blue-600 hover:text-blue-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                    </button>
-                  </div>
-                ) : typeof organiser.evidence === 'string' && /^https?:\/\//.test(organiser.evidence) ? (
-                  <div className="flex items-center justify-center">
-                    <button
-                      onClick={() => window.open(organiser.evidence, '_blank')}
-                      className="flex items-center justify-center p-1 rounded hover:bg-gray-100 transition-colors duration-200"
-                      title="Click to open document"
-                    >
-                      Document
-                      <svg className="w-5 h-5 text-blue-600 hover:text-blue-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                    </button>
+                    {
+                      organiser.evidence.file_url === "Internal" ? (
+                        <span>{organiser.evidence.file_url}</span>
+                      ) : (
+                        <button
+                          onClick={() => window.open(organiser.evidence.file_url, '_blank')}
+                          className="flex items-center justify-center p-1 rounded hover:bg-gray-100 transition-colors duration-200"
+                          title="Click to open document"
+                        >
+                          Document
+                          <svg className="w-5 h-5 text-blue-600 hover:text-blue-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                        </button>
+                      )
+                    }
                   </div>
                 ) : (
                   <span>{typeof organiser.evidence === 'string' ? organiser.evidence : 'Document'}</span>
@@ -516,7 +531,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
                       )}
 
                       <button
-                        onClick={() => handleAction('delete', organiser?.id || '')}
+                        onClick={() => handleDeleteClick(organiser?.id || '')}
                         disabled={updatingOrganiserId === organiser?.id}
                         className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingOrganiserId === organiser?.id
                           ? 'text-gray-400 cursor-not-allowed'
@@ -536,12 +551,22 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
 
       {/* New Organiser Input Row */}
       {isAddingNew && (
-        <div className="grid grid-cols-11 gap-2 mb-2">
+        <div className="grid grid-cols-12 gap-2 mb-2">
+          {/*User ID */}
+          <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
+            <input
+              type="text"
+              value={newOrganiser.users?.id?.split('-')[0]}
+              placeholder="Auto populated"
+              className="w-full border-none outline-none text-sm"
+              disabled
+            />
+          </div>
           {/* Organiser ID */}
           <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
             <input
               type="text"
-              value={newOrganiser.organiser_id}
+              value={newOrganiser.organiser_id || "N/A"}
               placeholder="Auto populated"
               className="w-full border-none outline-none text-sm"
               disabled
@@ -723,6 +748,18 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
           Save
         </button>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title="Confirm Delete"
+        message="Are you sure you want to delete this organiser? This action cannot be undone."
+        confirmText="Yes"
+        cancelText="No"
+        confirmButtonColor="text-red-600"
+      />
     </div>
   );
 };
