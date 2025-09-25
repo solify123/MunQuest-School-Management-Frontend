@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { useApp } from '../../contexts/AppContext';
 import { ConfirmationModal } from '../ui';
 import { updateAreaStatusApi, deleteAreaApi } from '../../apis/areas';
+import { mergeLocalitiesApi } from '../../apis/localities';
 interface Locality {
     id: string;
     code: string;
@@ -42,6 +43,14 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
         linkedStudents: '',
         status: 'Active'
     });
+    
+    // Merge functionality state
+    const [isMergeMode, setIsMergeMode] = useState<boolean>(false);
+    const [selectedLocalities, setSelectedLocalities] = useState<string[]>([]);
+    const [primaryLocalityId, setPrimaryLocalityId] = useState<string | null>(null);
+    const [lockedRows, setLockedRows] = useState<string[]>([]);
+    const [showMergeMessage, setShowMergeMessage] = useState<string>('');
+    
     const { refreshAreasData, refreshLocalitiesData, refreshSchoolsData } = useApp();
     const dropdownRef = useRef<HTMLDivElement>(null);
     // Filter localities based on search term
@@ -220,6 +229,105 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
         handleSaveNewRow();
     };
 
+    // Merge functionality handlers
+    const handleMergeModeToggle = () => {
+        if (isMergeMode) {
+            // Cancel merge mode
+            setIsMergeMode(false);
+            setSelectedLocalities([]);
+            setPrimaryLocalityId(null);
+            setLockedRows([]);
+            setShowMergeMessage('');
+        } else {
+            // Enter merge mode
+            setIsMergeMode(true);
+            setSelectedLocalities([]);
+            setPrimaryLocalityId(null);
+            setLockedRows([]);
+            setShowMergeMessage('');
+        }
+    };
+
+    const handleLocalitySelection = (localityId: string) => {
+        if (lockedRows.includes(localityId)) {
+            setShowMergeMessage('Unlock to merge');
+            setTimeout(() => setShowMergeMessage(''), 3000);
+            return;
+        }
+
+        if (selectedLocalities.includes(localityId)) {
+            // Deselect locality
+            setSelectedLocalities(prev => prev.filter(id => id !== localityId));
+            if (primaryLocalityId === localityId) {
+                setPrimaryLocalityId(null);
+            }
+        } else {
+            // Check if already have 2 selected
+            if (selectedLocalities.length >= 2) {
+                // setShowMergeMessage('Merge happens one pair at a time.');
+                toast.warning('Merge happens one pair at a time.');
+                // setTimeout(() => setShowMergeMessage(''), 3000);
+                return;
+            }
+            
+            // Select locality
+            setSelectedLocalities(prev => [...prev, localityId]);
+            
+            // Set as primary if it's the first selection or if merge was invoked from this row
+            if (selectedLocalities.length === 0 || !primaryLocalityId) {
+                setPrimaryLocalityId(localityId);
+            }
+        }
+    };
+
+    const handleMergeExecute = async () => {
+        if (selectedLocalities.length !== 2 || !primaryLocalityId) {
+            setShowMergeMessage('Please select exactly two localities and ensure primary is set.');
+            toast.warning('Please select exactly two localities and ensure primary is set.');
+            // setTimeout(() => setShowMergeMessage(''), 3000);
+            return;
+        }
+
+        try {
+            // Here you would call the merge API
+            // For now, we'll simulate the merge
+            const secondaryLocalityId = selectedLocalities.find(id => id !== primaryLocalityId);
+            
+            let response = await mergeLocalitiesApi(primaryLocalityId || '', secondaryLocalityId || '');
+            if (response.success) {
+                toast.success('Localities merged successfully');
+            } else {
+                toast.error(response.message || 'Failed to merge localities');
+            }
+
+            // Simulate API call
+            // toast.success('Localities merged successfully');
+            
+            // Reset merge state
+            setSelectedLocalities([]);
+            setPrimaryLocalityId(null);
+            setLockedRows([]);
+            setShowMergeMessage('');
+            
+            // Refresh data
+            await Promise.all([
+                refreshAreasData(),
+                refreshLocalitiesData(),
+                refreshSchoolsData()
+            ]);
+            
+            // Ask if user wants to merge another duplicate
+            const continueMerge = window.confirm('Merge another duplicate?');
+            if (!continueMerge) {
+                setIsMergeMode(false);
+            }
+            
+        } catch (error: any) {
+            console.error('Error merging localities:', error);
+            toast.error('Failed to merge localities');
+        }
+    };
+
     const getStatusColor = (status: string | undefined) => {
         if (!status) return 'text-gray-600';
 
@@ -307,6 +415,13 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
                 <div className="w-16 px-3 py-2 text-xs font-medium text-gray-900 uppercase tracking-wider rounded-md flex items-center">
                     <span></span>
                 </div>
+
+                {/* Checkbox column for merge mode */}
+                {isMergeMode && (
+                    <div className="w-8 px-3 py-2 text-xs font-medium text-gray-900 uppercase tracking-wider">
+                        <span></span>
+                    </div>
+                )}
             </div>
 
             {/* Data Rows */}
@@ -364,8 +479,29 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
                                 )}
                             </div>
 
+                            {/* Checkbox column for merge mode */}
+                            {isMergeMode && (
+                                <div className="w-8 px-3 py-2 text-sm font-medium text-gray-900 flex items-center justify-center">
+                                    <div className="flex items-center space-x-1">
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedLocalities.includes(locality?.id || locality?.area?.id)}
+                                            onChange={() => handleLocalitySelection(locality?.id || locality?.area?.id)}
+                                            disabled={lockedRows.includes(locality?.id || locality?.area?.id)}
+                                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            title={lockedRows.includes(locality?.id || locality?.area?.id) ? 'Unlock to merge' : 'Select for merge'}
+                                        />
+                                        {primaryLocalityId === (locality?.id || locality?.area?.id) && (
+                                            <svg className="w-3 h-3 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                            </svg>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
                             {/* Actions */}
-                            <div className="w-16 px-3 py-2 text-sm font-medium relative">
+                            <div className="w-16 px-3 py-2 text-sm font-medium flex items-center justify-left" ref={dropdownRef}>
                                 <div className="relative flex items-center justify-left" ref={dropdownRef}>
                                     <button
                                         onClick={() => handleDropdownToggle(locality?.id || locality?.area?.id || '')}
@@ -411,13 +547,17 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
                                                 </button>
 
                                                 <button
+                                                    onClick={() => {
+                                                        setActiveDropdown(null);
+                                                        handleMergeModeToggle();
+                                                    }}
                                                     disabled={updatingLocalityId === (locality?.id || locality?.area?.id)}
                                                     className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.id || locality?.area?.id)
                                                         ? 'text-gray-400 cursor-not-allowed'
                                                         : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
                                                         }`}
                                                 >
-                                                    Merge
+                                                    {isMergeMode ? 'Cancel Merge' : 'Merge'}
                                                 </button>
 
                                                 {/* Status-specific buttons based on current status */}
@@ -553,30 +693,72 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
                             </button>
                         </div>
                     </div>
+
+                    {/* Checkbox column for merge mode */}
+                    {isMergeMode && (
+                        <div className="w-8 bg-gray-100 px-3 py-2 text-sm text-gray-500 rounded-md border border-gray-200 flex items-center justify-center">
+                            -
+                        </div>
+                    )}
                 </div>
             )}
 
-            <div className="flex justify-start space-x-4 mt-6">
-                <button
-                    onClick={handleAddNew}
-                    disabled={isAddingNew}
-                    className={`bg-[#C2A46D] text-white font-medium rounded-[30px] w-[105px] h-[44px] px-[10px] py-[10px] mr-[10px] transition-colors duration-200 ${isAddingNew
-                        ? 'opacity-50 cursor-not-allowed'
-                        : 'hover:bg-[#9a7849]'
-                        }`}
-                >
-                    Add
-                </button>
-                <button
-                    onClick={handleSaveNew}
-                    disabled={!isAddingNew}
-                    className={`bg-[#C2A46D] text-white font-medium rounded-[30px] w-[105px] h-[44px] px-[10px] py-[10px] mr-[10px] transition-colors duration-200 ${!isAddingNew
-                        ? 'opacity-50 cursor-not-allowed'
-                        : 'hover:bg-[#b89a6a]'
-                        }`}
-                >
-                    Save
-                </button>
+            {/* Merge Mode Messages */}
+            {isMergeMode && showMergeMessage && (
+                <div className="mt-4 p-2 bg-yellow-100 border border-yellow-300 rounded text-yellow-800">
+                    {showMergeMessage}
+                </div>
+            )}
+
+            <div className="flex justify-between items-center mt-6 mr-[110px]">
+                <div className="flex space-x-4">
+                    <button
+                        onClick={handleAddNew}
+                        disabled={isAddingNew}
+                        className={`bg-[#C2A46D] text-white font-medium rounded-[30px] w-[105px] h-[44px] px-[10px] py-[10px] transition-colors duration-200 ${isAddingNew
+                            ? 'opacity-50 cursor-not-allowed'
+                            : 'hover:bg-[#9a7849]'
+                            }`}
+                    >
+                        Add
+                    </button>
+                    <button
+                        onClick={handleSaveNew}
+                        disabled={!isAddingNew}
+                        className={`bg-[#C2A46D] text-white font-medium rounded-[30px] w-[105px] h-[44px] px-[10px] py-[10px] transition-colors duration-200 ${!isAddingNew
+                            ? 'opacity-50 cursor-not-allowed'
+                            : 'hover:bg-[#b89a6a]'
+                            }`}
+                    >
+                        Save
+                    </button>
+                </div>
+                
+                {/* Merge and Cancel buttons on the right */}
+                {isMergeMode && (
+                    <div className="flex space-x-4">
+                        <button
+                            onClick={handleMergeModeToggle}
+                            className="bg-[#C2A46D] text-white font-medium rounded-[30px] w-[105px] h-[44px] px-[10px] py-[10px] transition-colors duration-200 hover:bg-[#9a7849]"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleMergeExecute}
+                            disabled={selectedLocalities.length !== 2 || !primaryLocalityId}
+                            className={`bg-[#C2A46D] text-white font-medium rounded-[30px] w-[105px] h-[44px] px-[10px] py-[10px] transition-colors duration-200 flex items-center justify-center ${
+                                selectedLocalities.length !== 2 || !primaryLocalityId
+                                    ? 'opacity-50 cursor-not-allowed'
+                                    : 'hover:bg-[#9a7849]'
+                            }`}
+                        >
+                            <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                            </svg>
+                            Merge
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Delete Confirmation Modal */}

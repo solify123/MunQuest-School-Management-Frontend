@@ -134,7 +134,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const refreshSchoolsData = useCallback(async () => {
     try {
       const allSchoolsResponse = await getAllSchoolsApi();
-      console.log('allSchoolsResponse', allSchoolsResponse);
       setAllSchools(allSchoolsResponse.data);
     } catch (error) {
       console.error('Error refreshing schools data:', error);

@@ -204,11 +204,9 @@ const SuperUser: React.FC = () => {
       return <GlobalUserPage type="teachers" isSuperUser={true} />
     }
     if (activeTab === 'schools') {
-      console.log('SuperUser - Rendering Schools page with locality:', schoolsSubSection);
       return <SchoolsPage type="schools" selectedLocality={schoolsSubSection} />
     }
     if (activeTab === 'localities') {
-      console.log('SuperUser - Rendering Localities page with locality:', schoolsSubSection);
       return <SchoolsPage type="localities" selectedLocality={schoolsSubSection} />
     }
     switch (activeTab) {

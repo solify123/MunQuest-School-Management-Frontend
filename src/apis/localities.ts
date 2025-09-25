@@ -26,3 +26,20 @@ export const getAllLocalitiesApi = async () => {
         }
     }
 };
+
+export const mergeLocalitiesApi = async (primaryLocalityId: string, secondaryLocalityId: string) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.post(`${backendUrl}/api/v1/localities/merge-localities`, {
+            primaryLocalityId,
+            secondaryLocalityId
+        }, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+};

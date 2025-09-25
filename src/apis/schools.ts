@@ -92,3 +92,20 @@ export const createSchoolApi = async (code: string, name: string, locality_id: s
         throw new Error(error.response.data.message);
     }
 };
+
+export const mergeSchoolsApi = async (primarySchoolId: string, secondarySchoolId: string) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.post(`${backendUrl}/api/v1/schools/merge-schools`, {
+            primarySchoolId,
+            secondarySchoolId
+        }, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+};
