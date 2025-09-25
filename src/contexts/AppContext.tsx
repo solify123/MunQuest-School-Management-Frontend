@@ -8,6 +8,7 @@ import { getAllAreasApi } from '../apis/areas';
 import { getAllEventsApi } from '../apis/Events';
 import { getAllLeadershipRolesApi } from '../apis/LeadershipRoles';
 import { useSupabaseAuth } from './SupabaseAuthContext';
+import { toast } from 'sonner';
 
 // Define the context type
 interface AppContextType {
@@ -98,7 +99,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       // Only make API calls if user is authenticated
       if (session?.access_token) {
         const allUsersResponse = await getAllUsersApi();
-        setAllUsers(allUsersResponse.data);
+        if (allUsersResponse.success) {
+          setAllUsers(allUsersResponse.data);
+        }
+        else {
+          toast.error(allUsersResponse.message);
+        }
 
         const allOrganisersResponse = await getAllOrganisersApi();
         setAllOrganisers(allOrganisersResponse.data);
@@ -107,7 +113,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         setAllLeadershipRoles(allLeadershipRolesResponse.data);
       }
     } catch (error) {
-      console.error('Error refreshing user data:', error);
+      toast.error('JWT token is expired. Please login again.');
     } finally {
       setIsLoading(false);
     }
@@ -116,46 +122,71 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const refreshEventsData = useCallback(async () => {
     try {
       const allEventsResponse = await getAllEventsApi();
-      setAllEvents(allEventsResponse.data);
+      if (allEventsResponse.success) {
+        setAllEvents(allEventsResponse.data);
+      }
+      else {
+        toast.error(allEventsResponse.message);
+      }
     } catch (error) {
-      console.error('Error refreshing events data:', error);
+      toast.error('JWT token is expired. Please login again.');
     }
   }, []);
 
   const refreshLocalitiesData = useCallback(async () => {
     try {
       const allLocalitiesResponse = await getAllLocalitiesApi();
-      setAllLocalities(allLocalitiesResponse.data);
+      if (allLocalitiesResponse.success) {
+        setAllLocalities(allLocalitiesResponse.data);
+      }
+      else {
+        toast.error(allLocalitiesResponse.message);
+      }
     } catch (error) {
-      console.error('Error refreshing localities data:', error);
+      toast.error('JWT token is expired. Please login again.');
     }
   }, []);
 
   const refreshSchoolsData = useCallback(async () => {
     try {
       const allSchoolsResponse = await getAllSchoolsApi();
-      setAllSchools(allSchoolsResponse.data);
+      if (allSchoolsResponse.success) {
+        setAllSchools(allSchoolsResponse.data);
+      }
+      else {
+        toast.error(allSchoolsResponse.message);
+      }
     } catch (error) {
-      console.error('Error refreshing schools data:', error);
+      toast.error('JWT token is expired. Please login again.');
     }
   }, []);
 
   const refreshAreasData = useCallback(async () => {
     try {
       const allAreasResponse = await getAllAreasApi();
-      console.log('allAreasResponse', allAreasResponse);
-      setAllAreas(allAreasResponse.data);
+      if (allAreasResponse.success) {
+        setAllAreas(allAreasResponse.data);
+      }
+      else {
+        toast.error(allAreasResponse.message);
+      }
     } catch (error) {
-      console.error('Error refreshing areas data:', error);
+      toast.error('JWT token is expired. Please login again.');
     }
   }, []);
 
   const refreshLeadershipRolesData = useCallback(async () => {
     try {
       const allLeadershipRolesResponse = await getAllLeadershipRolesApi();
+      if (allLeadershipRolesResponse.success) {
+        setAllLeadershipRoles(allLeadershipRolesResponse.data);
+      }
+      else {
+        toast.error(allLeadershipRolesResponse.message);
+      }
       setAllLeadershipRoles(allLeadershipRolesResponse.data || []);
     } catch (error) {
-      console.error('Error refreshing leadership roles data:', error);
+      toast.error('JWT token is expired. Please login again.');
     }
   }, []);
 
@@ -242,22 +273,22 @@ export const useApp = (): AppContextType => {
         pendingApprovals: 0,
         schools: 0
       },
-      setUserType: () => {},
-      setIsOrganiser: () => {},
-      updateDashboardStats: () => {},
-      refreshUserData: async () => {},
-      setAllUsers: () => {},
-      setAllOrganisers: () => {},
-      setAllEvents: () => {},
-      setAllLocalities: () => {},
-      setAllSchools: () => {},
-      setAllAreas: () => {},
-      setAllLeadershipRoles: () => {},
-      refreshEventsData: async () => {},
-      refreshLocalitiesData: async () => {},
-      refreshSchoolsData: async () => {},
-      refreshAreasData: async () => {},
-      refreshLeadershipRolesData: async () => {}
+      setUserType: () => { },
+      setIsOrganiser: () => { },
+      updateDashboardStats: () => { },
+      refreshUserData: async () => { },
+      setAllUsers: () => { },
+      setAllOrganisers: () => { },
+      setAllEvents: () => { },
+      setAllLocalities: () => { },
+      setAllSchools: () => { },
+      setAllAreas: () => { },
+      setAllLeadershipRoles: () => { },
+      refreshEventsData: async () => { },
+      refreshLocalitiesData: async () => { },
+      refreshSchoolsData: async () => { },
+      refreshAreasData: async () => { },
+      refreshLeadershipRolesData: async () => { }
     };
   }
   return context;
