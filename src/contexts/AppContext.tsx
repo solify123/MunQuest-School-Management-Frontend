@@ -16,6 +16,7 @@ interface AppContextType {
   userType: string | null;
   isOrganiser: boolean;
   isLoading: boolean;
+  loginStatus: boolean;
   allUsers: any[];
   allOrganisers: any[];
   allEvents: any[];
@@ -33,6 +34,7 @@ interface AppContextType {
   // Actions
   setUserType: (type: string | null) => void;
   setIsOrganiser: (isOrganiser: boolean) => void;
+  setLoginStatus: (status: boolean) => void;
   updateDashboardStats: (stats: Partial<AppContextType['dashboardStats']>) => void;
   refreshUserData: () => Promise<void>;
   setAllUsers: (users: any[]) => void;
@@ -67,6 +69,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [userType, setUserType] = useState<string | null>(null);
   const [isOrganiser, setIsOrganiser] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [loginStatus, setLoginStatus] = useState<boolean>(false);
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const [allOrganisers, setAllOrganisers] = useState<any[]>([]);
   const [allEvents, setAllEvents] = useState<any[]>([]);
@@ -88,6 +91,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const refreshUserData = useCallback(async () => {
     try {
       setIsLoading(true);
+
+      // Set login status based on authentication
+      const isAuthenticated = !!(supabaseUser && session?.access_token);
+      setLoginStatus(isAuthenticated);
 
       // Get user type from Supabase user metadata
       if (supabaseUser?.user_metadata?.role) {
@@ -113,11 +120,14 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         setAllLeadershipRoles(allLeadershipRolesResponse.data);
       }
     } catch (error) {
-      toast.error('JWT token is expired. Please login again.');
+      // Only show JWT expiration toast if user was logged in
+      if (loginStatus) {
+        toast.error('JWT token is expired. Please login again.');
+      }
     } finally {
       setIsLoading(false);
     }
-  }, [supabaseUser, session]);
+  }, [supabaseUser, session, loginStatus]);
 
   const refreshEventsData = useCallback(async () => {
     try {
@@ -129,9 +139,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         toast.error(allEventsResponse.message);
       }
     } catch (error) {
-      toast.error('JWT token is expired. Please login again.');
+      // Only show JWT expiration toast if user was logged in
+      if (loginStatus) {
+        toast.error('JWT token is expired. Please login again.');
+      }
     }
-  }, []);
+  }, [loginStatus]);
 
   const refreshLocalitiesData = useCallback(async () => {
     try {
@@ -143,9 +156,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         toast.error(allLocalitiesResponse.message);
       }
     } catch (error) {
-      toast.error('JWT token is expired. Please login again.');
+      // Only show JWT expiration toast if user was logged in
+      if (loginStatus) {
+        toast.error('JWT token is expired. Please login again.');
+      }
     }
-  }, []);
+  }, [loginStatus]);
 
   const refreshSchoolsData = useCallback(async () => {
     try {
@@ -157,9 +173,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         toast.error(allSchoolsResponse.message);
       }
     } catch (error) {
-      toast.error('JWT token is expired. Please login again.');
+      // Only show JWT expiration toast if user was logged in
+      if (loginStatus) {
+        toast.error('JWT token is expired. Please login again.');
+      }
     }
-  }, []);
+  }, [loginStatus]);
 
   const refreshAreasData = useCallback(async () => {
     try {
@@ -171,9 +190,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         toast.error(allAreasResponse.message);
       }
     } catch (error) {
-      toast.error('JWT token is expired. Please login again.');
+      // Only show JWT expiration toast if user was logged in
+      if (loginStatus) {
+        toast.error('JWT token is expired. Please login again.');
+      }
     }
-  }, []);
+  }, [loginStatus]);
 
   const refreshLeadershipRolesData = useCallback(async () => {
     try {
@@ -186,9 +208,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       }
       setAllLeadershipRoles(allLeadershipRolesResponse.data || []);
     } catch (error) {
-      toast.error('JWT token is expired. Please login again.');
+      // Only show JWT expiration toast if user was logged in
+      if (loginStatus) {
+        toast.error('JWT token is expired. Please login again.');
+      }
     }
-  }, []);
+  }, [loginStatus]);
 
   // Update dashboard statistics
   const updateDashboardStats = (newStats: Partial<AppContextType['dashboardStats']>) => {
@@ -214,6 +239,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     userType,
     isOrganiser,
     isLoading,
+    loginStatus,
     dashboardStats,
     allUsers,
     allEvents,
@@ -231,6 +257,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     allOrganisers,
     setUserType,
     setIsOrganiser,
+    setLoginStatus,
     updateDashboardStats,
     refreshUserData,
     refreshEventsData,
@@ -258,6 +285,7 @@ export const useApp = (): AppContextType => {
       userType: null,
       isOrganiser: false,
       isLoading: true,
+      loginStatus: false,
       allUsers: [],
       allOrganisers: [],
       allEvents: [],
@@ -275,6 +303,7 @@ export const useApp = (): AppContextType => {
       },
       setUserType: () => { },
       setIsOrganiser: () => { },
+      setLoginStatus: () => { },
       updateDashboardStats: () => { },
       refreshUserData: async () => { },
       setAllUsers: () => { },

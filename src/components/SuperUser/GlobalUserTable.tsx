@@ -9,9 +9,9 @@ interface GlobalUser {
   id: string;
   username: string;
   fullname: string;
-  role: string;
+  global_role: string;
   school: any;
-  school_location?: string;
+  mun_experience?: string;
   grade?: string;
   years_of_experience?: string;
   created_at?: string;
@@ -50,7 +50,7 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, user
         const fullname = user?.fullname || '';
         const schoolLocation = user?.school.code || '';
         const schoolName = user?.school?.name || '';
-        const role = user?.role || '';
+        const role = user?.global_role || '';
 
         return (
           username.toLowerCase().includes(searchLower) ||
@@ -101,7 +101,6 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, user
 
   const handleAction = async (action: string, userId: string) => {
     setActiveDropdown(null); // Close dropdown immediately when action is triggered
-    
     try {
       if (action === 'delete') {
         const response = await deleteUserBySuperUserApi(userId);
@@ -137,6 +136,8 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, user
     switch (status.toLowerCase()) {
       case 'actived':
         return 'text-green-600';
+      case 'active':
+        return 'text-green-600';
       case 'flagged':
         return 'text-yellow-500';
       case 'blocked':
@@ -161,7 +162,7 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, user
 
       {/* Header Row */}
       <div className="grid grid-cols-12 gap-2 mb-2">
-        {['UserID', 'Username', 'Name', userType === 'students' ? 'Grade' : 'Teaching Experience', 'School', 'Location', 'Role', 'Date Created', 'Last Updated', 'Status', ' '].map((header, index) => (
+        {['UserID', 'Username', 'Name', userType === 'students' ? 'Academic Level' : 'Teaching Experience', 'School', 'MUN Experience', 'Global Role', 'Date Created', 'Last Updated', 'Status', ' '].map((header, index) => (
           header === ' ' ? (
             <div key={header}>
             </div>
@@ -209,7 +210,7 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, user
               {user?.fullname || 'N/A'}
             </div>
 
-            {/* Grade/Teaching Experience */}
+            {/* Academic Level/Teaching Experience */}
             <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
               {userType === 'students'
                 ? (user?.grade || 'N/A')
@@ -222,14 +223,14 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, user
               {user?.school?.name || user?.school || 'N/A'}
             </div>
 
-            {/* Location */}
+            {/* MUN Experience */}
             <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-              {user?.school_location || 'N/A'}
+              {user?.mun_experience || 'N/A'}
             </div>
 
-            {/* Role */}
+            {/* Global Role */}
             <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-              {user?.role || 'N/A'}
+              {user?.global_role || 'N/A'}
             </div>
 
             {/* Date Created */}
@@ -251,15 +252,15 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, user
                 </div>
               ) : (
                 <div className="flex items-center justify-between">
-                  <span className={`font-medium ${getStatusColor(user.status)}`}>
-                    {user.status}
+                  <span className={`font-medium ${getStatusColor(user.user_status)}`}>
+                    {user.user_status}
                   </span>
                 </div>
               )}
             </div>
 
             {/* Actions */}
-            <div className="px-3 py-2 text-sm font-medium relative" ref={dropdownRef}>
+            <div className="px-3 py-2 text-sm font-medium relative" >
               <div className="relative flex items-center justify-left">
                 {isUserOrganiser(user?.id) && (
                   <div className="ml-2">

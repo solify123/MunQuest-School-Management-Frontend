@@ -15,7 +15,7 @@ const GlobalUserPage: React.FC<GlobalUserPageProps> = ({ type = 'students', isSu
   const getData = () => {
     if (isSuperUser) {
       // For superusers, filter by global_role = superuser and then by role
-      const superUsers = allUsers.filter(user => 
+      const superUsers = allUsers.filter(user =>
         user.global_role === 'superuser'
       ) || [];
 
@@ -31,7 +31,7 @@ const GlobalUserPage: React.FC<GlobalUserPageProps> = ({ type = 'students', isSu
       }
     } else {
       // For regular users, filter by global_role = user and then by role
-      const regularUsers = allUsers.filter(user => 
+      const regularUsers = allUsers.filter(user =>
         user.global_role === 'user' || !user.global_role // fallback for users without global_role
       ) || [];
       switch (type) {
@@ -70,8 +70,7 @@ const GlobalUserPage: React.FC<GlobalUserPageProps> = ({ type = 'students', isSu
     });
   }, [type, allUsers, searchTerm]);
 
-  const handleUserAction = (action: string, userId: string) => {
-    console.log(`Action: ${action} on User: ${userId}`);
+  const handleUserAction = (action: string) => {
     // Implement action logic here
     switch (action) {
       case 'approved':

@@ -145,7 +145,8 @@ const EventCreate: React.FC = () => {
 
       try {
         setIsSubmitting(true);
-        const response = await createEventApi(eventName, eventDescription, eventStartDate, eventEndDate, coverImage as string, eventLogo as string, locality_id, school_id, area_id, numberOfSeats, feesPerDelegate, totalRevenue, website, instagram);
+        const organiser_id = localStorage.getItem('orgainiserId') as string;
+        const response = await createEventApi(eventName, eventDescription, eventStartDate, eventEndDate, coverImage as string, eventLogo as string, locality_id, school_id, area_id, numberOfSeats, feesPerDelegate, totalRevenue, website, instagram , organiser_id as string);
         if (response.success) {
           toast.success(response.message);
           navigate('/event-create-success');

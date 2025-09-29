@@ -321,7 +321,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
 
       {/* Header Row */}
       <div className="grid grid-cols-12 gap-2 mb-2">
-        {['UserID', 'Organiser ID', 'Username', 'Name', organiserType === 'students' ? 'Grade' : 'Teaching Experience', 'School', 'Role in Event', 'Evidence', 'Date Received', 'Date Actioned', 'Status', ' '].map((header, index) => (
+        {['UserID', 'Organiser ID', 'Username', 'Name', organiserType === 'students' ? 'Academic Level' : 'Teaching Experience', 'School', 'Role in Event', 'Evidence', 'Date Received', 'Date Actioned', 'Status', ' '].map((header, index) => (
           header === ' ' ? (
             <div key={header}>
             </div>
@@ -329,8 +329,8 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
             <div
               key={header}
               className={`px-3 py-2 text-xs font-medium text-gray-900 uppercase tracking-wider rounded-md ${index < 4
-                ? 'bg-[#C6DAF4] border border-[#4A5F7A] flex items-center justify-between'
-                : 'bg-[#C6DAF4] border border-[#4A5F7A] flex items-center'
+                ? 'bg-[#F0F7FF] border border-[#4A5F7A] flex items-center justify-between'
+                : 'bg-[#F0F7FF] border border-[#4A5F7A] flex items-center'
                 }`}
             >
               <span>{header}</span>
@@ -373,7 +373,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
               {organiser?.users.fullname || 'N/A'}
             </div>
 
-            {/* Grade/Teaching Experience */}
+            {/* Academic Level/Teaching Experience */}
             <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
               {organiserType === 'students'
                 ? (organiser?.users?.grade || 'N/A')

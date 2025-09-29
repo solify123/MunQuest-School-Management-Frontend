@@ -50,25 +50,38 @@ const MasterlistsNavigation: React.FC<MasterlistsNavigationProps> = ({
   };
 
 
-  const getButtonStyle = (isActive: boolean, isSubSection: boolean = false, isParent: boolean = false) => {
+  const getButtonStyle = (isActive: boolean, isSubSection: boolean = false, isParent: boolean = false, colorOrder: number = 0) => {
     const baseStyle = "font-medium transition-colors duration-200";
-
     if (isSubSection) {
-      return `${baseStyle} ${isActive
-        ? 'bg-[#C6DAF4] text-white'
-        : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'
-        }`;
+      if (colorOrder === 3) {
+        return `${baseStyle} ${isActive
+          ? 'bg-[#84B5F3] text-white'
+          : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'
+          }`;
+      } else {
+        return `${baseStyle} ${isActive
+          ? 'bg-[#C6DAF4] text-white'
+          : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'
+          }`;
+      }
     }
 
     // Handle parent state with lighter blue
     if (isParent && !isActive) {
       return `${baseStyle} bg-[#607DA3] text-white`;
     }
-
-    return `${baseStyle} ${isActive
-      ? 'bg-[#1E395D] text-white'
-      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'
-      }`;
+    if (colorOrder === 1) {
+      return `${baseStyle} ${isActive
+        ? 'bg-[#1E395D] text-white'
+        : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'
+        }`;
+    }
+    if (colorOrder === 2) {
+      return `${baseStyle} ${isActive
+        ? 'bg-[#607DA3] text-white'
+        : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'
+        }`;
+    }
   };
 
   const isMainSectionActive = (sectionId: string) => {
@@ -156,13 +169,13 @@ const MasterlistsNavigation: React.FC<MasterlistsNavigationProps> = ({
       <div className="flex space-x-2">
         <button
           onClick={() => onSectionChange('dashboard')}
-          className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] ${getButtonStyle(isMainSectionActive('dashboard'))}`}
+          className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] ${getButtonStyle(isMainSectionActive('dashboard'), false, false, 1)}`}
         >
           Dashboard
         </button>
         <button
           onClick={() => onSectionChange('events')}
-          className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] ${getButtonStyle(isMainSectionActive('masterlists'))}`}
+          className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] ${getButtonStyle(isMainSectionActive('masterlists'), false, false, 1)}`}
         >
           Masterlists
         </button>
@@ -198,7 +211,7 @@ const MasterlistsNavigation: React.FC<MasterlistsNavigationProps> = ({
                   onClick={() => {
                     onSectionChange(section.id === 'users-related' ? 'users' : section.id === 'schools-related' ? 'schools' : section.id);
                   }}
-                  className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] ${getButtonStyle(isSubSectionActive(section.id), false, isSubSectionParent(section.id))}`}
+                  className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] ${getButtonStyle(isSubSectionActive(section.id), false, isSubSectionParent(section.id), 2)}`}
                 >
                   {section.label}
                 </button>
@@ -212,7 +225,7 @@ const MasterlistsNavigation: React.FC<MasterlistsNavigationProps> = ({
                   <button
                     key={subSection.id}
                     onClick={() => onSectionChange(subSection.id === 'organisers' ? 'students' : subSection.id)}
-                    className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] ${getButtonStyle(isSubSectionActive(subSection.id), true, isSubSectionParent(subSection.id))}`}
+                    className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] ${getButtonStyle(isSubSectionActive(subSection.id), true, isSubSectionParent(subSection.id), 3)}`}
                   >
                     {subSection.label}
                   </button>
@@ -225,13 +238,13 @@ const MasterlistsNavigation: React.FC<MasterlistsNavigationProps> = ({
               <div className="flex space-x-2">
                 <button
                   onClick={() => onSectionChange('students')}
-                  className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] ${getButtonStyle(isSubSectionActive('students'), true)}`}
+                  className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] ${getButtonStyle(isSubSectionActive('students'), true, false, 4)}`}
                 >
                   Students
                 </button>
                 <button
                   onClick={() => onSectionChange('teachers')}
-                  className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] ${getButtonStyle(isSubSectionActive('teachers'), true)}`}
+                  className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] ${getButtonStyle(isSubSectionActive('teachers'), true, false, 4)}`}
                 >
                   Teachers
                 </button>
@@ -248,7 +261,7 @@ const MasterlistsNavigation: React.FC<MasterlistsNavigationProps> = ({
                       onClick={() => {
                         onSectionChange(subSection.id);
                       }}
-                      className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] ${getButtonStyle(isSubSectionActive(subSection.id), true, isSubSectionParent(subSection.id))}`}
+                      className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] ${getButtonStyle(isSubSectionActive(subSection.id), true, isSubSectionParent(subSection.id), 3)}`}
                     >
                       {subSection.label}
                     </button>
@@ -300,7 +313,7 @@ const MasterlistsNavigation: React.FC<MasterlistsNavigationProps> = ({
                     onClick={() => {
                       onSectionChange(subSection.id);
                     }}
-                    className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] ${getButtonStyle(isSubSectionActive(subSection.id), true, isSubSectionParent(subSection.id))}`}
+                    className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] ${getButtonStyle(isSubSectionActive(subSection.id), true, isSubSectionParent(subSection.id), 3)}`}
                   >
                     {subSection.label}
                   </button>

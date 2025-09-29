@@ -82,8 +82,8 @@ const EventsTable: React.FC<EventsTableProps> = ({ events, onAction }) => {
           <div
             key={header}
             className={`px-3 py-2 text-xs font-medium text-gray-900 uppercase tracking-wider rounded-md ${index < 4
-              ? 'bg-[#C6DAF4] border border-[#4A5F7A] flex items-center justify-between'
-              : 'bg-[#C6DAF4] border border-[#4A5F7A] flex items-center'
+              ? 'bg-[#F0F7FF] border border-[#4A5F7A] flex items-center justify-between'
+              : 'bg-[#F0F7FF] border border-[#4A5F7A] flex items-center'
               }`}
           >
             <span>{header}</span>

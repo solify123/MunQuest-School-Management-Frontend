@@ -165,7 +165,7 @@ const LeadershipRolesTable: React.FC<LeadershipRolesTableProps> = ({ leadershipR
           ) : (
             <div
               key={header}
-              className="px-3 py-2 text-xs font-medium text-gray-900 uppercase tracking-wider rounded-md bg-[#C6DAF4] border border-[#4A5F7A] flex items-center justify-between"
+              className="px-3 py-2 text-xs font-medium text-gray-900 uppercase tracking-wider rounded-md bg-[#F0F7FF] border border-[#4A5F7A] flex items-center justify-between"
             >
               <span>{header}</span>
               <svg className="w-3 h-3 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
