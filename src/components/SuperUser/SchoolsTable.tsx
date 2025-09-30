@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { useApp } from '../../contexts/AppContext';
 import { ConfirmationModal } from '../ui';
 import { updateSchoolStatusApi, deleteSchoolApi, createSchoolApi, updateSchoolApi, mergeSchoolsApi } from '../../apis/schools';
+import { generateSchoolCode } from '../../utils/schoolCodeGenerator';
 import saveIcon from '../../assets/save_icon.svg'
 
 interface School {
@@ -47,17 +48,19 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
     const [editingSchoolId, setEditingSchoolId] = useState<string | null>(null);
     const [editingRowData, setEditingRowData] = useState<any>(null);
     const [editValidationErrors, setEditValidationErrors] = useState<{ [key: string]: string }>({});
-    
+    const [filteredAreas, setFilteredAreas] = useState<any[]>([]);
+    const [filteredAreasForEdit, setFilteredAreasForEdit] = useState<any[]>([]);
+    const { allSchools } = useApp();
+
     // Merge functionality state
     const [isMergeMode, setIsMergeMode] = useState<boolean>(false);
     const [selectedSchools, setSelectedSchools] = useState<string[]>([]);
     const [primarySchoolId, setPrimarySchoolId] = useState<string | null>(null);
     const [lockedRows, setLockedRows] = useState<string[]>([]);
     const [showMergeMessage, setShowMergeMessage] = useState<string>('');
-    
+
     const { refreshSchoolsData, allLocalities, allAreas, refreshLocalitiesData, refreshAreasData } = useApp();
     const dropdownRef = useRef<HTMLDivElement>(null);
-
     // Fetch localities and areas data when component mounts
     useEffect(() => {
         if (allLocalities.length === 0) {
@@ -67,6 +70,58 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
             refreshAreasData();
         }
     }, [allLocalities.length, allAreas.length, refreshLocalitiesData, refreshAreasData]);
+
+    // Generate school code when all required fields are filled
+    useEffect(() => {
+        if (showNewRow && newRowData.schoolName && newRowData.locality_id && newRowData.area_id) {
+            const selectedLocality = allLocalities.find(loc => loc.id === Number(newRowData.locality_id));
+            const selectedArea = filteredAreas.find(area => area.id === Number(newRowData.area_id));
+            if (selectedLocality && selectedArea) {
+                const existingCodes = allSchools.map(school => school.code).filter(Boolean);
+
+                const generatedCode = generateSchoolCode(
+                    newRowData.schoolName,
+                    selectedLocality,
+                    selectedArea,
+                    existingCodes
+                );
+
+                setNewRowData(prev => ({
+                    ...prev,
+                    schoolCode: generatedCode
+                }));
+            }
+        }
+    }, [newRowData.schoolName, newRowData.locality_id, newRowData.area_id, allLocalities, filteredAreas, allSchools, showNewRow]);
+
+    // Function to filter areas based on selected locality
+    const filterAreasByLocality = (localityId: string) => {
+        if (!localityId) {
+            setFilteredAreas([]);
+            return;
+        }
+
+        const areasInLocality = allAreas.filter(area => {
+            return area.locality_id == localityId; // Use == for type coercion
+        });
+
+        setFilteredAreas(areasInLocality);
+    };
+
+    // Function to filter areas for edit mode based on selected locality
+    const filterAreasForEditByLocality = (localityId: string) => {
+
+        if (!localityId) {
+            setFilteredAreasForEdit([]);
+            return;
+        }
+
+        const areasInLocality = allAreas.filter(area => {
+            return area.locality_id == localityId; // Use == for type coercion
+        });
+
+        setFilteredAreasForEdit(areasInLocality);
+    };
 
     useEffect(() => {
         if (!searchTerm.trim()) {
@@ -110,6 +165,27 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, [activeDropdown]);
+
+    // Handle clicking outside edit mode to close it
+    useEffect(() => {
+        const handleClickOutsideEdit = (event: MouseEvent) => {
+            const target = event.target as HTMLElement;
+            // Check if click is outside any edit input fields or save/cancel buttons
+            if (editingSchoolId &&
+                !target.closest('.edit-row-container') &&
+                !target.closest('.edit-buttons-container')) {
+                handleCancelEdit();
+            }
+        };
+
+        if (editingSchoolId) {
+            document.addEventListener('mousedown', handleClickOutsideEdit);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutsideEdit);
+        };
+    }, [editingSchoolId]);
 
     const handleDropdownToggle = (schoolId: string) => {
         setActiveDropdown(activeDropdown === schoolId ? null : schoolId);
@@ -235,12 +311,12 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
         });
         setEditValidationErrors({});
         setActiveDropdown(null);
+        // Filter areas for edit mode based on the school's locality
+        filterAreasForEditByLocality(school?.locality_id || '');
     };
 
     const handleSaveEdit = async () => {
         try {
-            console.log("editingRowData----", editingRowData.name, editingRowData.code, editingRowData.locality_id, editingRowData.area_id);
-
             const response = await updateSchoolApi(editingRowData?.id, editingRowData?.code, editingRowData?.name, editingRowData?.locality_id, editingRowData?.area_id)
             if (response.success) {
                 toast.success('School updated successfully');
@@ -303,10 +379,10 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
                 // setTimeout(() => setShowMergeMessage(''), 3000);
                 return;
             }
-            
+
             // Select school
             setSelectedSchools(prev => [...prev, schoolId]);
-            
+
             // Set as primary if it's the first selection or if merge was invoked from this row
             if (selectedSchools.length === 0 || !primarySchoolId) {
                 setPrimarySchoolId(schoolId);
@@ -326,7 +402,7 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
             // Here you would call the merge API
             // For now, we'll simulate the merge
             const secondarySchoolId = selectedSchools.find(id => id !== primarySchoolId);
-            
+
             let response = await mergeSchoolsApi(primarySchoolId || '', secondarySchoolId || '');
             if (response.success) {
                 toast.success('Schools merged successfully');
@@ -335,22 +411,22 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
             }
             // Simulate API call
             // toast.success('Schools merged successfully');
-            
+
             // Reset merge state
             setSelectedSchools([]);
             setPrimarySchoolId(null);
             setLockedRows([]);
             setShowMergeMessage('');
-            
+
             // Refresh data
             await refreshSchoolsData();
-            
+
             // Ask if user wants to merge another duplicate
             const continueMerge = window.confirm('Merge another duplicate?');
             if (!continueMerge) {
                 setIsMergeMode(false);
             }
-            
+
         } catch (error: any) {
             console.error('Error merging schools:', error);
             toast.error('Failed to merge schools');
@@ -431,7 +507,7 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
                     const isEditing = editingSchoolId === school?.id;
 
                     return (
-                        <div key={school?.id || Math.random()} className="flex gap-2 mb-2">
+                        <div key={school?.id || Math.random()} className={`flex gap-2 mb-2 ${isEditing ? 'edit-row-container' : ''}`}>
                             {/* School ID */}
                             <div className="w-24 bg-white px-3 py-2 text-sm font-medium text-gray-900 rounded-md border border-gray-200">
                                 {school?.id ? String(school.id).split('-')[0] : 'N/A'}
@@ -483,7 +559,15 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
                                             value={editingRowData?.locality_id || ''}
                                             onChange={(e) => {
                                                 const selectedLocality = allLocalities.find(loc => loc.id === e.target.value);
-                                                setEditingRowData({ ...editingRowData, locality_id: e.target.value, locality: selectedLocality?.locality?.name || selectedLocality?.name || '' });
+                                                setEditingRowData({
+                                                    ...editingRowData,
+                                                    locality_id: e.target.value,
+                                                    locality: selectedLocality?.locality?.name || selectedLocality?.name || '',
+                                                    area_id: '', // Reset area when locality changes
+                                                    area: '' // Reset area name when locality changes
+                                                });
+                                                // Filter areas for edit mode based on selected locality
+                                                filterAreasForEditByLocality(e.target.value);
                                             }}
                                             className={`w-full text-sm text-gray-900 focus:outline-none border-0 p-0 ${editValidationErrors.locality_id ? 'border-red-500' : ''}`}
                                         >
@@ -510,15 +594,16 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
                                         <select
                                             value={editingRowData?.area_id || ''}
                                             onChange={(e) => {
-                                                const selectedArea = allAreas.find(area => area.id === e.target.value);
+                                                const selectedArea = filteredAreasForEdit.find(area => area.id === e.target.value);
                                                 setEditingRowData({ ...editingRowData, area_id: e.target.value, area: selectedArea?.area?.name || selectedArea?.name || '' });
                                             }}
                                             className={`w-full text-sm text-gray-900 focus:outline-none border-0 p-0 ${editValidationErrors.area_id ? 'border-red-500' : ''}`}
+                                            disabled={!editingRowData?.locality_id} // Disable if no locality selected
                                         >
                                             <option value="">Select area</option>
-                                            {allAreas.map((area) => (
+                                            {filteredAreasForEdit.map((area) => (
                                                 <option key={area.id} value={area.id}>
-                                                    {area.area?.name}
+                                                    {area.area?.name || area.name}
                                                 </option>
                                             ))}
                                         </select>
@@ -572,7 +657,7 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
                             <div className="w-16 px-3 py-2 text-sm font-medium flex items-center justify-left">
                                 <div className="relative flex items-center justify-left">
                                     {isEditing ? (
-                                        <div className="flex space-x-1">
+                                        <div className="flex space-x-1 edit-buttons-container">
                                             <button
                                                 onClick={handleSaveEdit}
                                                 className="text-green-600 hover:text-green-800 focus:outline-none"
@@ -636,7 +721,7 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
                                                         ? 'text-gray-400 cursor-not-allowed'
                                                         : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
                                                         }`}
-                                                        onClick={() => { handleAction('unlisted', school?.id || ''); }}
+                                                    onClick={() => { handleAction('active', school?.id || ''); }}
                                                 >
                                                     List
                                                 </button>
@@ -727,16 +812,17 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
                 <div className="flex gap-2 mb-2">
                     {/* School ID - Auto generated */}
                     <div className="w-24 bg-gray-100 px-3 py-2 text-sm text-gray-500 rounded-md border border-gray-200">
-                        Auto
+                        {allSchools.length + 1}
                     </div>
 
                     {/* School Code - Auto-generated and read-only */}
-                    <div className="w-32 bg-white px-3 py-2 rounded-md border border-gray-200">
+                    <div className="w-32 bg-gray-100 px-3 py-2 text-sm text-gray-500 rounded-md border border-gray-200">
                         <input
                             type="text"
                             value={newRowData.schoolCode}
-                            onChange={(e) => setNewRowData({ ...newRowData, schoolCode: e.target.value })}
-                            className="w-full text-sm text-gray-900 focus:outline-none"
+                            readOnly
+                            placeholder="Auto-generated"
+                            className="w-full text-sm text-gray-500 focus:outline-none bg-transparent"
                         />
                     </div>
 
@@ -757,11 +843,19 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
                             value={newRowData.locality_id || ''}
                             onChange={(e) => {
                                 const selectedLocality = allLocalities.find(loc => loc.id === e.target.value);
-                                setNewRowData({ ...newRowData, locality_id: e.target.value, locality: selectedLocality?.locality?.name || selectedLocality?.name || '' });
+                                setNewRowData({
+                                    ...newRowData,
+                                    locality_id: e.target.value,
+                                    locality: selectedLocality?.locality?.name || selectedLocality?.name || '',
+                                    area_id: '', // Reset area when locality changes
+                                    area: '' // Reset area name when locality changes
+                                });
+                                // Filter areas based on selected locality
+                                filterAreasByLocality(e.target.value);
                             }}
                             className="w-full text-sm text-gray-900 focus:outline-none"
                         >
-                            <option value="">Select locality</option>
+                            <option value="" >Select locality</option>
                             {allLocalities.map((locality) => (
                                 <option key={locality.id} value={locality.id}>
                                     {locality.name}
@@ -775,13 +869,14 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
                         <select
                             value={newRowData.area_id || ''}
                             onChange={(e) => {
-                                const selectedArea = allAreas.find(area => area.id === e.target.value);
+                                const selectedArea = filteredAreas.find(area => area.id === e.target.value);
                                 setNewRowData({ ...newRowData, area_id: e.target.value, area: selectedArea?.area?.name || selectedArea?.name || '' });
                             }}
                             className="w-full text-sm text-gray-900 focus:outline-none"
+                            disabled={!newRowData.locality_id} // Disable if no locality selected
                         >
                             <option value="">Select area</option>
-                            {allAreas.map((area) => (
+                            {filteredAreas.map((area) => (
                                 <option key={area.id} value={area.id}>
                                     {area.name}
                                 </option>
@@ -791,11 +886,12 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
 
                     {/* Status */}
                     <div className="w-24 bg-white px-3 py-2 rounded-md border border-gray-200">
-                         <input
+                        <input
                             type="text"
                             value={"Active"}
                             placeholder="Enter status"
                             className="w-full text-sm text-gray-900 focus:outline-none"
+                            readOnly
                         />
                     </div>
 
@@ -843,7 +939,7 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
                         Save
                     </button>
                 </div>
-                
+
                 {/* Merge and Cancel buttons on the right */}
                 {isMergeMode && (
                     <div className="flex space-x-4">
@@ -856,11 +952,10 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
                         <button
                             onClick={handleMergeExecute}
                             disabled={selectedSchools.length !== 2 || !primarySchoolId}
-                            className={`bg-[#C2A46D] text-white font-medium rounded-[30px] w-[105px] h-[44px] px-[10px] py-[10px] transition-colors duration-200 flex items-center justify-center ${
-                                selectedSchools.length !== 2 || !primarySchoolId
+                            className={`bg-[#C2A46D] text-white font-medium rounded-[30px] w-[105px] h-[44px] px-[10px] py-[10px] transition-colors duration-200 flex items-center justify-center ${selectedSchools.length !== 2 || !primarySchoolId
                                     ? 'opacity-50 cursor-not-allowed'
                                     : 'hover:bg-[#9a7849]'
-                            }`}
+                                }`}
                         >
                             <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />

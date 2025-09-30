@@ -52,6 +52,22 @@ const SuperUser: React.FC = () => {
       return 'Masterlists > Schools Related > Schools > Umm Al Quwain';
     } else if (activeTab === 'schools' && schoolsSubSection === 7) {
       return 'Masterlists > Schools Related > Schools > Other';
+    } else if (activeTab === 'localities' && schoolsSubSection === 0) {
+      return 'Masterlists > Schools Related > Localities > Dubai';
+    } else if (activeTab === 'localities' && schoolsSubSection === 1) {
+      return 'Masterlists > Schools Related > Localities > Abu Dhabi';
+    } else if (activeTab === 'localities' && schoolsSubSection === 2) {
+      return 'Masterlists > Schools Related > Localities > Al Ain';
+    }    else if (activeTab === 'localities' && schoolsSubSection === 3) {
+      return 'Masterlists > Schools Related > Localities > Sharjah';
+    } else if (activeTab === 'localities' && schoolsSubSection === 4) {
+      return 'Masterlists > Schools Related > Localities > Ajman';
+    } else if (activeTab === 'localities' && schoolsSubSection === 5) {
+      return 'Masterlists > Schools Related > Localities > Ras Al Khaimah';
+    } else if (activeTab === 'localities' && schoolsSubSection === 6) {
+      return 'Masterlists > Schools Related > Localities > Umm Al Quwain';
+    } else if (activeTab === 'localities' && schoolsSubSection === 7) {
+      return 'Masterlists > Schools Related > Localities > Other';
     }
     switch (activeTab) {
       case 'dashboard':

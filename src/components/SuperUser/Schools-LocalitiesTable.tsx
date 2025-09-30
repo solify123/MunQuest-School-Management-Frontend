@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useApp } from '../../contexts/AppContext';
 import { ConfirmationModal } from '../ui';
-import { updateAreaStatusApi, deleteAreaApi } from '../../apis/areas';
+import { updateAreaStatusApi, deleteAreaApi, updateAreaApi } from '../../apis/areas';
 import { mergeLocalitiesApi } from '../../apis/localities';
+import { deleteLocalityApi } from '../../apis/localities';
 interface Locality {
     id: string;
     code: string;
@@ -43,6 +44,9 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
         linkedStudents: '',
         status: 'Active'
     });
+    const [editingLocalityId, setEditingLocalityId] = useState<string | null>(null);
+    const [editingRowData, setEditingRowData] = useState<any>(null);
+    const [editValidationErrors, setEditValidationErrors] = useState<{ [key: string]: string }>({});
     
     // Merge functionality state
     const [isMergeMode, setIsMergeMode] = useState<boolean>(false);
@@ -52,7 +56,46 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
     const [showMergeMessage, setShowMergeMessage] = useState<string>('');
     
     const { refreshAreasData, refreshLocalitiesData, refreshSchoolsData } = useApp();
-    const dropdownRef = useRef<HTMLDivElement>(null);
+    
+    // Handle clicking outside dropdown to close it
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as HTMLElement;
+            // Check if click is outside any dropdown
+            if (activeDropdown && !target.closest('.dropdown-container')) {
+                setActiveDropdown(null);
+            }
+        };
+
+        if (activeDropdown) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [activeDropdown]);
+
+    // Handle clicking outside edit mode to close it
+    useEffect(() => {
+        const handleClickOutsideEdit = (event: MouseEvent) => {
+            const target = event.target as HTMLElement;
+            // Check if click is outside any edit input fields or save/cancel buttons
+            if (editingLocalityId &&
+                !target.closest('.edit-row-container') &&
+                !target.closest('.edit-buttons-container')) {
+                handleCancelEdit();
+            }
+        };
+
+        if (editingLocalityId) {
+            document.addEventListener('mousedown', handleClickOutsideEdit);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutsideEdit);
+        };
+    }, [editingLocalityId]);
     // Filter localities based on search term
     useEffect(() => {
         if (!localities || !Array.isArray(localities)) {
@@ -98,7 +141,12 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
     // Delete confirmation handlers
     const handleDeleteConfirm = () => {
         if (localityToDelete) {
-            handleAction('delete', localityToDelete);
+            setActiveDropdown(null); // Close dropdown
+            // Find the locality data to get both localityId and areaId
+            const localityData = filteredLocalities.find(loc => (loc?.area?.id || loc?.id) === localityToDelete);
+            if (localityData) {
+                handleAction('delete', localityData?.id || '', localityData?.area?.id || '');
+            }
             setShowDeleteModal(false);
             setLocalityToDelete(null);
         }
@@ -109,13 +157,15 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
         setLocalityToDelete(null);
     };
 
-    const handleAction = async (action: string, localityId: string) => {
+    const handleAction = async (action: string, localityId: string, areaId: string) => {
         try {
             setActiveDropdown(null); // Close dropdown immediately when action is triggered
-            setUpdatingLocalityId(localityId);
+            setUpdatingLocalityId(areaId || localityId);
+
             if (action === 'delete') {
-                const response = await deleteAreaApi(localityId);
-                if (response.success) {
+                const response = await deleteAreaApi(areaId);
+                const localityResponse = await deleteLocalityApi(localityId);
+                if (response.success && localityResponse.success) {
                     toast.success(response.message || 'Locality deleted successfully');
                     await Promise.all([
                         refreshAreasData(),
@@ -124,10 +174,10 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
                     ]);
                     onAction(action, localityId);
                 } else {
-                    toast.error(response.message || 'Failed to delete locality');
+                    toast.error(response.message || localityResponse.message || 'Failed to delete locality');
                 }
             } else {
-                const response = await updateAreaStatusApi(localityId, action);
+                const response = await updateAreaStatusApi(areaId, action);
                 if (response.success) {
                     toast.success(response.message || `Locality ${action} successfully`);
                     await Promise.all([
@@ -210,6 +260,58 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
 
     const handleSaveNew = () => {
         handleSaveNewRow();
+    };
+
+    const handleEditRow = (locality: any) => {
+        setEditingLocalityId(locality?.area?.id || locality?.id);
+        setEditingRowData({
+            id: locality?.area?.id || locality?.id,
+            localityCode: locality?.locality?.code || '',
+            localityName: locality?.locality?.name || '',
+            areaCode: locality?.area?.code || '',
+            areaName: locality?.area?.name || '',
+            status: locality?.status || 'Active'
+        });
+        setEditValidationErrors({});
+        setActiveDropdown(null);
+    };
+
+    const handleSaveEdit = async () => {
+        try {
+            if (!editingRowData?.areaName.trim()) {
+                setEditValidationErrors({ areaName: 'Area name is required' });
+                return;
+            }
+
+            const response = await updateAreaApi(
+                editingRowData?.id,
+                editingRowData?.areaName.trim(),
+                editingRowData?.areaCode.trim()
+            );
+            
+            if (response.success) {
+                toast.success('Area updated successfully');
+                setEditingLocalityId(null);
+                setEditingRowData(null);
+                setEditValidationErrors({});
+                await Promise.all([
+                    refreshAreasData(),
+                    refreshLocalitiesData(),
+                    refreshSchoolsData()
+                ]);
+            } else {
+                toast.error(response.message || 'Failed to update area');
+            }
+        } catch (error: any) {
+            console.error('Error updating area:', error);
+            toast.error(error.message || 'Failed to update area');
+        }
+    };
+
+    const handleCancelEdit = () => {
+        setEditingLocalityId(null);
+        setEditingRowData(null);
+        setEditValidationErrors({});
     };
 
     // Merge functionality handlers
@@ -414,8 +516,9 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
                 </div>
             ) : filteredLocalities.length > 0 ? (
                 filteredLocalities.map((locality: any) => {
+                    const isEditing = editingLocalityId === (locality?.area?.id || locality?.id);
                     return (
-                        <div key={locality?.id || Math.random()} className="flex gap-2 mb-2">
+                        <div key={locality?.id || Math.random()} className={`flex gap-2 mb-2 ${isEditing ? 'edit-row-container' : ''}`}>
                             {/* Locality Code */}
                             <div className="w-32 bg-white px-3 py-2 text-sm font-medium text-gray-900 rounded-md border border-gray-200">
                                 {locality?.locality?.code || 'N/A'}
@@ -423,7 +526,20 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
 
                             {/* Locality Name */}
                             <div className="w-40 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-                                {locality?.locality?.name || 'N/A'}
+                                {isEditing ? (
+                                    <div>
+                                        <input
+                                            type="text"
+                                            value={editingRowData?.localityName || ''}
+                                            className="w-full text-sm text-gray-500 focus:outline-none border-0 p-0 bg-transparent cursor-not-allowed"
+                                            placeholder="Read-only"
+                                            readOnly
+                                            disabled
+                                        />
+                                    </div>
+                                ) : (
+                                    locality?.locality?.name || 'N/A'
+                                )}
                             </div>
 
                             {/* Area Code */}
@@ -433,7 +549,22 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
 
                             {/* Area Name */}
                             <div className="w-40 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-                                {locality?.area?.name || 'N/A'}
+                                {isEditing ? (
+                                    <div>
+                                        <input
+                                            type="text"
+                                            value={editingRowData?.areaName || ''}
+                                            onChange={(e) => setEditingRowData({ ...editingRowData, areaName: e.target.value })}
+                                            className={`w-full text-sm text-gray-900 focus:outline-none border-0 p-0 ${editValidationErrors.areaName ? 'border-red-500' : ''}`}
+                                            placeholder="Enter area name"
+                                        />
+                                        {editValidationErrors.areaName && (
+                                            <div className="text-xs text-red-500 mt-1">{editValidationErrors.areaName}</div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    locality?.area?.name || 'N/A'
+                                )}
                             </div>
 
                             {/* Linked Schools (Area) */}
@@ -484,22 +615,46 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
                             )}
 
                             {/* Actions */}
-                            <div className="w-16 px-3 py-2 text-sm font-medium flex items-center justify-left" ref={dropdownRef}>
-                                <div className="relative flex items-center justify-left" ref={dropdownRef}>
-                                    <button
-                                        onClick={() => handleDropdownToggle(locality?.id || locality?.area?.id || '')}
-                                        className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                    >
-                                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                                        </svg>
-                                    </button>
+                            <div className="w-16 px-3 py-2 text-sm font-medium flex items-center justify-left">
+                                <div className="relative flex items-center justify-left dropdown-container">
+                                    {isEditing ? (
+                                        <div className="flex space-x-1 edit-buttons-container">
+                                            <button
+                                                onClick={handleSaveEdit}
+                                                className="text-green-600 hover:text-green-800 focus:outline-none"
+                                                title="Save changes"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            </button>
+                                            <button
+                                                onClick={handleCancelEdit}
+                                                className="text-red-600 hover:text-red-800 focus:outline-none"
+                                                title="Cancel editing"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            onClick={() => handleDropdownToggle(locality?.id || locality?.area?.id || '')}
+                                            className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                        >
+                                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                                            </svg>
+                                        </button>
+                                    )}
 
-                                    {activeDropdown === (locality?.id || locality?.area?.id) && (
-                                        <div className="absolute top-full right-0 mt-1 w-48 bg-white rounded-md shadow-lg z-[9999] border border-gray-300">
+                                    {activeDropdown === (locality?.id || locality?.area?.id) && !isEditing && (
+                                        <div className="absolute top-full right-0 mt-1 w-48 bg-white rounded-md shadow-lg z-[9999] border border-gray-300 dropdown-container">
                                             <div className="py-1">
                                                 {/* Main management options - always show for all statuses */}
                                                 <button
+                                                    onClick={() => handleEditRow(locality)}
                                                     disabled={updatingLocalityId === (locality?.id || locality?.area?.id)}
                                                     className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.id || locality?.area?.id)
                                                         ? 'text-gray-400 cursor-not-allowed'
@@ -547,7 +702,7 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
                                                 {/* Show Active button when status is not active */}
                                                 {locality?.status?.toLowerCase() !== 'active' && (
                                                     <button
-                                                        onClick={() => handleAction('active', locality?.area?.id || locality?.id || '')}
+                                                        onClick={() => handleAction('active', locality?.id || '', locality?.area?.id || '')}
                                                         disabled={updatingLocalityId === (locality?.id || locality?.area?.id)}
                                                         className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.id || locality?.area?.id)
                                                             ? 'text-gray-400 cursor-not-allowed'
@@ -561,7 +716,7 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
                                                 {/* Show Flag button when status is not flagged */}
                                                 {locality?.status?.toLowerCase() !== 'flagged' && (
                                                     <button
-                                                        onClick={() => handleAction('flagged', locality?.area?.id || locality?.id || '')}
+                                                        onClick={() => handleAction('flagged', locality?.id || '', locality?.area?.id || '')}
                                                         disabled={updatingLocalityId === (locality?.id || locality?.area?.id)}
                                                         className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.id || locality?.area?.id)
                                                             ? 'text-gray-400 cursor-not-allowed'
@@ -575,7 +730,7 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
                                                 {/* Show Block button when status is not blocked */}
                                                 {locality?.status?.toLowerCase() !== 'blocked' && (
                                                     <button
-                                                        onClick={() => handleAction('blocked', locality?.area?.id || locality?.id || '')}
+                                                        onClick={() => handleAction('blocked', locality?.id || '', locality?.area?.id || '')}
                                                         disabled={updatingLocalityId === (locality?.id || locality?.area?.id)}
                                                         className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.id || locality?.area?.id)
                                                             ? 'text-gray-400 cursor-not-allowed'
@@ -588,7 +743,10 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
 
                                                 {/* Delete button - always show */}
                                                 <button
-                                                    onClick={() => { handleAction('delete', locality?.area?.id || locality?.id || ''); }}
+                                                    onClick={() => {
+                                                        setLocalityToDelete(locality?.area?.id || locality?.id || '');
+                                                        setShowDeleteModal(true);
+                                                    }}
                                                     disabled={updatingLocalityId === (locality?.id || locality?.area?.id)}
                                                     className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.id || locality?.area?.id)
                                                         ? 'text-gray-400 cursor-not-allowed'

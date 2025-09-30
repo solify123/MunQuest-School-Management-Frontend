@@ -155,7 +155,7 @@ const CommitteesTable: React.FC<CommitteesTableProps> = ({ committees, onRefresh
       </div>
 
       {/* Header Row */}
-      <div className="grid grid-cols-4 gap-2 mb-2">
+      <div className="grid gap-2 mb-2" style={{ gridTemplateColumns: '70px 120px 0.5fr 60px' }}>
         {['ID', 'ABBR', 'Committee', ' '].map((header) => (
           header === ' ' ? (
             <div key={header}>
@@ -163,7 +163,7 @@ const CommitteesTable: React.FC<CommitteesTableProps> = ({ committees, onRefresh
           ) : (
             <div
               key={header}
-              className="px-3 py-2 text-xs font-medium text-gray-900 uppercase tracking-wider rounded-md bg-[#C6DAF4] border border-[#4A5F7A] flex items-center justify-between"
+              className="px-3 py-2 text-xs font-medium text-gray-900 uppercase tracking-wider rounded-md bg-[#F0F7FF] border border-[#4A5F7A] flex items-center justify-between"
             >
               <span>{header}</span>
               <svg className="w-3 h-3 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -181,7 +181,7 @@ const CommitteesTable: React.FC<CommitteesTableProps> = ({ committees, onRefresh
         </div>
       ) : filteredCommittees.length > 0 ? (
         filteredCommittees.map((committee) => (
-          <div key={committee.id} className="grid grid-cols-4 gap-2 mb-2">
+          <div key={committee.id} className="grid gap-2 mb-2" style={{ gridTemplateColumns: '70px 120px 0.5fr 60px' }}>
             {/* ID */}
             <div className="bg-white px-3 py-2 text-sm font-medium text-gray-900 rounded-md border border-gray-200">
               {committee.id}
@@ -294,7 +294,7 @@ const CommitteesTable: React.FC<CommitteesTableProps> = ({ committees, onRefresh
 
       {/* Add New Committee Input Row */}
       {isAdding && (
-        <div className="grid grid-cols-4 gap-2 mb-2">
+        <div className="grid gap-2 mb-2" style={{ gridTemplateColumns: '70px 120px 0.5fr 60px' }}>
           {/* ID */}
           <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
             <input

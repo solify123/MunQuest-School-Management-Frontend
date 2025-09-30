@@ -267,3 +267,59 @@ export const updateUserStatusApi = async (userId: string, status: string) => {
         throw new Error(error.response.data.message);
     }
 }
+
+export const updateTeacherProfileAndCustomLocalityApi = async (fullname: string, username: string, birthday: string,
+    gender: string, custom_locality_name: string, custom_school_name: string, yearsOfExperience: string, phone: string,
+    email: string, avatar?: string, phone_e164?: string) => {
+    try {
+        const token = localStorage.getItem('token');
+        const userId = localStorage.getItem('userId');
+        const response = await axios.patch(`${backendUrl}/api/v1/users/teacher-profile-and-custom-locality/${userId}`, {
+            fullname,
+            username,
+            birthday,
+            gender,
+            custom_locality_name,
+            custom_school_name,
+            yearsOfExperience,
+            phone,
+            email,
+            avatar,
+            phone_e164
+        }, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+}
+
+export const updateTeacherProfileCustomSchoolNameApi = async (
+    fullname: string, username: string, birthday: string, gender: string, locality: string,
+    custom_school_name: string, yearsOfExperience: string, phone: string, phone_e164?: string) => {
+    try {
+        const token = localStorage.getItem('token');
+        const userId = localStorage.getItem('userId');
+        const response = await axios.patch(`${backendUrl}/api/v1/users/teacher-profile-custom-school-name/${userId}`, {
+            fullname,
+            username,
+            birthday,
+            gender,
+            locality,
+            custom_school_name,
+            yearsOfExperience,
+            phone,
+            phone_e164
+        }, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+}

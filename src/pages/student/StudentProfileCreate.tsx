@@ -23,7 +23,9 @@ const StudentProfile: React.FC = () => {
   const [birthday, setBirthday] = useState<string>('');
   const [gender, setGender] = useState<string>('');
   const [locality, setLocality] = useState<string>('');
+  const [customLocality, setCustomLocality] = useState<string>('');
   const [selectedSchool, setSelectedSchool] = useState<any>(null);
+  const [customSchool, setCustomSchool] = useState<string>('');
   const [school_id, setSchool_id] = useState<string>('');
   const [gradeType, setGradeType] = useState<string>('');
   const [grade, setGrade] = useState<string>('');
@@ -116,13 +118,30 @@ const StudentProfile: React.FC = () => {
     setSelectedSchool(null);
     setSchool_id('');
     setSchoolSearchTerm('');
-    if (cityCode) {
+    setCustomSchool(''); // Clear custom school when locality changes
+    
+    // Clear custom locality when selecting a predefined locality
+    if (cityCode !== 'Other') {
+      setCustomLocality('');
+    }
+    
+    if (cityCode && cityCode !== 'Other') {
       // Filter schools by locality
       const schoolsInLocality = allSchools.filter(school => school.locality.code === cityCode);
       setFilteredSchools(schoolsInLocality);
     } else {
       setFilteredSchools([]);
     }
+  };
+
+  const handleCustomLocalityChange = (value: string) => {
+    setCustomLocality(value);
+    // Clear school selection when custom locality changes
+    setSelectedSchool(null);
+    setSchool_id('');
+    setSchoolSearchTerm('');
+    setCustomSchool('');
+    setFilteredSchools([]);
   };
 
   const handleSchoolSearch = (searchTerm: string) => {
@@ -149,6 +168,15 @@ const StudentProfile: React.FC = () => {
     setSchool_id(school.id);
     setSchoolSearchTerm(schoolLabel);
     setShowSchoolDropdown(false);
+    
+    // Clear custom school when selecting a predefined school
+    if (school.id !== 'UNLISTED') {
+      setCustomSchool('');
+    }
+  };
+
+  const handleCustomSchoolChange = (value: string) => {
+    setCustomSchool(value);
   };
 
   // Close dropdown when clicking outside
@@ -311,6 +339,25 @@ const StudentProfile: React.FC = () => {
           </div>
         </div>
         {errors.locality && <p className="mt-1 text-xs text-red-600">{errors.locality}</p>}
+        
+        {/* Custom Locality Input - appears when "Other" is selected */}
+        {locality === 'Other' && (
+          <div className="mt-4">
+            <label className="block text-base font-bold text-black mb-2">
+              Enter Custom Locality
+            </label>
+            <input
+              type="text"
+              name="customLocality"
+              placeholder="Enter your locality name..."
+              value={customLocality}
+              onChange={(e) => handleCustomLocalityChange(e.target.value)}
+              className={`w-[400px] px-4 py-4 border rounded-lg text-sm bg-white focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors.customLocality ? 'border-red-500' : 'border-gray-300'
+                }`}
+            />
+            {errors.customLocality && <p className="mt-1 text-xs text-red-600">{errors.customLocality}</p>}
+          </div>
+        )}
       </div>
 
       {/* School Name */}
@@ -322,12 +369,12 @@ const StudentProfile: React.FC = () => {
           <input
             type="text"
             name="schoolName"
-            placeholder={locality ? "Search by school name or code..." : "Please select a city first"}
+            placeholder={locality === 'Other' ? "School selection not available for custom locality" : locality ? "Search by school name or code..." : "Please select a city first"}
             value={schoolSearchTerm}
             onChange={e => handleSchoolSearch(e.target.value)}
             onFocus={() => setShowSchoolDropdown(true)}
-            disabled={!locality}
-            className={`w-[400px] px-4 py-4 pl-12 pr-12 border rounded-lg text-sm bg-white placeholder-gray-500 focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors.schoolName ? 'border-red-500' : 'border-gray-300'} ${!locality ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+            disabled={!locality || locality === 'Other'}
+            className={`w-[400px] px-4 py-4 pl-12 pr-12 border rounded-lg text-sm bg-white placeholder-gray-500 focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors.schoolName ? 'border-red-500' : 'border-gray-300'} ${!locality || locality === 'Other' ? 'bg-gray-100 cursor-not-allowed' : ''}`}
           />
           <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -342,7 +389,8 @@ const StudentProfile: React.FC = () => {
               setSchoolSearchTerm('');
               setShowSchoolDropdown(false);
             }}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center hover:bg-gray-400 transition-colors"
+            disabled={!locality || locality === 'Other'}
+            className={`absolute right-4 top-1/2 transform -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center transition-colors ${!locality || locality === 'Other' ? 'bg-gray-200 cursor-not-allowed' : 'bg-gray-300 hover:bg-gray-400'}`}
           >
             <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -350,7 +398,7 @@ const StudentProfile: React.FC = () => {
           </button>
 
           {/* School Dropdown */}
-          {showSchoolDropdown && locality && filteredSchools.length > 0 && (
+          {showSchoolDropdown && locality && locality !== 'Other' && filteredSchools.length > 0 && (
             <div className="absolute top-full left-0 z-10 w-[400px] mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
               {filteredSchools.map((school, index) => (
                 <div
@@ -393,6 +441,25 @@ const StudentProfile: React.FC = () => {
           )}
         </div>
         {errors.schoolName && <p className="mt-1 text-xs text-red-600">{errors.schoolName}</p>}
+        
+        {/* Custom School Input - appears when "Unlisted / Not in the list / Other" is selected */}
+        {selectedSchool && selectedSchool.id === 'UNLISTED' && (
+          <div className="mt-4">
+            <label className="block text-base font-bold text-black mb-2">
+              Enter School Name
+            </label>
+            <input
+              type="text"
+              name="customSchool"
+              placeholder="Enter your school name..."
+              value={customSchool}
+              onChange={(e) => handleCustomSchoolChange(e.target.value)}
+              className={`w-[400px] px-4 py-4 border rounded-lg text-sm bg-white focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors.customSchool ? 'border-red-500' : 'border-gray-300'
+                }`}
+            />
+            {errors.customSchool && <p className="mt-1 text-xs text-red-600">{errors.customSchool}</p>}
+          </div>
+        )}
       </div>
 
       {/* Grade Type Selection */}
@@ -565,7 +632,18 @@ const StudentProfile: React.FC = () => {
 
   const StudentProfileHandler = async (fullName: string, generatedUsername: string, birthday: string, gender: string, school_id: string, grade: string, phone: string, phone_e164: string) => {
     try {
-      const response = await studentProfileApi(fullName, generatedUsername, birthday, gender, school_id, grade, phone, phone_e164);
+      let finalSchoolId = school_id;
+      
+      // Handle custom locality case
+      if (locality === 'Other') {
+        finalSchoolId = `custom_locality:${customLocality}`;
+      }
+      // Handle custom school case
+      else if (selectedSchool && selectedSchool.id === 'UNLISTED') {
+        finalSchoolId = `custom_school:${customSchool}`;
+      }
+      
+      const response = await studentProfileApi(fullName, generatedUsername, birthday, gender, finalSchoolId, grade, phone, phone_e164);
       if (response.success) {
         toast.success('Student profile created successfully');
         navigate('/student-home');
@@ -614,15 +692,37 @@ const StudentProfile: React.FC = () => {
                   }
                 } else if (currentStep === 'school') {
                   // Validate school info
-                  if (locality && selectedSchool && grade) {
-                    setCurrentStep('contact');
+                  if (locality === 'Other') {
+                    // For custom locality, check if custom locality is filled and grade is selected
+                    if (customLocality.trim() && grade) {
+                      setCurrentStep('contact');
+                    } else {
+                      toast.error('Please fill in all school information fields');
+                    }
                   } else {
-                    toast.error('Please fill in all school information fields');
+                    // For predefined localities, check if locality, school, and grade are selected
+                    if (selectedSchool && selectedSchool.id === 'UNLISTED') {
+                      // For unlisted school, check if custom school is filled and grade is selected
+                      if (customSchool.trim() && grade) {
+                        setCurrentStep('contact');
+                      } else {
+                        toast.error('Please fill in all school information fields');
+                      }
+                    } else {
+                      // For predefined schools, check if locality, school, and grade are selected
+                      if (locality && selectedSchool && grade) {
+                        setCurrentStep('contact');
+                      } else {
+                        toast.error('Please fill in all school information fields');
+                      }
+                    }
                   }
                 } else if (currentStep === 'contact') {
                   // Validate contact info and submit
                   if (phone && phone_e164) {
-                    StudentProfileHandler(fullname, generatedUsername, birthday, gender, school_id, grade, phone, phone_e164);
+                    // Pass empty string as school_id since we handle custom cases in the handler
+                    const schoolIdToPass = (locality === 'Other' || (selectedSchool && selectedSchool.id === 'UNLISTED')) ? '' : school_id;
+                    StudentProfileHandler(fullname, generatedUsername, birthday, gender, schoolIdToPass, grade, phone, phone_e164);
                   } else {
                     toast.error('Please fill in all contact information fields');
                   }
