@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Header } from '../../components/ui';
 import { useNavigate } from 'react-router-dom';
-import { studentProfileApi } from '../../apis/Users';
+import { studentProfileApi, updateStudentProfileAndCustomLocalityApi, updateStudentProfileCustomSchoolNameApi } from '../../apis/Users';
 import { toast } from 'sonner';
 import { generateUsername } from '../../utils/usernameGenerator';
 import PageLoader from '../../components/PageLoader';
@@ -76,11 +76,8 @@ const StudentProfile: React.FC = () => {
     setGradeType(gradeType);
   };
 
-  // Function to generate phone_e164 format
   const generatePhoneE164 = (phone: string, countryCode: string): string => {
-    // Remove all non-numeric characters from phone
     const cleanPhone = phone.replace(/[^0-9]/g, '');
-    // Combine country code with phone number to create complete E.164 format
     const phoneE164 = `${countryCode}${cleanPhone}`;
     console.log('Generating phone_e164:', { phone, countryCode, cleanPhone, phoneE164 });
     return phoneE164;
@@ -89,14 +86,12 @@ const StudentProfile: React.FC = () => {
   const handleCountryCodeSelect = (code: string) => {
     setCountryCode(code);
     setShowCountryDropdown(false);
-    // Regenerate phone_e164 with new country code
     if (phone) {
       const phoneE164 = generatePhoneE164(phone, code);
       setPhone_e164(phoneE164);
     }
   };
 
-  // Load localities, schools, and areas data on component mount
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -118,15 +113,14 @@ const StudentProfile: React.FC = () => {
     setSelectedSchool(null);
     setSchool_id('');
     setSchoolSearchTerm('');
-    setCustomSchool(''); // Clear custom school when locality changes
-    
+    setCustomSchool('');
+
     // Clear custom locality when selecting a predefined locality
     if (cityCode !== 'Other') {
       setCustomLocality('');
     }
-    
+
     if (cityCode && cityCode !== 'Other') {
-      // Filter schools by locality
       const schoolsInLocality = allSchools.filter(school => school.locality.code === cityCode);
       setFilteredSchools(schoolsInLocality);
     } else {
@@ -136,7 +130,6 @@ const StudentProfile: React.FC = () => {
 
   const handleCustomLocalityChange = (value: string) => {
     setCustomLocality(value);
-    // Clear school selection when custom locality changes
     setSelectedSchool(null);
     setSchool_id('');
     setSchoolSearchTerm('');
@@ -147,11 +140,9 @@ const StudentProfile: React.FC = () => {
   const handleSchoolSearch = (searchTerm: string) => {
     setSchoolSearchTerm(searchTerm);
     if (searchTerm.trim() === '') {
-      // Show all schools in the selected locality
       const schoolsInLocality = allSchools.filter(school => school.locality.code === locality);
       setFilteredSchools(schoolsInLocality);
     } else {
-      // Filter schools in the selected locality by search term
       const schoolsInLocality = allSchools.filter(school => school.locality.code === locality);
       const filtered = schoolsInLocality.filter(school =>
         school.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -168,8 +159,7 @@ const StudentProfile: React.FC = () => {
     setSchool_id(school.id);
     setSchoolSearchTerm(schoolLabel);
     setShowSchoolDropdown(false);
-    
-    // Clear custom school when selecting a predefined school
+
     if (school.id !== 'UNLISTED') {
       setCustomSchool('');
     }
@@ -179,7 +169,6 @@ const StudentProfile: React.FC = () => {
     setCustomSchool(value);
   };
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -226,7 +215,6 @@ const StudentProfile: React.FC = () => {
 
   const renderPersonalInfo = () => (
     <div className="space-y-6">
-      {/* Name */}
       <div>
         <label className="block text-base font-bold text-black mb-2">
           Name
@@ -237,10 +225,10 @@ const StudentProfile: React.FC = () => {
           placeholder="E.g. Sam Morgan Lee"
           value={username}
           onChange={e => handleNameChange(e.target.value)}
-          className={`w-[400px] px-4 py-4 border rounded-lg text-sm bg-white placeholder-gray-500 focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors.name ? 'border-red-500' : 'border-gray-300'
+          className={`w-[400px] px-4 py-4 border rounded-lg text-sm bg-white placeholder-gray-500 focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors?.name ? 'border-red-500' : 'border-gray-300'
             }`}
         />
-        {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name}</p>}
+        {errors?.name && <p className="mt-1 text-xs text-red-600">{errors.name}</p>}
 
         {/* Generated Username Display */}
         {generatedUsername && (
@@ -267,7 +255,7 @@ const StudentProfile: React.FC = () => {
             name="dateOfBirth"
             value={birthday}
             onChange={e => setBirthday(e.target.value)}
-            className={`w-[400px] px-4 py-4 pl-12 border rounded-lg text-sm bg-white focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors.dateOfBirth ? 'border-red-500' : 'border-gray-300'
+            className={`w-[400px] px-4 py-4 pl-12 border rounded-lg text-sm bg-white focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors?.dateOfBirth ? 'border-red-500' : 'border-gray-300'
               }`}
           />
           <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
@@ -276,7 +264,7 @@ const StudentProfile: React.FC = () => {
             </svg>
           </div>
         </div>
-        {errors.dateOfBirth && <p className="mt-1 text-xs text-red-600">{errors.dateOfBirth}</p>}
+        {errors?.dateOfBirth && <p className="mt-1 text-xs text-red-600">{errors.dateOfBirth}</p>}
       </div>
 
       {/* Gender */}
@@ -299,7 +287,7 @@ const StudentProfile: React.FC = () => {
             </button>
           ))}
         </div>
-        {errors.gender && <p className="mt-1 text-xs text-red-600">{errors.gender}</p>}
+        {errors?.gender && <p className="mt-1 text-xs text-red-600">{errors.gender}</p>}
       </div>
     </div>
   );
@@ -316,7 +304,7 @@ const StudentProfile: React.FC = () => {
             name="locality"
             value={locality}
             onChange={(e) => handleCityChange(e.target.value)}
-            className={`w-[400px] px-4 py-4 pr-10 border rounded-lg text-sm bg-white focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 appearance-none ${errors.locality ? 'border-red-500' : 'border-gray-300'
+            className={`w-[400px] px-4 py-4 pr-10 border rounded-lg text-sm bg-white focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 appearance-none ${errors?.locality ? 'border-red-500' : 'border-gray-300'
               }`}
           >
             <option value="">Select a locality...</option>
@@ -338,8 +326,8 @@ const StudentProfile: React.FC = () => {
             </svg>
           </div>
         </div>
-        {errors.locality && <p className="mt-1 text-xs text-red-600">{errors.locality}</p>}
-        
+        {errors?.locality && <p className="mt-1 text-xs text-red-600">{errors.locality}</p>}
+
         {/* Custom Locality Input - appears when "Other" is selected */}
         {locality === 'Other' && (
           <div className="mt-4">
@@ -352,10 +340,10 @@ const StudentProfile: React.FC = () => {
               placeholder="Enter your locality name..."
               value={customLocality}
               onChange={(e) => handleCustomLocalityChange(e.target.value)}
-              className={`w-[400px] px-4 py-4 border rounded-lg text-sm bg-white focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors.customLocality ? 'border-red-500' : 'border-gray-300'
+              className={`w-[400px] px-4 py-4 border rounded-lg text-sm bg-white focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors?.customLocality ? 'border-red-500' : 'border-gray-300'
                 }`}
             />
-            {errors.customLocality && <p className="mt-1 text-xs text-red-600">{errors.customLocality}</p>}
+            {errors?.customLocality && <p className="mt-1 text-xs text-red-600">{errors.customLocality}</p>}
           </div>
         )}
       </div>
@@ -374,7 +362,7 @@ const StudentProfile: React.FC = () => {
             onChange={e => handleSchoolSearch(e.target.value)}
             onFocus={() => setShowSchoolDropdown(true)}
             disabled={!locality || locality === 'Other'}
-            className={`w-[400px] px-4 py-4 pl-12 pr-12 border rounded-lg text-sm bg-white placeholder-gray-500 focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors.schoolName ? 'border-red-500' : 'border-gray-300'} ${!locality || locality === 'Other' ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+            className={`w-[400px] px-4 py-4 pl-12 pr-12 border rounded-lg text-sm bg-white placeholder-gray-500 focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors?.schoolName ? 'border-red-500' : 'border-gray-300'} ${!locality || locality === 'Other' ? 'bg-gray-100 cursor-not-allowed' : ''}`}
           />
           <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -440,10 +428,10 @@ const StudentProfile: React.FC = () => {
             </div>
           )}
         </div>
-        {errors.schoolName && <p className="mt-1 text-xs text-red-600">{errors.schoolName}</p>}
-        
-        {/* Custom School Input - appears when "Unlisted / Not in the list / Other" is selected */}
-        {selectedSchool && selectedSchool.id === 'UNLISTED' && (
+        {errors?.schoolName && <p className="mt-1 text-xs text-red-600">{errors.schoolName}</p>}
+
+        {/* Custom School Input - appears when "Unlisted / Not in the list / Other" is selected OR when locality is "Other" */}
+        {((selectedSchool && selectedSchool.id === 'UNLISTED') || locality === 'Other') && (
           <div className="mt-4">
             <label className="block text-base font-bold text-black mb-2">
               Enter School Name
@@ -454,10 +442,10 @@ const StudentProfile: React.FC = () => {
               placeholder="Enter your school name..."
               value={customSchool}
               onChange={(e) => handleCustomSchoolChange(e.target.value)}
-              className={`w-[400px] px-4 py-4 border rounded-lg text-sm bg-white focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors.customSchool ? 'border-red-500' : 'border-gray-300'
+              className={`w-[400px] px-4 py-4 border rounded-lg text-sm bg-white focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors?.customSchool ? 'border-red-500' : 'border-gray-300'
                 }`}
             />
-            {errors.customSchool && <p className="mt-1 text-xs text-red-600">{errors.customSchool}</p>}
+            {errors?.customSchool && <p className="mt-1 text-xs text-red-600">{errors.customSchool}</p>}
           </div>
         )}
       </div>
@@ -485,7 +473,7 @@ const StudentProfile: React.FC = () => {
             ))}
           </div>
         </div>
-        {errors.gradeType && <p className="mt-1 text-xs text-red-600">{errors.gradeType}</p>}
+        {errors?.gradeType && <p className="mt-1 text-xs text-red-600">{errors.gradeType}</p>}
       </div>
 
       {/* Grade Selection */}
@@ -495,7 +483,7 @@ const StudentProfile: React.FC = () => {
             name="grade"
             value={grade}
             onChange={(e) => setGrade(e.target.value)}
-            className={`w-full px-4 py-4 pr-10 border rounded-lg text-sm bg-white focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 appearance-none ${errors.grade ? 'border-red-500' : 'border-gray-300'
+            className={`w-full px-4 py-4 pr-10 border rounded-lg text-sm bg-white focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 appearance-none ${errors?.grade ? 'border-red-500' : 'border-gray-300'
               }`}
           >
             {gradeType === 'grade' && (
@@ -557,7 +545,7 @@ const StudentProfile: React.FC = () => {
             </svg>
           </div>
         </div>
-        {errors.grade && <p className="mt-1 text-xs text-red-600">{errors.grade}</p>}
+        {errors?.grade && <p className="mt-1 text-xs text-red-600">{errors.grade}</p>}
       </div>
     </div>
   );
@@ -603,7 +591,7 @@ const StudentProfile: React.FC = () => {
                 const phoneE164 = generatePhoneE164(phoneValue, countryCode);
                 setPhone_e164(phoneE164);
               }}
-              className={`flex-1 px-4 py-4 text-sm bg-white placeholder-gray-500 focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors.phone ? 'border-red-500' : 'border-gray-300'
+              className={`flex-1 px-4 py-4 text-sm bg-white placeholder-gray-500 focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${errors?.phone ? 'border-red-500' : 'border-gray-300'
                 }`}
             />
           </div>
@@ -625,25 +613,24 @@ const StudentProfile: React.FC = () => {
             </div>
           )}
         </div>
-        {errors.phone && <p className="mt-1 text-xs text-red-600">{errors.phone}</p>}
+        {errors?.phone && <p className="mt-1 text-xs text-red-600">{errors.phone}</p>}
       </div>
     </div>
   );
 
-  const StudentProfileHandler = async (fullName: string, generatedUsername: string, birthday: string, gender: string, school_id: string, grade: string, phone: string, phone_e164: string) => {
+  const StudentProfileHandler = async (fullName: string, generatedUsername: string, birthday: string,
+     gender: string, school_id: string, grade: string, phone: string, phone_e164: string) => {
     try {
       let finalSchoolId = school_id;
-      
-      // Handle custom locality case
+
+      let response;
       if (locality === 'Other') {
-        finalSchoolId = `custom_locality:${customLocality}`;
+        response = await updateStudentProfileAndCustomLocalityApi(fullName, generatedUsername, birthday, gender, customLocality, customSchool, grade, phone, phone_e164);
+      } else if (selectedSchool && selectedSchool.id === 'UNLISTED') {
+        response = await updateStudentProfileCustomSchoolNameApi(fullName, generatedUsername, birthday, gender, locality, customSchool, grade, phone, phone_e164);
+      } else {
+        response = await studentProfileApi(fullName, generatedUsername, birthday, gender, finalSchoolId, grade, phone, phone_e164);
       }
-      // Handle custom school case
-      else if (selectedSchool && selectedSchool.id === 'UNLISTED') {
-        finalSchoolId = `custom_school:${customSchool}`;
-      }
-      
-      const response = await studentProfileApi(fullName, generatedUsername, birthday, gender, finalSchoolId, grade, phone, phone_e164);
       if (response.success) {
         toast.success('Student profile created successfully');
         navigate('/student-home');
@@ -652,8 +639,9 @@ const StudentProfile: React.FC = () => {
         toast.error(response.errors.message);
       }
     } catch (error: any) {
-      setErrors(error.errors);
-      toast.error(error.errors.message);
+      const errorData = error?.errors || error || { message: 'An unexpected error occurred' };
+      setErrors(errorData);
+      toast.error(errorData.message || 'An unexpected error occurred');
     }
   }
 
@@ -693,8 +681,8 @@ const StudentProfile: React.FC = () => {
                 } else if (currentStep === 'school') {
                   // Validate school info
                   if (locality === 'Other') {
-                    // For custom locality, check if custom locality is filled and grade is selected
-                    if (customLocality.trim() && grade) {
+                    // For custom locality, check if custom locality and custom school are filled and grade is selected
+                    if (customLocality.trim() && customSchool.trim() && grade) {
                       setCurrentStep('contact');
                     } else {
                       toast.error('Please fill in all school information fields');
@@ -720,9 +708,7 @@ const StudentProfile: React.FC = () => {
                 } else if (currentStep === 'contact') {
                   // Validate contact info and submit
                   if (phone && phone_e164) {
-                    // Pass empty string as school_id since we handle custom cases in the handler
-                    const schoolIdToPass = (locality === 'Other' || (selectedSchool && selectedSchool.id === 'UNLISTED')) ? '' : school_id;
-                    StudentProfileHandler(fullname, generatedUsername, birthday, gender, schoolIdToPass, grade, phone, phone_e164);
+                    StudentProfileHandler(fullname, generatedUsername, birthday, gender, school_id, grade, phone, phone_e164);
                   } else {
                     toast.error('Please fill in all contact information fields');
                   }

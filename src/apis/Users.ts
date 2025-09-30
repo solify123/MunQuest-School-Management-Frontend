@@ -323,3 +323,57 @@ export const updateTeacherProfileCustomSchoolNameApi = async (
         throw new Error(error.response.data.message);
     }
 }
+
+export const updateStudentProfileAndCustomLocalityApi = async (fullname: string, username: string, birthday: string,
+    gender: string, custom_locality_name: string, custom_school_name: string, grade: string, phone: string,
+    phone_e164?: string) => {
+    try {
+        const token = localStorage.getItem('token');
+        const userId = localStorage.getItem('userId');
+        const response = await axios.patch(`${backendUrl}/api/v1/users/student-profile-and-custom-locality/${userId}`, {
+            fullname,
+            username,
+            birthday,
+            gender,
+            custom_locality_name,
+            custom_school_name,
+            grade,
+            phone,
+            phone_e164
+        }, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+}
+
+export const updateStudentProfileCustomSchoolNameApi = async (
+    fullname: string, username: string, birthday: string, gender: string, locality: string,
+    custom_school_name: string, grade: string, phone: string, phone_e164?: string) => {
+    try {
+        const token = localStorage.getItem('token');
+        const userId = localStorage.getItem('userId');
+        const response = await axios.patch(`${backendUrl}/api/v1/users/student-profile-custom-school-name/${userId}`, {
+            fullname,
+            username,
+            birthday,
+            gender,
+            locality,
+            custom_school_name,
+            grade,
+            phone,
+            phone_e164
+        }, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+}
