@@ -5,6 +5,7 @@ import { AppProvider } from './contexts/AppContext';
 import { SupabaseAuthProvider } from './contexts/SupabaseAuthContext';
 import SignUp from './pages/SignUp';
 import Login from './pages/Login';
+import EmailVerification from './pages/EmailVerification';
 import HomePage from './pages/HomePage';
 import Dashboard from './pages/Dashboard';
 import RequestApproval from './pages/RequestApproval';
@@ -38,6 +39,7 @@ function App() {
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/email-verification" element={<EmailVerification />} />
 
           {/* Protected Routes - Authentication required */}
           <Route path="/home" element={<PrivateRoute><HomePage /></PrivateRoute>} />

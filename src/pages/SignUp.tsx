@@ -67,8 +67,8 @@ const SignUp: React.FC = () => {
         if (!signupUserTableResponse.success) {
           throw new Error(signupUserTableResponse.message);
         }
-        toast.success(signupResponse.message);
-        navigate('/login');
+        toast.success('Account created successfully!');
+        navigate('/email-verification', { state: { email } });
       }
     } catch (error: any) {
       toast.error(error.message);
