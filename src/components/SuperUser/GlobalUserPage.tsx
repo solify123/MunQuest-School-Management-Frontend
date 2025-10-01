@@ -118,6 +118,7 @@ const GlobalUserPage: React.FC<GlobalUserPageProps> = ({ type = 'students', isSu
         users={filteredData}
         onAction={handleUserAction}
         userType={type}
+        isSuperUser={isSuperUser}
       />
     </div>
   );

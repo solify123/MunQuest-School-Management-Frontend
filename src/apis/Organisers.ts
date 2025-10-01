@@ -120,4 +120,18 @@ export const addOrganiserBySuperUserApi = async (user_id: string, school_id: str
     } catch (error: any) {
         throw new Error(error.response.data.message);
     }
-}   
+}
+
+export const assignOrganiserToSchoolApi = async (organiserId: string, schoolId: string) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.post(`${backendUrl}/api/v1/organisers/assign-organiser-to-school`, { organiserId, schoolId }, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+}
