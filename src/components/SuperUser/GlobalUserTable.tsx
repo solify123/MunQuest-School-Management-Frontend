@@ -4,6 +4,7 @@ import { useApp } from '../../contexts/AppContext';
 import { removeSuperUserInviteApi, sendSuperUserInviteApi, updateUserStatusApi } from '../../apis/Users';
 import { ConfirmationModal } from '../ui';
 import OrganiserIcon from '../../assets/organiser_icon.svg';
+import { assignOrganiserToSchoolApi } from '../../apis/Organisers';
 
 interface GlobalUser {
   id: string;
@@ -402,10 +403,17 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
                         // Regular Users section menu options - dynamic based on current status
                         <>
                           <button
-                            onClick={() => {
+                            onClick={async () => {
                               setActiveDropdown(null);
-                              // TODO: Implement assign organiser functionality
-                              console.log('Assign organiser:', user?.id);
+                              const response = await assignOrganiserToSchoolApi(user?.id);
+                              if (response.success) {
+                                toast.success(response.message);
+                                await refreshUserData();
+                                onAction('assign-organiser', user?.id, user?.email);
+                                await refreshUserData();
+                              } else {
+                                toast.error(response.message);
+                              }
                             }}
                             disabled={updatingUserId === user?.id}
                             className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingUserId === user?.id
@@ -415,7 +423,7 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
                           >
                             Assign Organiser
                           </button>
-                          
+
                           {/* Show Active option if user is flagged or blocked */}
                           {(user?.user_status?.toLowerCase() === 'flagged' || user?.user_status?.toLowerCase() === 'blocked') && (
                             <button
@@ -432,7 +440,7 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
                               Active
                             </button>
                           )}
-                          
+
                           {/* Show Flag option if user is not already flagged */}
                           {user?.user_status?.toLowerCase() !== 'flagged' && (
                             <button
@@ -449,7 +457,7 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
                               Flag
                             </button>
                           )}
-                          
+
                           {/* Show Block option if user is not already blocked */}
                           {user?.user_status?.toLowerCase() !== 'blocked' && (
                             <button
@@ -466,11 +474,10 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
                               Block
                             </button>
                           )}
-                          
+
                           <button
                             onClick={() => {
                               setActiveDropdown(null);
-                              handleUserSectionAction('delete', user?.id, user?.email);
                               setUserToDelete({ username: user?.username || '', email: user?.email || '' });
                               setShowDeleteModal(true);
                             }}

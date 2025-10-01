@@ -122,10 +122,10 @@ export const addOrganiserBySuperUserApi = async (user_id: string, school_id: str
     }
 }
 
-export const assignOrganiserToSchoolApi = async (organiserId: string, schoolId: string) => {
+export const assignOrganiserToSchoolApi = async (userId: string) => {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.post(`${backendUrl}/api/v1/organisers/assign-organiser-to-school`, { organiserId, schoolId }, {
+        const response = await axios.post(`${backendUrl}/api/v1/organisers/assign-organiser-to-school`, { userId }, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
