@@ -23,6 +23,7 @@ const SchoolsPage: React.FC<SchoolsPageProps> = ({ type = 'schools', selectedLoc
     if (type === 'localities') {
       // if (!allLocalities || allLocalities.length === 0) {
       if (allSchools && allSchools.length > 0) {
+        console.log(allSchools)
         const localityMap = new Map();
         allSchools.forEach((school: any) => {
           const localityName = school?.locality?.name || 'Unknown';

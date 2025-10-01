@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createLeadershipRoleApi, updateLeadershipRoleApi, deleteLeadershipRoleApi } from '../../apis/LeadershipRoles';
 import { showToast } from '../../utils/toast';
 import saveIcon from '../../assets/save_icon.svg';
+import ConfirmationModal from '../ui/ConfirmationModal';
 
 interface LeadershipRole {
   id: string;
@@ -24,6 +25,8 @@ const LeadershipRolesTable: React.FC<LeadershipRolesTableProps> = ({ leadershipR
   const [editRole, setEditRole] = useState({ abbr: '', leadership_role: '' });
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [filteredRoles, setFilteredRoles] = useState<LeadershipRole[]>([]);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [roleToDelete, setRoleToDelete] = useState<string | null>(null);
 
   // Filter roles based on search term
   useEffect(() => {
@@ -84,9 +87,17 @@ const LeadershipRolesTable: React.FC<LeadershipRolesTableProps> = ({ leadershipR
     }
   };
 
-  const handleDelete = async (roleId: string) => {
+  const handleDeleteClick = (roleId: string) => {
+    setRoleToDelete(roleId);
+    setShowDeleteModal(true);
+    setShowContextMenu(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!roleToDelete) return;
+    
     try {
-      const response = await deleteLeadershipRoleApi(roleId);
+      const response = await deleteLeadershipRoleApi(roleToDelete);
       if (response.success) {
         showToast.success('Leadership role deleted successfully');
       } else {
@@ -95,8 +106,16 @@ const LeadershipRolesTable: React.FC<LeadershipRolesTableProps> = ({ leadershipR
       onRefresh();
     } catch (error: any) {
       showToast.error(error.message || 'Failed to delete leadership role');
+    } finally {
+      setShowDeleteModal(false);
+      setRoleToDelete(null);
     }
-  }
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteModal(false);
+    setRoleToDelete(null);
+  };
 
   const handleEdit = (role: LeadershipRole) => {
     console.log('Edit button clicked for role:', role);
@@ -279,7 +298,7 @@ const LeadershipRolesTable: React.FC<LeadershipRolesTableProps> = ({ leadershipR
                           e.preventDefault();
                           e.stopPropagation();
                           console.log('Delete button clicked');
-                          handleDelete(role.id);
+                          handleDeleteClick(role.id);
                         }}
                         className="block w-full text-left px-4 py-2 text-sm transition-colors duration-200 text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900"
                       >
@@ -373,6 +392,18 @@ const LeadershipRolesTable: React.FC<LeadershipRolesTableProps> = ({ leadershipR
           Save
         </button>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Leadership Role"
+        message="Are you sure you want to delete this leadership role? This action cannot be undone."
+        confirmText="Yes"
+        cancelText="No"
+        confirmButtonColor="text-red-600"
+      />
     </div>
   );
 };

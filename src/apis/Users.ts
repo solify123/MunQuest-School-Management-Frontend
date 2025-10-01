@@ -377,3 +377,31 @@ export const updateStudentProfileCustomSchoolNameApi = async (
         throw new Error(error.response.data.message);
     }
 }
+
+export const sendSuperUserInviteApi = async (userame: string, email: string) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.patch(`${backendUrl}/api/v1/users/send-superuser-invite`, { userame, email }, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+}
+
+export const removeSuperUserInviteApi = async (username: string, email: string) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.patch(`${backendUrl}/api/v1/users/remove-superuser-invite`, { username, email }, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+}

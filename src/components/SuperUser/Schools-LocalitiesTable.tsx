@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useApp } from '../../contexts/AppContext';
 import { ConfirmationModal } from '../ui';
-import { updateAreaStatusApi, deleteAreaApi, updateAreaApi } from '../../apis/areas';
+import { updateAreaStatusApi, deleteAreaApi } from '../../apis/areas';
 import { mergeLocalitiesApi } from '../../apis/localities';
 import { deleteLocalityApi } from '../../apis/localities';
 interface Locality {
@@ -56,7 +56,6 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
     const [showMergeMessage, setShowMergeMessage] = useState<string>('');
     
     const { refreshAreasData, refreshLocalitiesData, refreshSchoolsData } = useApp();
-    
     // Handle clicking outside dropdown to close it
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -91,7 +90,6 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
         if (editingLocalityId) {
             document.addEventListener('mousedown', handleClickOutsideEdit);
         }
-
         return () => {
             document.removeEventListener('mousedown', handleClickOutsideEdit);
         };
@@ -274,38 +272,6 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
         });
         setEditValidationErrors({});
         setActiveDropdown(null);
-    };
-
-    const handleSaveEdit = async () => {
-        try {
-            if (!editingRowData?.areaName.trim()) {
-                setEditValidationErrors({ areaName: 'Area name is required' });
-                return;
-            }
-
-            const response = await updateAreaApi(
-                editingRowData?.id,
-                editingRowData?.areaName.trim(),
-                editingRowData?.areaCode.trim()
-            );
-            
-            if (response.success) {
-                toast.success('Area updated successfully');
-                setEditingLocalityId(null);
-                setEditingRowData(null);
-                setEditValidationErrors({});
-                await Promise.all([
-                    refreshAreasData(),
-                    refreshLocalitiesData(),
-                    refreshSchoolsData()
-                ]);
-            } else {
-                toast.error(response.message || 'Failed to update area');
-            }
-        } catch (error: any) {
-            console.error('Error updating area:', error);
-            toast.error(error.message || 'Failed to update area');
-        }
     };
 
     const handleCancelEdit = () => {
@@ -579,7 +545,7 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
 
                             {/* Status */}
                             <div className="w-24 bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
-                                {updatingLocalityId === (locality?.id || locality?.area?.id) ? (
+                                {updatingLocalityId === (locality?.area?.id || locality?.id) ? (
                                     <div className="flex items-center space-x-2">
                                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
                                         <span className="text-gray-500">Updating</span>
@@ -599,13 +565,13 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
                                     <div className="flex items-center space-x-1">
                                         <input
                                             type="checkbox"
-                                            checked={selectedLocalities.includes(locality?.id || locality?.area?.id)}
-                                            onChange={() => handleLocalitySelection(locality?.id || locality?.area?.id)}
-                                            disabled={lockedRows.includes(locality?.id || locality?.area?.id)}
+                                            checked={selectedLocalities.includes(locality?.area?.id || locality?.id)}
+                                            onChange={() => handleLocalitySelection(locality?.area?.id || locality?.id)}
+                                            disabled={lockedRows.includes(locality?.area?.id || locality?.id)}
                                             className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                                            title={lockedRows.includes(locality?.id || locality?.area?.id) ? 'Unlock to merge' : 'Select for merge'}
+                                            title={lockedRows.includes(locality?.area?.id || locality?.id) ? 'Unlock to merge' : 'Select for merge'}
                                         />
-                                        {primaryLocalityId === (locality?.id || locality?.area?.id) && (
+                                        {primaryLocalityId === (locality?.area?.id || locality?.id) && (
                                             <svg className="w-3 h-3 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
                                                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                                             </svg>
@@ -620,15 +586,6 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
                                     {isEditing ? (
                                         <div className="flex space-x-1 edit-buttons-container">
                                             <button
-                                                onClick={handleSaveEdit}
-                                                className="text-green-600 hover:text-green-800 focus:outline-none"
-                                                title="Save changes"
-                                            >
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                </svg>
-                                            </button>
-                                            <button
                                                 onClick={handleCancelEdit}
                                                 className="text-red-600 hover:text-red-800 focus:outline-none"
                                                 title="Cancel editing"
@@ -640,7 +597,7 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
                                         </div>
                                     ) : (
                                         <button
-                                            onClick={() => handleDropdownToggle(locality?.id || locality?.area?.id || '')}
+                                            onClick={() => handleDropdownToggle(locality?.area?.id || locality?.id || '')}
                                             className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                                         >
                                             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -649,14 +606,14 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
                                         </button>
                                     )}
 
-                                    {activeDropdown === (locality?.id || locality?.area?.id) && !isEditing && (
+                                    {activeDropdown === (locality?.area?.id || locality?.id) && !isEditing && (
                                         <div className="absolute top-full right-0 mt-1 w-48 bg-white rounded-md shadow-lg z-[9999] border border-gray-300 dropdown-container">
                                             <div className="py-1">
                                                 {/* Main management options - always show for all statuses */}
                                                 <button
                                                     onClick={() => handleEditRow(locality)}
-                                                    disabled={updatingLocalityId === (locality?.id || locality?.area?.id)}
-                                                    className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.id || locality?.area?.id)
+                                                    disabled={updatingLocalityId === (locality?.area?.id || locality?.id)}
+                                                    className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.area?.id || locality?.id)
                                                         ? 'text-gray-400 cursor-not-allowed'
                                                         : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
                                                         }`}
@@ -665,8 +622,8 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
                                                 </button>
 
                                                 <button
-                                                    disabled={updatingLocalityId === (locality?.id || locality?.area?.id)}
-                                                    className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.id || locality?.area?.id)
+                                                    disabled={updatingLocalityId === (locality?.area?.id || locality?.id)}
+                                                    className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.area?.id || locality?.id)
                                                         ? 'text-gray-400 cursor-not-allowed'
                                                         : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
                                                         }`}
@@ -675,8 +632,8 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
                                                 </button>
 
                                                 <button
-                                                    disabled={updatingLocalityId === (locality?.id || locality?.area?.id)}
-                                                    className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.id || locality?.area?.id)
+                                                    disabled={updatingLocalityId === (locality?.area?.id || locality?.id)}
+                                                    className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.area?.id || locality?.id)
                                                         ? 'text-gray-400 cursor-not-allowed'
                                                         : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
                                                         }`}
@@ -689,8 +646,8 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
                                                         setActiveDropdown(null);
                                                         handleMergeModeToggle();
                                                     }}
-                                                    disabled={updatingLocalityId === (locality?.id || locality?.area?.id)}
-                                                    className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.id || locality?.area?.id)
+                                                    disabled={updatingLocalityId === (locality?.area?.id || locality?.id)}
+                                                    className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.area?.id || locality?.id)
                                                         ? 'text-gray-400 cursor-not-allowed'
                                                         : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
                                                         }`}
@@ -703,8 +660,8 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
                                                 {locality?.status?.toLowerCase() !== 'active' && (
                                                     <button
                                                         onClick={() => handleAction('active', locality?.id || '', locality?.area?.id || '')}
-                                                        disabled={updatingLocalityId === (locality?.id || locality?.area?.id)}
-                                                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.id || locality?.area?.id)
+                                                        disabled={updatingLocalityId === (locality?.area?.id || locality?.id)}
+                                                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.area?.id || locality?.id)
                                                             ? 'text-gray-400 cursor-not-allowed'
                                                             : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
                                                             }`}
@@ -717,8 +674,8 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
                                                 {locality?.status?.toLowerCase() !== 'flagged' && (
                                                     <button
                                                         onClick={() => handleAction('flagged', locality?.id || '', locality?.area?.id || '')}
-                                                        disabled={updatingLocalityId === (locality?.id || locality?.area?.id)}
-                                                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.id || locality?.area?.id)
+                                                        disabled={updatingLocalityId === (locality?.area?.id || locality?.id)}
+                                                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.area?.id || locality?.id)
                                                             ? 'text-gray-400 cursor-not-allowed'
                                                             : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
                                                             }`}
@@ -731,8 +688,8 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
                                                 {locality?.status?.toLowerCase() !== 'blocked' && (
                                                     <button
                                                         onClick={() => handleAction('blocked', locality?.id || '', locality?.area?.id || '')}
-                                                        disabled={updatingLocalityId === (locality?.id || locality?.area?.id)}
-                                                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.id || locality?.area?.id)
+                                                        disabled={updatingLocalityId === (locality?.area?.id || locality?.id)}
+                                                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.area?.id || locality?.id)
                                                             ? 'text-gray-400 cursor-not-allowed'
                                                             : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
                                                             }`}
@@ -747,8 +704,8 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
                                                         setLocalityToDelete(locality?.area?.id || locality?.id || '');
                                                         setShowDeleteModal(true);
                                                     }}
-                                                    disabled={updatingLocalityId === (locality?.id || locality?.area?.id)}
-                                                    className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.id || locality?.area?.id)
+                                                    disabled={updatingLocalityId === (locality?.area?.id || locality?.id)}
+                                                    className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.area?.id || locality?.id)
                                                         ? 'text-gray-400 cursor-not-allowed'
                                                         : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
                                                         }`}

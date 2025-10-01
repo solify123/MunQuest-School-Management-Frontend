@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 
 // Import icons
 import EditIcon from '../assets/edit_icon.svg';
-import { deleteAccountApi, getUserByIdApi, updateStudentProfileApi, updateTeacherProfileApi, uploadAvatarApi } from '../apis/Users';
+import { deleteAccountApi, getUserByIdApi, updateStudentProfileApi, updateTeacherProfileApi, updateStudentProfileAndCustomLocalityApi, updateTeacherProfileAndCustomLocalityApi, uploadAvatarApi } from '../apis/Users';
 import { updatePassword } from '../apis/SupabaseAuth';
 import { generateUsername } from '../utils/usernameGenerator';
 import { Avatar, LoadingSpinner, Header, ConfirmationModal } from '../components/ui';
@@ -70,10 +70,13 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
     loadData();
   }, []); // Empty dependency array to run only once on mount
 
-  const localityOptions = allLocalities.map((locality) => ({
-    value: locality.code,
-    label: locality.name
-  }));
+  const localityOptions = [
+    ...allLocalities.map((locality) => ({
+      value: locality.code,
+      label: locality.name
+    })),
+    { value: 'Other', label: 'Unlisted / Not in the list / Other' }
+  ];
 
   useEffect(() => {
     const getUserById = async () => {
@@ -156,6 +159,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
   const [filteredSchools, setFilteredSchools] = useState<any[]>([]);
   const [showSchoolDropdown, setShowSchoolDropdown] = useState(false);
   const [schoolSearchTerm, setSchoolSearchTerm] = useState<string>('');
+  const [customLocality, setCustomLocality] = useState<string>('');
+  const [customSchool, setCustomSchool] = useState<string>('');
 
   const [errors] = useState<Record<string, string>>({});
 
@@ -473,8 +478,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
 
   // Load school data when locality changes
   useEffect(() => {
-    if (locality && allSchools.length > 0) {
-      const schoolsInLocality = allSchools.filter(school => school.locality.name === locality);
+    if (locality && locality !== 'Other' && allSchools.length > 0) {
+      const schoolsInLocality = allSchools.filter(school => school.locality?.name === locality);
       setSchools(schoolsInLocality);
       setFilteredSchools(schoolsInLocality);
     } else {
@@ -491,10 +496,22 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
       const filtered = schools.filter(school =>
         school.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         school.code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        school.locality.name?.toLowerCase().includes(searchTerm.toLowerCase())
+        school.locality?.name?.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredSchools(filtered);
     }
+  };
+
+  const handleCustomLocalityChange = (value: string) => {
+    setCustomLocality(value);
+    // Don't call handleFieldChange here as it will overwrite the locality with the custom value
+    // The custom value will be used in the save function
+  };
+
+  const handleCustomSchoolChange = (value: string) => {
+    setCustomSchool(value);
+    // Don't call handleFieldChange here as it will overwrite the school name with the custom value
+    // The custom value will be used in the save function
   };
 
   const renderGenderField = (label: string, field: keyof ProfileData, value: any) => {
@@ -593,7 +610,20 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
     })();
 
     const handleLocalityChange = (selectedValue: any) => {
-      handleFieldChange(field, selectedValue.label);
+      if (selectedValue.value === 'Other') {
+        handleFieldChange(field, 'Other');
+        // Clear school selection when switching to Other
+        setSchool_id('');
+        setSchoolName('');
+        setCustomSchool('');
+        // Clear custom locality when switching to Other
+        setCustomLocality('');
+      } else {
+        handleFieldChange(field, selectedValue.label);
+        // Clear custom locality when selecting a predefined locality
+        setCustomLocality('');
+        setCustomSchool('');
+      }
       // School filtering is now handled by useEffect when locality changes
     };
     return (
@@ -606,7 +636,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
             </span>
           )}
         </label>
-        <div className="relative" ref={dropdownRef}>
+        <div className="relative">
           <button
             type="button"
             onClick={() => isEditingThisField && _setIsOpen(false)}
@@ -652,6 +682,26 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
             </div>
           )}
         </div>
+
+        {/* Custom Locality Input - appears when "Other" is selected */}
+        {isEditingThisField && value === 'Other' && (
+          <div className="mt-4">
+            <label className="block text-base font-bold text-black mb-2">
+              Enter Custom Locality
+            </label>
+            <input
+              type="text"
+              name="customLocality"
+              placeholder="Enter your locality name..."
+              value={customLocality}
+              onChange={(e) => handleCustomLocalityChange(e.target.value)}
+              className="w-[400px] px-4 py-4 border rounded-lg text-sm bg-white focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 border-gray-300"
+            />
+            {!customLocality.trim() && (
+              <p className="mt-1 text-xs text-red-600">Custom locality is required when "Other" is selected</p>
+            )}
+          </div>
+        )}
       </div>
     );
   };
@@ -682,17 +732,17 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
         <label className="block text-base font-bold text-black mb-2">
           {label}
         </label>
-        <div className="relative" ref={dropdownRef}>
+        <div className="relative">
           <input
             type="text"
             name="schoolName"
-            placeholder={locality ? "Search by school name or code..." : "Please select a city first"}
+            placeholder={locality === 'Other' ? "School selection not available for custom locality" : locality ? "Search by school name or code..." : "Please select a city first"}
             value={displayValue}
             onChange={(e) => handleSchoolSearchChange(e.target.value)}
             onFocus={() => isEditingThisField && setShowSchoolDropdown(false)}
-            disabled={!isEditingThisField || !locality}
+            disabled={!isEditingThisField || !locality || locality === 'Other'}
             className={`w-[400px] px-4 py-4 pl-12 pr-12 border rounded-lg text-sm bg-white placeholder-gray-500 focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${isEditingThisField ? 'border-[#1E395D]' : 'border-gray-300 bg-gray-50'
-              } ${!locality ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+              } ${!locality || locality === 'Other' ? 'bg-gray-100 cursor-not-allowed' : ''}`}
           />
           <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -710,7 +760,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
           )}
 
           {/* School Dropdown */}
-          {!showSchoolDropdown && locality && filteredSchools.length > 0 && isEditingThisField && (
+          {!showSchoolDropdown && locality && locality !== 'Other' && filteredSchools.length > 0 && isEditingThisField && (
             <div className="absolute top-full left-0 z-10 w-[400px] mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
               {filteredSchools.map((school, index) => (
                 <div
@@ -763,6 +813,26 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
             </div>
           )}
         </div>
+
+        {/* Custom School Input - appears when locality is "Other" */}
+        {isEditingThisField && locality === 'Other' && (
+          <div className="mt-4">
+            <label className="block text-base font-bold text-black mb-2">
+              Enter School Name
+            </label>
+            <input
+              type="text"
+              name="customSchool"
+              placeholder="Enter your school name..."
+              value={customSchool}
+              onChange={(e) => handleCustomSchoolChange(e.target.value)}
+              className="w-[400px] px-4 py-4 border rounded-lg text-sm bg-white focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 border-gray-300"
+            />
+            {!customSchool.trim() && (
+              <p className="mt-1 text-xs text-red-600">Custom school name is required when "Other" locality is selected</p>
+            )}
+          </div>
+        )}
       </div>
     );
   };
@@ -803,7 +873,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
         <label className="block text-base font-bold text-black mb-2">
           {label}
         </label>
-        <div className="relative" ref={dropdownRef}>
+        <div className="relative">
           <div className="w-[400px] flex border rounded-lg bg-white">
             {/* Country Code Selector */}
             <div
@@ -1049,14 +1119,67 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
   };
 
   const profileDataHandlerEdit = async () => {
+    console.log(userType);
     try {
+      // Validate custom fields when "Other" is selected
+      if (locality === 'Other') {
+        if (!customLocality.trim()) {
+          toast.error('Please enter a custom locality name');
+          return;
+        }
+        if (!customSchool.trim()) {
+          toast.error('Please enter a custom school name');
+          return;
+        }
+      }
+
       // Get avatar from localStorage, if it exists
       const storedAvatar = localStorage.getItem('userAvatar');
       const avatarToSend = storedAvatar || undefined;
 
-      const response = userType === 'student' ? await updateStudentProfileApi(fullname, username, birthday, gender, school_id, grade, yearOfWorkExperience, phone, email, avatarToSend, phone_e164) : await updateTeacherProfileApi(fullname, username, birthday, gender, school_id, yearOfWorkExperience, phone, email, avatarToSend, phone_e164);
+      let response;
+      
+      if (locality === 'Other') {
+        // Use custom locality and school APIs when "Other" is selected
+        if (userType === 'student') {
+          response = await updateStudentProfileAndCustomLocalityApi(
+            fullname, 
+            username, 
+            birthday, 
+            gender, 
+            customLocality, 
+            customSchool, 
+            grade, 
+            phone, 
+            phone_e164
+          );
+        } else {
+          response = await updateTeacherProfileAndCustomLocalityApi(
+            fullname, 
+            username, 
+            birthday, 
+            gender, 
+            customLocality, 
+            customSchool, 
+            yearOfWorkExperience, 
+            phone, 
+            email, 
+            avatarToSend, 
+            phone_e164
+          );
+        }
+      } else {
+        // Use regular update APIs for predefined localities
+        response = userType === 'student' 
+          ? await updateStudentProfileApi(fullname, username, birthday, gender, school_id, grade, yearOfWorkExperience, phone, email, avatarToSend, phone_e164) 
+          : await updateTeacherProfileApi(fullname, username, birthday, gender, school_id, yearOfWorkExperience, phone, email, avatarToSend, phone_e164);
+      }
+
       if (response.success) {
         toast.success(response.message);
+        // Clear custom values after successful save
+        setCustomLocality('');
+        setCustomSchool('');
       } else {
         toast.error('Failed to update profile: ' + response.message);
       }

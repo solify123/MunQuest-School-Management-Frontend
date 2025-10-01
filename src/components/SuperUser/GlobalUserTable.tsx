@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { useApp } from '../../contexts/AppContext';
-import { deleteUserBySuperUserApi, updateUserStatusApi } from '../../apis/Users';
+import { removeSuperUserInviteApi, sendSuperUserInviteApi, updateUserStatusApi } from '../../apis/Users';
 import { ConfirmationModal } from '../ui';
 import OrganiserIcon from '../../assets/organiser_icon.svg';
 
@@ -20,17 +20,20 @@ interface GlobalUser {
 
 interface GlobalUserTableProps {
   users: GlobalUser[];
-  onAction: (action: string, userId: string) => void;
+  onAction: (action: string, username: string, email: string) => void;
   userType?: 'students' | 'teachers';
 }
 
-const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, userType = 'students' }) => {
+const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction }) => {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
-  const [userToDelete, setUserToDelete] = useState<string | null>(null);
+  const [userToDelete, setUserToDelete] = useState<{ username: string, email: string } | null>(null);
   const [filteredUsers, setFilteredUsers] = useState<any[]>([]);
+  const [showInviteForm, setShowInviteForm] = useState<boolean>(false);
+  const [inviteName, setInviteName] = useState<string>('');
+  const [inviteEmail, setInviteEmail] = useState<string>('');
   const { refreshUserData, allOrganisers } = useApp();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -88,7 +91,7 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, user
   // Delete confirmation handlers
   const handleDeleteConfirm = () => {
     if (userToDelete) {
-      handleAction('delete', userToDelete);
+      handleAction('delete', userToDelete.username, userToDelete.email);
       setShowDeleteModal(false);
       setUserToDelete(null);
     }
@@ -99,11 +102,34 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, user
     setUserToDelete(null);
   };
 
-  const handleAction = async (action: string, userId: string) => {
+  const handleSendInvite = async () => {
+    if (!inviteName.trim() || !inviteEmail.trim()) {
+      toast.error('Please fill in both name and email fields');
+      return;
+    }
+  
+    try {
+      const response = await sendSuperUserInviteApi(inviteName, inviteEmail);
+      if (response.success) {
+        toast.success(response.message);
+        await refreshUserData();
+      } else {
+        toast.error(response.message);
+      }
+      setInviteName('');
+      setInviteEmail('');
+      setShowInviteForm(false);
+    } catch (error) {
+      console.error('Error sending invite:', error);
+      toast.error('Failed to send invitation');
+    }
+  };
+
+  const handleAction = async (action: string, username: string, email: string) => {
     setActiveDropdown(null); // Close dropdown immediately when action is triggered
     try {
       if (action === 'delete') {
-        const response = await deleteUserBySuperUserApi(userId);
+        const response = await removeSuperUserInviteApi(username, email);
         if (response.success) {
           toast.success(response.message);
           await refreshUserData();
@@ -111,8 +137,8 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, user
           toast.error(response.message);
         }
       } else {
-        setUpdatingUserId(userId);
-        const response = await updateUserStatusApi(userId, action);
+        setUpdatingUserId(username);
+        const response = await updateUserStatusApi(username, action);
         if (response.success) {
           toast.success(response.message);
           await refreshUserData();
@@ -121,7 +147,7 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, user
         }
       }
       await refreshUserData();
-      onAction(action, userId);
+      onAction(action, username, email);
     } catch (error) {
       console.error('Error updating user:', error);
       toast.error('Failed to update user');
@@ -130,22 +156,6 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, user
     }
   };
 
-  const getStatusColor = (status: string | undefined) => {
-    if (!status) return 'text-gray-600';
-
-    switch (status.toLowerCase()) {
-      case 'actived':
-        return 'text-green-600';
-      case 'active':
-        return 'text-green-600';
-      case 'flagged':
-        return 'text-yellow-500';
-      case 'blocked':
-        return 'text-red-600';
-      default:
-        return 'text-gray-600';
-    }
-  };
 
   return (
     <div>
@@ -162,19 +172,26 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, user
 
       {/* Header Row */}
       <div className="grid grid-cols-12 gap-2 mb-2">
-        {['UserID', 'Username', 'Name', userType === 'students' ? 'Academic Level' : 'Teaching Experience', 'School', 'MUN Experience', 'Global Role', 'Date Created', 'Last Updated', 'Status', ' '].map((header, index) => (
-          header === ' ' ? (
-            <div key={header}>
+        {[
+          { label: 'UserID', span: 'col-span-1' },
+          { label: 'Username', span: 'col-span-1' },
+          { label: 'Name', span: 'col-span-2' },
+          { label: 'Email', span: 'col-span-3' },
+          { label: 'Global Role', span: 'col-span-1' },
+          { label: ' ', span: 'col-span-1' }
+        ].map((header, index) => (
+          header.label === ' ' ? (
+            <div key={header.label} className={header.span}>
             </div>
           ) : (
             <div
-              key={header}
-              className={`px-3 py-2 text-xs font-medium text-gray-900 uppercase tracking-wider rounded-md ${index < 4
+              key={header.label}
+              className={`${header.span} px-3 py-2 text-xs font-medium text-gray-900 uppercase tracking-wider rounded-md ${index < 4
                 ? 'bg-[#C6DAF4] border border-[#4A5F7A] flex items-center justify-between'
                 : 'bg-[#C6DAF4] border border-[#4A5F7A] flex items-center'
                 }`}
             >
-              <span>{header}</span>
+              <span>{header.label}</span>
               {index < 4 && (
                 <svg className="w-3 h-3 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -196,71 +213,32 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, user
         filteredUsers.map((user: any) => (
           <div key={user?.id || Math.random()} className="grid grid-cols-12 gap-2 mb-2">
             {/* User ID */}
-            <div className="bg-white px-3 py-2 text-sm font-medium text-gray-900 rounded-md border border-gray-200">
+            <div className="col-span-1 bg-white px-3 py-2 text-sm font-medium text-gray-900 rounded-md border border-gray-200">
               {user?.id?.split('-')[0] || 'N/A'}
             </div>
 
             {/* Username */}
-            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+            <div className="col-span-1 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
               {user?.username || 'N/A'}
             </div>
 
             {/* Name */}
-            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+            <div className="col-span-2 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
               {user?.fullname || 'N/A'}
             </div>
-
-            {/* Academic Level/Teaching Experience */}
-            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-              {userType === 'students'
-                ? (user?.grade || 'N/A')
-                : (user?.years_of_experience || 'N/A')
-              }
+            {/* Email */}
+            <div className="col-span-3 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+              {user?.email || 'N/A'}
             </div>
 
-            {/* School */}
-            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-              {user?.school?.name || user?.school || 'N/A'}
-            </div>
-
-            {/* MUN Experience */}
-            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-              {user?.mun_experience || 'N/A'}
-            </div>
 
             {/* Global Role */}
-            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+            <div className="col-span-1 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
               {user?.global_role || 'N/A'}
             </div>
 
-            {/* Date Created */}
-            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-              {user?.created_at?.split('T')[0] || 'N/A'}
-            </div>
-
-            {/* Last Updated */}
-            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-              {user?.updated_at?.split('T')[0] || 'N/A'}
-            </div>
-
-            {/* Status */}
-            <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
-              {updatingUserId === user?.id ? (
-                <div className="flex items-center space-x-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
-                  <span className="text-gray-500">Updating</span>
-                </div>
-              ) : (
-                <div className="flex items-center justify-between">
-                  <span className={`font-medium ${getStatusColor(user.user_status)}`}>
-                    {user.user_status}
-                  </span>
-                </div>
-              )}
-            </div>
-
             {/* Actions */}
-            <div className="px-3 py-2 text-sm font-medium relative" >
+            <div className="col-span-1 px-3 py-2 text-sm font-medium relative" >
               <div className="relative flex items-center justify-left">
                 {isUserOrganiser(user?.id) && (
                   <div className="ml-2">
@@ -282,45 +260,12 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, user
                 </button>
 
                 {activeDropdown === user?.id && (
-                  <div className="absolute top-full right-0 mt-1 w-48 bg-white rounded-md shadow-lg z-50 border-2">
+                  <div ref={dropdownRef} className="absolute top-full right-0 mt-1 w-48 bg-white rounded-md shadow-lg z-50 border-2">
                     <div className="py-1">
-                      <button
-                        onClick={() => handleAction('actived', user?.id || '')}
-                        disabled={updatingUserId === user?.id}
-                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingUserId === user?.id
-                          ? 'text-gray-400 cursor-not-allowed'
-                          : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
-                          }`}
-                      >
-                        Activate
-                      </button>
-
-                      <button
-                        onClick={() => handleAction('flagged', user?.id || '')}
-                        disabled={updatingUserId === user?.id}
-                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingUserId === user?.id
-                          ? 'text-gray-400 cursor-not-allowed'
-                          : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
-                          }`}
-                      >
-                        Flag
-                      </button>
-
-                      <button
-                        onClick={() => handleAction('blocked', user?.id || '')}
-                        disabled={updatingUserId === user?.id}
-                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingUserId === user?.id
-                          ? 'text-gray-400 cursor-not-allowed'
-                          : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
-                          }`}
-                      >
-                        Block
-                      </button>
-
                       <button
                         onClick={() => {
                           setActiveDropdown(null); // Close dropdown when delete modal is triggered
-                          setUserToDelete(user?.id || '');
+                          setUserToDelete({ username: user?.username || '', email: user?.email || '' });
                           setShowDeleteModal(true);
                         }}
                         disabled={updatingUserId === user?.id}
@@ -329,7 +274,7 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, user
                           : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
                           }`}
                       >
-                        Delete
+                        Remove Super User
                       </button>
                     </div>
                   </div>
@@ -339,6 +284,62 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, user
           </div>
         ))
       ) : null}
+
+      {/* Invite Superuser Section */}
+      <div className="mt-6">
+        <button
+          onClick={() => setShowInviteForm(!showInviteForm)}
+          className="px-6 py-3 bg-[#C4A35A] hover:bg-[#B8973F] text-white font-medium rounded-[20px] transition-colors duration-200 shadow-md"
+        >
+          Invite a Superuser
+        </button>
+
+        {/* Invite Form */}
+        {showInviteForm && (
+          <div className="mt-6 p-6 max-w-md flex items-end justify-between">
+            <div>
+              {/* Name Field */}
+              <div className="mb-4">
+                <label htmlFor="invite-name" className="block text-sm font-semibold text-gray-900 mb-2">
+                  Name
+                </label>
+                <input
+                  id="invite-name"
+                  type="text"
+                  value={inviteName}
+                  onChange={(e) => setInviteName(e.target.value)}
+                  placeholder="E.g. Ivy Grace Turner"
+                  className="w-full px-4 py-2 border border-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-[#C4A35A] focus:border-transparent text-gray-700"
+                />
+              </div>
+
+              {/* Email Field */}
+              <div>
+                <label htmlFor="invite-email" className="block text-sm font-semibold text-gray-900 mb-2">
+                  Email
+                </label>
+                <input
+                  id="invite-email"
+                  type="email"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  placeholder="E.g. ivy.grace@example.com"
+                  className="w-full px-4 py-2 border border-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-[#C4A35A] focus:border-transparent text-gray-700"
+                />
+              </div>
+            </div>
+            <div>
+              {/* Send Invite Button */}
+              <button
+                onClick={handleSendInvite}
+                className="w-[150px] px-6 py-3 bg-[#7FB539] hover:bg-[#6FA329] text-white font-semibold rounded-[20px]"
+              >
+                Send Invite
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Delete Confirmation Modal */}
       <ConfirmationModal

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createCommitteeApi, updateCommitteeApi, deleteCommitteeApi } from '../../apis/Committees';
 import { showToast } from '../../utils/toast';
 import saveIcon from '../../assets/save_icon.svg';
+import ConfirmationModal from '../ui/ConfirmationModal';
 
 interface CommitteesTableProps {
   committees: any[];
@@ -17,6 +18,8 @@ const CommitteesTable: React.FC<CommitteesTableProps> = ({ committees, onRefresh
   const [editCommittee, setEditCommittee] = useState({ abbr: '', committee: '' });
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [filteredCommittees, setFilteredCommittees] = useState<any[]>([]);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [committeeToDelete, setCommitteeToDelete] = useState<string | null>(null);
   
   // Filter committees based on committee type and search term
   useEffect(() => {
@@ -82,9 +85,17 @@ const CommitteesTable: React.FC<CommitteesTableProps> = ({ committees, onRefresh
     }
   };
 
-  const handleDelete = async (committeeId: string) => {
+  const handleDeleteClick = (committeeId: string) => {
+    setCommitteeToDelete(committeeId);
+    setShowDeleteModal(true);
+    setShowContextMenu(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!committeeToDelete) return;
+
     try {
-      const response = await deleteCommitteeApi(committeeId);
+      const response = await deleteCommitteeApi(committeeToDelete);
       if (response.success) {
         showToast.success('Committee deleted successfully');
       } else {
@@ -93,7 +104,15 @@ const CommitteesTable: React.FC<CommitteesTableProps> = ({ committees, onRefresh
       onRefresh();
     } catch (error: any) {
       showToast.error(error.message || 'Failed to delete committee');
+    } finally {
+      setShowDeleteModal(false);
+      setCommitteeToDelete(null);
     }
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteModal(false);
+    setCommitteeToDelete(null);
   };
 
   const handleEdit = (committee: any) => {
@@ -277,7 +296,7 @@ const CommitteesTable: React.FC<CommitteesTableProps> = ({ committees, onRefresh
                           e.preventDefault();
                           e.stopPropagation();
                           console.log('Delete button clicked');
-                          handleDelete(committee.id);
+                          handleDeleteClick(committee.id);
                         }}
                         className="block w-full text-left px-4 py-2 text-sm transition-colors duration-200 text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900"
                       >
@@ -371,6 +390,18 @@ const CommitteesTable: React.FC<CommitteesTableProps> = ({ committees, onRefresh
           Save
         </button>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Committee"
+        message="Are you sure you want to delete this committee? This action cannot be undone."
+        confirmText="Yes"
+        cancelText="No"
+        confirmButtonColor="text-red-600"
+      />
     </div>
   );
 };
