@@ -10,6 +10,20 @@ export const getDefaultAvatar = (userType: string): string => {
   return userType === 'student' ? StudentAvatar : TeacherAvatar;
 };
 
+export const getUserType = (): string => {
+  try {
+    const userType = localStorage.getItem('userRole');
+    return userType || 'student'; // Default fallback
+  } catch (error) {
+    console.error('Error getting user type:', error);
+    return 'student'; // Default fallback
+  }
+};
+
+export const clearUserAvatar = (): void => {
+  localStorage.removeItem('userAvatar');
+};
+
 export const getUserAvatar = async (): Promise<string> => {
   try {
     // First try to get avatar from localStorage
@@ -40,22 +54,4 @@ export const getUserAvatar = async (): Promise<string> => {
     // Fallback to student avatar
     return StudentAvatar;
   }
-};
-
-export const getUserType = (): string => {
-  try {
-    const token = localStorage.getItem('token');
-    if (token) {
-      const decodedToken = jwtDecode<CustomJwtPayload>(token);
-      return decodedToken.role;
-    }
-    return 'student'; // Default fallback
-  } catch (error) {
-    console.error('Error getting user type:', error);
-    return 'student'; // Default fallback
-  }
-};
-
-export const clearUserAvatar = (): void => {
-  localStorage.removeItem('userAvatar');
 };

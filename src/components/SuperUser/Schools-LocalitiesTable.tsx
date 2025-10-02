@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useApp } from '../../contexts/AppContext';
 import { ConfirmationModal } from '../ui';
-import { updateAreaStatusApi, deleteAreaApi } from '../../apis/areas';
-import { mergeLocalitiesApi } from '../../apis/localities';
-import { deleteLocalityApi } from '../../apis/localities';
+import { updateAreaStatusApi, deleteAreaApi } from '../../apis/Areas';
+import { mergeLocalitiesApi } from '../../apis/Localities';
+import { deleteLocalityApi } from '../../apis/Localities';
 interface Locality {
     id: string;
     code: string;

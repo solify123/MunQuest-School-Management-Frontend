@@ -54,7 +54,7 @@ interface AppContextType {
   allAreas: any[];
 }
 
-// Create the context
+// Create the context with a default value to prevent undefined errors
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 // Provider component
@@ -280,6 +280,7 @@ export const useApp = (): AppContextType => {
   const context = useContext(AppContext);
   if (context === undefined) {
     console.error('useApp - Context is undefined, this should not happen if component is wrapped in AppProvider');
+    console.error('Stack trace:', new Error().stack);
     // Instead of throwing an error, return a default context to prevent crashes
     return {
       userType: null,

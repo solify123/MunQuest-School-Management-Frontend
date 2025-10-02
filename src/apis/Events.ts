@@ -95,45 +95,7 @@ export const getEventByIdApi = async (eventId: string) => {
     }
 }
 
-export const eventRegistratTeacherApi = async (eventId: string, foodPreference: string, foodAllergies: string) => {
-    try {
-        const token = localStorage.getItem('token');
-        const response = await axios.post(`${backendUrl}/api/v1/events/event-registration-teacher/${eventId}`, {
-            foodPreference,
-            foodAllergies,
-        }, {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        return response.data;
-    } catch (error: any) {
-        throw new Error(error.response.data.message);
-    }
-}
 
-export const eventRegistratStudentApi = async (eventId: string, munExperience: string, preferredCommittee1: string, foodPreference: string, foodAllergies: string, emergencyContactName: string, emergencyMobileNumber: string) => {
-    try {
-        const token = localStorage.getItem('token');
-        const response = await axios.post(`${backendUrl}/api/v1/events/event-registration-student/${eventId}`, {
-            munExperience,
-            preferredCommittee1,
-            foodPreference,
-            foodAllergies,
-            emergencyContactName,
-            emergencyMobileNumber,
-        }, {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            }
-        });
-        return response.data;
-    } catch (error: any) {
-        throw new Error(error.response.data.message);
-    }
-}
 
 export const updateEventApi = async (eventId: string, name: string, description: string, start_date: string, end_date: string, cover_image: string, locality_id: string, school_id: string, area_id: string, number_of_seats: string, fees_per_delegate: string, total_revenue: string, website: string, instagram: string) => {
     try {

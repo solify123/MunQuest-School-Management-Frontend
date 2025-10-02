@@ -48,7 +48,6 @@ export const verifyOrganiserApi = async () => {
                 'Authorization': `Bearer ${token}`
             }
         });
-        console.log("response.data", response.data);
         return response.data;
     } catch (error: any) {
         throw new Error(error.response.data.message);

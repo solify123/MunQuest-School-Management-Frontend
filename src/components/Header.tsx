@@ -24,8 +24,16 @@ const Header: React.FC<HeaderProps> = ({
   const location = useLocation();
   const isSuperUserPage = location.pathname === '/super-user';
 
-  // Use context for global state
-  const { userType } = useApp();
+  // Use context for global state with error handling
+  let userType = null;
+  try {
+    const appContext = useApp();
+    userType = appContext.userType;
+  } catch (error) {
+    console.error('Error accessing AppContext in Header:', error);
+    // Fallback to localStorage or default value
+    userType = localStorage.getItem('userType') || 'student';
+  }
 
   // Check if user is an organiser by checking localStorage
   const [isOrganiser, setIsOrganiser] = useState<boolean>(false);
@@ -35,7 +43,6 @@ const Header: React.FC<HeaderProps> = ({
   // Update organiser status based on localStorage
   useEffect(() => {
     const organiserId = localStorage.getItem('organiserId');
-    console.log("organiserId", organiserId);
     if (organiserId && organiserId !== 'null') {
       setIsOrganiser(true);
     } else {

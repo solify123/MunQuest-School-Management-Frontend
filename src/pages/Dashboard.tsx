@@ -3,8 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { LoadingSpinner, Header } from '../components/ui';
 import { getCurrentEventsApi } from '../apis/Events';
 import PageLoader from '../components/PageLoader';
-import { getUserType } from '../utils/avatarUtils';
-
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -42,7 +40,7 @@ const Dashboard: React.FC = () => {
   };
 
   const handleRegister = async (eventId: number) => {
-    const userType = await getUserType();
+    const userType = localStorage.getItem('userRole');
     if (userType === 'student') {
       navigate(`/student-registration/${eventId}`);
     } else {
@@ -174,7 +172,7 @@ const Dashboard: React.FC = () => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
-                      {event.locality}
+                      {event.locality.name}
                     </div>
                     <div className="flex items-center text-sm text-gray-600">
                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -12,6 +12,7 @@ const HomePage: React.FC = () => {
     const checkEvents = async () => {
       try {
         const response = await getCurrentEventsApi();
+        console.log("getCurrentEventsApi", response);
         if (response.success && response.data && response.data.length > 0) {
           navigate('/dashboard');
           return;

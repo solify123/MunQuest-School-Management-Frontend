@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getUserAvatar, getDefaultAvatar, getUserType } from '../../utils/avatarUtils';
+import { getUserAvatar, getDefaultAvatar } from '../../utils/avatarUtils';
 
 interface AvatarProps {
   size?: 'small' | 'medium' | 'large';
@@ -29,8 +29,8 @@ const Avatar: React.FC<AvatarProps> = ({
     } catch (error) {
       console.error('Error loading avatar:', error);
       // Fallback to default avatar
-      const userType = getUserType();
-      setAvatarUrl(getDefaultAvatar(userType));
+      const userType = localStorage.getItem('userRole');
+      setAvatarUrl(getDefaultAvatar(userType || 'student'));
       setLastAvatarCheck(Date.now());
     } finally {
       setIsLoading(false);
@@ -121,7 +121,7 @@ const Avatar: React.FC<AvatarProps> = ({
         className="w-full h-full rounded-full object-cover"
         onError={(e) => {
           // If image fails to load, show default avatar
-          const userType = getUserType();
+          const userType = localStorage.getItem('userRole') || 'student';
           e.currentTarget.src = getDefaultAvatar(userType);
         }}
       />

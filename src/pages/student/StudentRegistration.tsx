@@ -1,30 +1,32 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Header, Avatar } from '../../components/ui';
 import { toast } from 'sonner';
 import { getUserByIdApi } from '../../apis/Users';
 import PageLoader from '../../components/PageLoader';
-import { eventRegistratStudentApi } from '../../apis/Events';
+import { eventRegistratStudentApi } from '../../apis/registerations';
+import { useApp } from '../../contexts/AppContext';
 
 type Step = 'personal' | 'mun' | 'food' | 'emergency';
 
 const StudentRegistration: React.FC = () => {
   const navigate = useNavigate();
   const emergencyDropdownRef = useRef<HTMLDivElement>(null);
-  const { eventId } = useParams();
+  const { allLocalities } = useApp();
   // Current step state
   const [currentStep, setCurrentStep] = useState<Step>('personal');
 
   // Form data states
-  const [username, setUsername] = useState<string>('@samm1234');
-  const [name, setName] = useState<string>('Sam Morgan Lee');
-  const [dateOfBirth, setDateOfBirth] = useState<string>('5 Oct 2008');
-  const [gender, setGender] = useState<string>('Male');
-  const [placeOfSchool, setPlaceOfSchool] = useState<string>('Dubai');
-  const [schoolName, setSchoolName] = useState<string>('Oasis World School');
-  const [gradeOrYear, setGradeOrYear] = useState<string>('IB DP 2');
-  const [email, setEmail] = useState<string>('samlee@gmail.com');
-  const [mobile, setMobile] = useState<string>('+971 50 6362040');
+  const [username, setUsername] = useState<string>('');
+  const [name, setName] = useState<string>('');
+  const [dateOfBirth, setDateOfBirth] = useState<string>('');
+  const [gender, setGender] = useState<string>('');
+  const [placeOfSchool, setPlaceOfSchool] = useState<string>('');
+  const [schoolName, setSchoolName] = useState<string>('');
+  const [schoolLocalityId, setSchoolLocalityId] = useState<string>('');
+  const [gradeOrYear, setGradeOrYear] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
+  const [mobile, setMobile] = useState<string>('');
 
   // MUN Info states
   const [munExperience, setMunExperience] = useState<string>('');
@@ -75,33 +77,16 @@ const StudentRegistration: React.FC = () => {
     const getUserById = async () => {
       try {
         const response = await getUserByIdApi();
-        console.log(response);
         if (response.success) {
           setUsername(response.data.username || '');
           setName(response.data.fullname || '');
           setDateOfBirth(response.data.birthday || '');
           setGender(response.data.gender || '');
-          setSchoolName(response.data.school_name || '');
+          setSchoolName(response.data.school.name || '');
+          setSchoolLocalityId(response.data.school.locality_id || '');
           setGradeOrYear(response.data.grade || '');
           setEmail(response.data.email || '');
           setMobile(response.data.phone_number || '');
-          if(response.data.school_location === "AD") {
-            setPlaceOfSchool("Abu Dhabi");
-          } else if(response.data.school_location === "DU") {
-            setPlaceOfSchool("Dubai");
-          } else if(response.data.school_location === "SH") {
-            setPlaceOfSchool("Sharjah");
-          } else if(response.data.school_location === "AJ") {
-            setPlaceOfSchool("Ajman");
-          } else if(response.data.school_location === "RAK") {
-            setPlaceOfSchool("Ras Al Khaimah");
-          } else if(response.data.school_location === "UAQ") {
-            setPlaceOfSchool("Umm Al Quwain");
-          } else if(response.data.school_location === "AIN") {
-            setPlaceOfSchool("Al Ain");
-          } else {
-            setPlaceOfSchool(response.data.school_location);
-          }
         }
         else {
           toast.error('Failed to get user by id: ' + response.message);
@@ -112,6 +97,22 @@ const StudentRegistration: React.FC = () => {
     };
     getUserById();
   }, []);
+
+  useEffect(() => {
+    if (allLocalities && allLocalities.length > 0 && schoolLocalityId) {
+      const locality = allLocalities.find((locality: any) => {
+        const localityIdStr = String(locality.id || '').toLowerCase();
+        const schoolLocalityIdStr = String(schoolLocalityId || '').toLowerCase();
+        return localityIdStr === schoolLocalityIdStr;
+      });
+
+      if (locality) {
+        setPlaceOfSchool(locality.name || '');
+      } else {
+        setPlaceOfSchool('');
+      }
+    }
+  }, [allLocalities, schoolLocalityId]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -423,7 +424,7 @@ const StudentRegistration: React.FC = () => {
                 if (hasInvalidChars) {
                   toast.error('Only numbers and spaces are allowed in phone number');
                 }
-                
+
                 // Remove any non-numeric characters except spaces
                 const phoneValue = e.target.value.replace(/[^0-9\s]/g, '');
                 setEmergencyMobileNumber(phoneValue);
@@ -459,11 +460,11 @@ const StudentRegistration: React.FC = () => {
       {/* Avatar Section */}
       <div className="flex justify-left mb-8">
         <div className="relative">
-            <Avatar
-              size="large"
-              className="w-32 h-32 border-4 border-white shadow-lg"
-              showBorder={true}
-            />
+          <Avatar
+            size="large"
+            className="w-32 h-32 border-4 border-white shadow-lg"
+            showBorder={true}
+          />
         </div>
       </div>
 
@@ -621,7 +622,7 @@ const StudentRegistration: React.FC = () => {
 
   const handleEventRegistration = async () => {
     try {
-      const response = await eventRegistratStudentApi(eventId as string, munExperience, preferredCommittee1, foodPreference, foodAllergies, emergencyContactName, emergencyMobileNumber);
+      const response = await eventRegistratStudentApi(munExperience, preferredCommittee1, foodPreference, foodAllergies, emergencyContactName, emergencyMobileNumber);
       if (response.success) {
         toast.success('Registration completed successfully!');
         navigate('/teacher-registration-success');
@@ -638,58 +639,58 @@ const StudentRegistration: React.FC = () => {
         {/* Header Section */}
         <Header />
 
-      {/* Main Content */}
-      <div className="max-w-[85rem] mx-auto px-6 py-8" style={{ paddingLeft: '10.5rem' }}>
-        {/* Page Title */}
-        <div className="mb-8">
-          <h1
-            className="mb-6"
-            style={{
-              color: '#000',
-              fontSize: '18px',
-              fontStyle: 'normal',
-              fontWeight: 700,
-              lineHeight: '150%',
-            }}
-          >
-            Review Info
-          </h1>
+        {/* Main Content */}
+        <div className="max-w-[85rem] mx-auto px-6 py-8" style={{ paddingLeft: '10.5rem' }}>
+          {/* Page Title */}
+          <div className="mb-8">
+            <h1
+              className="mb-6"
+              style={{
+                color: '#000',
+                fontSize: '18px',
+                fontStyle: 'normal',
+                fontWeight: 700,
+                lineHeight: '150%',
+              }}
+            >
+              Review Info
+            </h1>
 
-          {/* Progress Indicator */}
-          {renderProgressIndicator()}
-        </div>
+            {/* Progress Indicator */}
+            {renderProgressIndicator()}
+          </div>
 
-        {/* Form Content */}
-        <div className="max-w-2xl">
-          {currentStep === 'personal' && renderPersonalInfo()}
-          {currentStep === 'mun' && renderMunInfo()}
-          {currentStep === 'food' && renderFoodInfo()}
-          {currentStep === 'emergency' && renderEmergencyInfo()}
-        </div>
+          {/* Form Content */}
+          <div className="max-w-2xl">
+            {currentStep === 'personal' && renderPersonalInfo()}
+            {currentStep === 'mun' && renderMunInfo()}
+            {currentStep === 'food' && renderFoodInfo()}
+            {currentStep === 'emergency' && renderEmergencyInfo()}
+          </div>
 
-        {/* Continue/Register Button */}
-        <div className="flex justify-left mt-8">
-          <button
-            onClick={handleContinue}
-            className="font-medium text-white transition-all hover:opacity-90"
-            style={{
-              backgroundColor: '#C2A46D',
-              borderRadius: '30px',
-              display: 'flex',
-              width: '160px',
-              height: '50px',
-              padding: '10px',
-              justifyContent: 'center',
-              alignItems: 'center',
-              gap: '10px',
-              fontSize: '16px'
-            }}
-          >
-           Continue
-          </button>
+          {/* Continue/Register Button */}
+          <div className="flex justify-left mt-8">
+            <button
+              onClick={handleContinue}
+              className="font-medium text-white transition-all hover:opacity-90"
+              style={{
+                backgroundColor: '#C2A46D',
+                borderRadius: '30px',
+                display: 'flex',
+                width: '160px',
+                height: '50px',
+                padding: '10px',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: '10px',
+                fontSize: '16px'
+              }}
+            >
+              Continue
+            </button>
+          </div>
         </div>
       </div>
-    </div>
     </PageLoader>
   );
 };

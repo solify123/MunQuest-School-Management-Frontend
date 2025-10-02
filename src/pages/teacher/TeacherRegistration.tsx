@@ -4,26 +4,29 @@ import { Header, Avatar } from '../../components/ui';
 import { toast } from 'sonner';
 import { getUserByIdApi } from '../../apis/Users';
 import PageLoader from '../../components/PageLoader';
-import { eventRegistratTeacherApi } from '../../apis/Events';
+import { eventRegistratTeacherApi } from '../../apis/registerations';
+import { useApp } from '../../contexts/AppContext';
 
 type Step = 'personal' | 'food';
 
 const TeacherRegistration: React.FC = () => {
   const navigate = useNavigate();
   const { eventId } = useParams();
+  const { allLocalities } = useApp();
   // Current step state
   const [currentStep, setCurrentStep] = useState<Step>('personal');
 
   // Form data states
-  const [username, setUsername] = useState<string>('@samm1234');
-  const [fullname, setFullname] = useState<string>('Sam Morgan Lee');
-  const [dateOfBirth, setDateOfBirth] = useState<string>('5 Oct 2008');
-  const [gender, setGender] = useState<string>('Male');
-  const [placeOfSchool, setPlaceOfSchool] = useState<string>('Dubai');
-  const [schoolName, setSchoolName] = useState<string>('Oasis World School');
-  const [yearsOfWorkExperience, setYearsOfWorkExperience] = useState<string>('IB DP 2');
-  const [email, setEmail] = useState<string>('samlee@gmail.com');
-  const [mobile, setMobile] = useState<string>('+971 50 6362040');
+  const [username, setUsername] = useState<string>('');
+  const [fullname, setFullname] = useState<string>('');
+  const [dateOfBirth, setDateOfBirth] = useState<string>('');
+  const [gender, setGender] = useState<string>('');
+  const [placeOfSchool, setPlaceOfSchool] = useState<string>('');
+  const [schoolName, setSchoolName] = useState<string>('');
+  const [schoolLocalityId, setSchoolLocalityId] = useState<string>('');
+  const [yearsOfWorkExperience, setYearsOfWorkExperience] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
+  const [mobile, setMobile] = useState<string>('');
 
   // Food Info states
   const [foodPreference, setFoodPreference] = useState<string>('');
@@ -34,32 +37,17 @@ const TeacherRegistration: React.FC = () => {
     const getUserById = async () => {
       try {
         const response = await getUserByIdApi();
+
         if (response.success) {
-          setUsername(response.data.username);
-          setFullname(response.data.fullname);
-          setDateOfBirth(response.data.birthday);
-          setGender(response.data.gender);
-          setSchoolName(response.data.school_name);
-          setYearsOfWorkExperience(response.data.year_of_work_experience);
-          setEmail(response.data.email);
-          setMobile(response.data.phone_number);
-          if (response.data.school_location === "AD") {
-            setPlaceOfSchool("Abu Dhabi");
-          } else if (response.data.school_location === "DU") {
-            setPlaceOfSchool("Dubai");
-          } else if (response.data.school_location === "SH") {
-            setPlaceOfSchool("Sharjah");
-          } else if (response.data.school_location === "AJ") {
-            setPlaceOfSchool("Ajman");
-          } else if (response.data.school_location === "RAK") {
-            setPlaceOfSchool("Ras Al Khaimah");
-          } else if (response.data.school_location === "UAQ") {
-            setPlaceOfSchool("Umm Al Quwain");
-          } else if (response.data.school_location === "AIN") {
-            setPlaceOfSchool("Al Ain");
-          } else {
-            setPlaceOfSchool(response.data.school_location);
-          }
+          setUsername(response.data.username || '');
+          setFullname(response.data.fullname || '');
+          setDateOfBirth(response.data.birthday || '');
+          setGender(response.data.gender || '');
+          setSchoolName(response.data.school.name || '');
+          setSchoolLocalityId(response.data.school.locality_id || '');
+          setYearsOfWorkExperience(response.data.years_of_experience || '');
+          setEmail(response.data.email || '');
+          setMobile(response.data.phone_number || '');
         }
         else {
           toast.error('Failed to get user by id: ' + response.message);
@@ -70,6 +58,23 @@ const TeacherRegistration: React.FC = () => {
     };
     getUserById();
   }, []);
+
+  // Effect to find locality name when allLocalities is loaded and we have schoolLocalityId
+  useEffect(() => {
+    if (allLocalities && allLocalities.length > 0 && schoolLocalityId) {
+      const locality = allLocalities.find((locality: any) => {
+        const localityIdStr = String(locality.id || '').toLowerCase();
+        const schoolLocalityIdStr = String(schoolLocalityId || '').toLowerCase();
+        return localityIdStr === schoolLocalityIdStr;
+      });
+
+      if (locality) {
+        setPlaceOfSchool(locality.name || '');
+      } else {
+        setPlaceOfSchool('');
+      }
+    }
+  }, [allLocalities, schoolLocalityId]);
 
   // Step configuration
   const steps = [
@@ -269,7 +274,7 @@ const TeacherRegistration: React.FC = () => {
               <button
                 key={option}
                 disabled={true}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${gender === option
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${gender.toLowerCase() === option.toLowerCase()
                   ? 'bg-[#C2A46D] text-white'
                   : ' text-gray-700 hover:bg-gray-300'
                   }`}
