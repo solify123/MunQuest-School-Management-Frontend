@@ -377,21 +377,14 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
         const response = await uploadAvatarApi(file);
 
         if (response.success) {
-          // Clear avatar cache so it refreshes in all components
           clearUserAvatar();
-          // Store new avatar in localStorage
           localStorage.setItem('userAvatar', response.avatarUrl);
-
-          // Dispatch custom event to notify all Avatar components to refresh
-          // Use setTimeout to ensure localStorage is updated before dispatching
           setTimeout(() => {
             const avatarUpdatedEvent = new CustomEvent('avatarUpdated', {
               detail: { avatarUrl: response.avatarUrl }
             });
-            console.log('ProfilePage: Dispatching avatarUpdated event', response.avatarUrl);
             window.dispatchEvent(avatarUpdatedEvent);
           }, 100);
-          // Show success message
           toast.success(response.message);
         } else {
           toast.error('Failed to upload avatar: ' + response.message);
@@ -404,7 +397,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
     }
   };
 
-  // Handle password change
   const handlePasswordChange = async () => {
     if (newPassword !== confirmPassword) {
       toast.error('Passwords do not match');
@@ -460,7 +452,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
   const handleDeleteCancel = () => {
     setShowDeleteModal(false);
   };
-  // Close dropdowns when clicking outside
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -476,7 +468,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
     };
   }, []);
 
-  // Load school data when locality changes
   useEffect(() => {
     if (locality && locality !== 'Other' && allSchools.length > 0) {
       const schoolsInLocality = allSchools.filter(school => school.locality?.name === locality);
@@ -504,14 +495,10 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
 
   const handleCustomLocalityChange = (value: string) => {
     setCustomLocality(value);
-    // Don't call handleFieldChange here as it will overwrite the locality with the custom value
-    // The custom value will be used in the save function
   };
 
   const handleCustomSchoolChange = (value: string) => {
     setCustomSchool(value);
-    // Don't call handleFieldChange here as it will overwrite the school name with the custom value
-    // The custom value will be used in the save function
   };
 
   const renderGenderField = (label: string, field: keyof ProfileData, value: any) => {
@@ -587,7 +574,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
           )}
         </div>
 
-        {/* Generated Username Display */}
         {isEditingThisField && tempValue && (
           <div className="w-[400px] mt-2 p-3 bg-gray-50 border border-gray-200 rounded-lg">
             <div className="flex items-center justify-between">
@@ -612,19 +598,15 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
     const handleLocalityChange = (selectedValue: any) => {
       if (selectedValue.value === 'Other') {
         handleFieldChange(field, 'Other');
-        // Clear school selection when switching to Other
         setSchool_id('');
         setSchoolName('');
         setCustomSchool('');
-        // Clear custom locality when switching to Other
         setCustomLocality('');
       } else {
         handleFieldChange(field, selectedValue.label);
-        // Clear custom locality when selecting a predefined locality
         setCustomLocality('');
         setCustomSchool('');
       }
-      // School filtering is now handled by useEffect when locality changes
     };
     return (
       <div className="mb-6">
@@ -683,7 +665,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
           )}
         </div>
 
-        {/* Custom Locality Input - appears when "Other" is selected */}
         {isEditingThisField && value === 'Other' && (
           <div className="mt-4">
             <label className="block text-base font-bold text-black mb-2">
@@ -1133,51 +1114,47 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
         }
       }
 
-      // Get avatar from localStorage, if it exists
       const storedAvatar = localStorage.getItem('userAvatar');
       const avatarToSend = storedAvatar || undefined;
 
       let response;
-      
+
       if (locality === 'Other') {
-        // Use custom locality and school APIs when "Other" is selected
         if (userType === 'student') {
           response = await updateStudentProfileAndCustomLocalityApi(
-            fullname, 
-            username, 
-            birthday, 
-            gender, 
-            customLocality, 
-            customSchool, 
-            grade, 
-            phone, 
+            fullname,
+            username,
+            birthday,
+            gender,
+            customLocality,
+            customSchool,
+            grade,
+            phone,
             phone_e164
           );
         } else {
           response = await updateTeacherProfileAndCustomLocalityApi(
-            fullname, 
-            username, 
-            birthday, 
-            gender, 
-            customLocality, 
-            customSchool, 
-            yearOfWorkExperience, 
-            phone, 
-            email, 
-            avatarToSend, 
+            fullname,
+            username,
+            birthday,
+            gender,
+            customLocality,
+            customSchool,
+            yearOfWorkExperience,
+            phone,
+            email,
+            avatarToSend,
             phone_e164
           );
         }
       } else {
-        // Use regular update APIs for predefined localities
-        response = userType === 'student' 
-          ? await updateStudentProfileApi(fullname, username, birthday, gender, school_id, grade, yearOfWorkExperience, phone, email, avatarToSend, phone_e164) 
+        response = userType === 'student'
+          ? await updateStudentProfileApi(fullname, username, birthday, gender, school_id, grade, yearOfWorkExperience, phone, email, avatarToSend, phone_e164)
           : await updateTeacherProfileApi(fullname, username, birthday, gender, school_id, yearOfWorkExperience, phone, email, avatarToSend, phone_e164);
       }
 
       if (response.success) {
         toast.success(response.message);
-        // Clear custom values after successful save
         setCustomLocality('');
         setCustomSchool('');
       } else {
@@ -1192,12 +1169,9 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
   return (
     <PageLoader loadingText="Loading Profile...">
       <div className="min-h-screen bg-gray-50">
-        {/* Header */}
         <Header />
 
-        {/* Main Content */}
         <div className="mx-auto py-8" style={{ maxWidth: "65rem" }}>
-          {/* Profile Header */}
           <div className="text-left mb-8">
             <div className="relative inline-block">
               {isUploadingAvatar ? (
@@ -1413,8 +1387,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
               </button>
             </div>
 
-
-            {/* Save Button */}
             <div className="flex justify-left">
               <button
                 onClick={() => {
@@ -1440,7 +1412,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
         </div>
       </div>
 
-      {/* Delete Account Confirmation Modal */}
       <ConfirmationModal
         isOpen={showDeleteModal}
         onClose={handleDeleteCancel}

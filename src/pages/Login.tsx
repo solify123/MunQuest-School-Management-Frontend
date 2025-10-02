@@ -62,7 +62,7 @@ const Login: React.FC = () => {
         localStorage.setItem('userRole', getUserIdByEmailResponse.user.role);
         const organiserResponse = await verifyOrganiserApi();
         if (organiserResponse.success) {
-          localStorage.setItem('orgainiserId', organiserResponse.data.id);
+          localStorage.setItem('organiserId', organiserResponse.data.id);
         }
       }
       else {
@@ -77,7 +77,7 @@ const Login: React.FC = () => {
       }
 
       const userRole = localStorage.getItem('userRole') || 'student';
-      const organiserId = localStorage.getItem('orgainiserId');
+      const organiserId = localStorage.getItem('organiserId');
       const hasProfile = await checkUserProfileExists();
 
       // Check if user is an organiser first

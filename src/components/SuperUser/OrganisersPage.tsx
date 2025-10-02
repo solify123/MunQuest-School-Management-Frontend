@@ -13,7 +13,6 @@ const OrganisersPage: React.FC<OrganisersPageProps> = ({ type = 'organisers' }) 
   const allOrganisersOfStudents = allOrganisers.filter((organiser) => organiser.users.role === 'student');
   const allOrganisersOfTeachers = allOrganisers.filter((organiser) => organiser.users.role === 'teacher');
 
-  // Get data based on type
   const getData = () => {
     switch (type) {
       case 'students':
@@ -25,7 +24,6 @@ const OrganisersPage: React.FC<OrganisersPageProps> = ({ type = 'organisers' }) 
     }
   };
 
-  // Filter data based on search term
   const filteredData = useMemo(() => {
     const data = getData();
     if (!data || data.length === 0) return [];
@@ -50,24 +48,17 @@ const OrganisersPage: React.FC<OrganisersPageProps> = ({ type = 'organisers' }) 
     });
   }, [type, allOrganisers, searchTerm]);
 
-  const handleOrganiserAction = (action: string, organiserId: string) => {
-    console.log(`Action: ${action} on Organiser: ${organiserId}`);
-    // Implement action logic here
+  const handleOrganiserAction = (action: string) => {
     switch (action) {
       case 'approved':
-        // Handle approve action
         break;
       case 'rejected':
-        // Handle reject action
         break;
       case 'flagged':
-        // Handle flag action
         break;
       case 'blocked':
-        // Handle block action
         break;
       case 'delete':
-        // Handle delete action
         break;
       default:
         break;
@@ -76,7 +67,6 @@ const OrganisersPage: React.FC<OrganisersPageProps> = ({ type = 'organisers' }) 
 
   return (
     <div className="space-y-6">
-      {/* Search Bar */}
       <div className="flex justify-left">
         <div className="relative w-full max-w-md">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -94,7 +84,6 @@ const OrganisersPage: React.FC<OrganisersPageProps> = ({ type = 'organisers' }) 
         </div>
       </div>
 
-      {/* Data Table */}
       <OrganisersTable
         organisers={filteredData}
         onAction={handleOrganiserAction}

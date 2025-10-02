@@ -63,11 +63,15 @@ const EventsTable: React.FC<EventsTableProps> = ({ events, onAction }) => {
     if (!status) return 'text-gray-600';
 
     switch (status.toLowerCase()) {
-      case 'actived':
-        return 'text-green-600';
+      case 'pending':
+        return 'text-yellow-500';
       case 'flagged':
         return 'text-yellow-500';
       case 'blocked':
+        return 'text-red-600';
+      case 'approved':
+        return 'text-green-600';
+      case 'rejected':
         return 'text-red-600';
       default:
         return 'text-gray-600';
@@ -162,60 +166,74 @@ const EventsTable: React.FC<EventsTableProps> = ({ events, onAction }) => {
 
                 {activeDropdown === event?.id && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
-                    <div className="py-1">
-                      {/* Show Flag button only if status is not flagged */}
-                      {event?.status?.toLowerCase() !== 'flagged' && (
-                        <button
-                          onClick={() => handleAction('flagged', event?.id || '')}
-                          disabled={updatingEventId === event?.id}
-                          className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingEventId === event?.id
-                            ? 'text-gray-400 cursor-not-allowed'
-                            : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
-                            }`}
-                        >
-                          Flag
-                        </button>
-                      )}
+                     <div className="py-1">
+                       {/* Show Approved button only if status is pending */}
+                       {event?.status?.toLowerCase() === 'pending' && (
+                         <button
+                           onClick={() => handleAction('approved', event?.id || '')}
+                           disabled={updatingEventId === event?.id}
+                           className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingEventId === event?.id
+                             ? 'text-gray-400 cursor-not-allowed'
+                             : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
+                             }`}
+                         >
+                           Approve
+                         </button>
+                       )}
 
-                      {/* Show Block button only if status is not blocked */}
-                      {event?.status?.toLowerCase() !== 'blocked' && (
-                        <button
-                          onClick={() => handleAction('blocked', event?.id || '')}
-                          disabled={updatingEventId === event?.id}
-                          className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingEventId === event?.id
-                            ? 'text-gray-400 cursor-not-allowed'
-                            : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
-                            }`}
-                        >
-                          Block
-                        </button>
-                      )}
+                       {/* Show Flag button only if status is not flagged */}
+                       {event?.status?.toLowerCase() !== 'flagged' && (
+                         <button
+                           onClick={() => handleAction('flagged', event?.id || '')}
+                           disabled={updatingEventId === event?.id}
+                           className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingEventId === event?.id
+                             ? 'text-gray-400 cursor-not-allowed'
+                             : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
+                             }`}
+                         >
+                           Flag
+                         </button>
+                       )}
 
-                      {/* Show Actived button if status is flagged or blocked */}
-                      {(event?.status?.toLowerCase() === 'flagged' || event?.status?.toLowerCase() === 'blocked') && (
-                        <button
-                          onClick={() => handleAction('actived', event?.id || '')}
-                          disabled={updatingEventId === event?.id}
-                          className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingEventId === event?.id
-                            ? 'text-gray-400 cursor-not-allowed'
-                            : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
-                            }`}
-                        >
-                          Actived
-                        </button>
-                      )}
+                       {/* Show Block button only if status is not blocked */}
+                       {event?.status?.toLowerCase() !== 'blocked' && (
+                         <button
+                           onClick={() => handleAction('blocked', event?.id || '')}
+                           disabled={updatingEventId === event?.id}
+                           className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingEventId === event?.id
+                             ? 'text-gray-400 cursor-not-allowed'
+                             : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
+                             }`}
+                         >
+                           Block
+                         </button>
+                       )}
 
-                      <button
-                        onClick={() => handleAction('delete', event?.id || '')}
-                        disabled={updatingEventId === event?.id}
-                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingEventId === event?.id
-                          ? 'text-gray-400 cursor-not-allowed'
-                          : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
-                          }`}
-                      >
-                        Delete
-                      </button>
-                    </div>
+                       {/* Show Approved button if status is flagged or blocked */}
+                       {(event?.status?.toLowerCase() === 'flagged' || event?.status?.toLowerCase() === 'blocked') && (
+                         <button
+                           onClick={() => handleAction('approved', event?.id || '')}
+                           disabled={updatingEventId === event?.id}
+                           className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingEventId === event?.id
+                             ? 'text-gray-400 cursor-not-allowed'
+                             : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
+                             }`}
+                         >
+                           Approve
+                         </button>
+                       )}
+
+                       <button
+                         onClick={() => handleAction('delete', event?.id || '')}
+                         disabled={updatingEventId === event?.id}
+                         className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingEventId === event?.id
+                           ? 'text-gray-400 cursor-not-allowed'
+                           : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
+                           }`}
+                       >
+                         Delete
+                       </button>
+                     </div>
                   </div>
                 )}
               </div>

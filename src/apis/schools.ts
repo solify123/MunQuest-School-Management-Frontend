@@ -9,7 +9,6 @@ export const getAllSchoolsApi = async () => {
                 'Authorization': `Bearer ${token}`
             }
         });
-        console.log(response.data)
         return response.data;
     } catch (error: any) {
         console.error('Get schools API error:', error);

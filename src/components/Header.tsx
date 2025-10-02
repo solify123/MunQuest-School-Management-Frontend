@@ -34,8 +34,13 @@ const Header: React.FC<HeaderProps> = ({
 
   // Update organiser status based on localStorage
   useEffect(() => {
-    const organiserId = localStorage.getItem('orgainiserId');
-    setIsOrganiser(!!organiserId);
+    const organiserId = localStorage.getItem('organiserId');
+    console.log("organiserId", organiserId);
+    if (organiserId && organiserId !== 'null') {
+      setIsOrganiser(true);
+    } else {
+      setIsOrganiser(false);
+    }
   }, []);
 
   const handleProfileClick = async () => {
@@ -53,7 +58,7 @@ const Header: React.FC<HeaderProps> = ({
 
   const handleHomeClick = () => {
     // Check if user is an organiser
-    const organiserId = localStorage.getItem('orgainiserId');
+    const organiserId = localStorage.getItem('organiserId');
     if (organiserId) {
       navigate('/organiser');
     } else {
@@ -85,7 +90,7 @@ const Header: React.FC<HeaderProps> = ({
     localStorage.removeItem('userAvatar');
     localStorage.removeItem('userId');
     localStorage.removeItem('userRole');
-    localStorage.removeItem('orgainiserId');
+    localStorage.removeItem('organiserId');
     setIsOrganiser(false); // Update organiser status
     navigate('/login');
   };
@@ -147,8 +152,8 @@ const Header: React.FC<HeaderProps> = ({
                 </div>
               )}
 
-              {/* Organiser Icon - Only show on non-super user pages */}
-              {!isSuperUserPage && isOrganiser && (
+              {/* Organiser Icon - Only show on non-super user pages and when user is NOT an organiser */}
+              {!isSuperUserPage && isOrganiser && userType !== 'organizer' && (
                 <div className="flex flex-col items-center cursor-pointer">
                   <div onClick={handleOrganiserClick} className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-1">
                     <img src={OrganiserIcon} alt="Organiser" className="w-6 h-6" />

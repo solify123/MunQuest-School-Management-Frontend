@@ -21,7 +21,8 @@ export const eventImagefileUploadApi = async (file: File) => {
 export const createEventApi = async (name: string, description: string, start_date: string, end_date: string, cover_image: string, logo_image: string, locality_id: string, school_id: string, area_id: string, number_of_seats: string, fees_per_delegate: string, total_revenue: string, website: string, instagram: string, organiser_id: string) => {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.post(`${backendUrl}/api/v1/events/create-event`, {
+        const organiserId = localStorage.getItem('organiserId');
+        const response = await axios.post(`${backendUrl}/api/v1/events/create-event/${organiserId}`, {
             name,
             description,
             start_date,
@@ -66,7 +67,7 @@ export const getCurrentEventsApi = async () => {
 export const getEventsByOrganiserApi = async () => {
     try {
         const token = localStorage.getItem('token');
-        const organiserId = localStorage.getItem('orgainiserId');
+        const organiserId = localStorage.getItem('organiserId');
         const response = await axios.get(`${backendUrl}/api/v1/events/get-events-of-organiser/${organiserId}`, {
             headers: {
                 'Content-Type': 'application/json',

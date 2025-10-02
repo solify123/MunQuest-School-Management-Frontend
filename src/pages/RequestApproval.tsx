@@ -22,7 +22,6 @@ const RequestApproval: React.FC = () => {
   useEffect(() => {
     async function getUserById() {
       const user = await getUserByIdApi();
-      console.log("user", user);
       setSchool(user.data.school.name);
       setLocality(user.data.school.code);
       setLocality_id(user.data.school.locality_id);
@@ -60,7 +59,6 @@ const RequestApproval: React.FC = () => {
   };
 
   const requestApprovalHandler = async () => {
-    // Validate required fields
     if (!role.trim()) {
       toast.error('Please enter your role in event or in school');
       return;
@@ -92,22 +90,17 @@ const RequestApproval: React.FC = () => {
   return (
     <PageLoader loadingText="Loading Request Approval...">
       <div className="min-h-screen bg-white">
-        {/* Header Section */}
         <Header />
 
-        {/* Main Content */}
         <div className="max-w-[62rem] mx-auto px-6 py-12">
-          {/* Page Title */}
           <h1 className="font-bold text-[#C2A46D] mb-8 text-left" style={{ fontSize: '40px' }}>
             Request for Approval
           </h1>
 
-          {/* Organiser Info Section */}
           <div className="mb-8">
             <h2 className="font-bold text-black mb-6" style={{ fontSize: '30px' }}>Organiser Info</h2>
 
             <div className="space-y-6">
-              {/* School Field */}
               <div>
                 <label
                   className="block mb-2"
@@ -130,7 +123,6 @@ const RequestApproval: React.FC = () => {
                 />
               </div>
 
-              {/* Locality Field */}
               <div>
                 <label
                   className="block mb-2"
@@ -153,7 +145,6 @@ const RequestApproval: React.FC = () => {
                 />
               </div>
 
-              {/* Role Field */}
               <div>
                 <label
                   className="block mb-2"
@@ -178,7 +169,6 @@ const RequestApproval: React.FC = () => {
             </div>
           </div>
 
-          {/* Evidence Section */}
           <div className="mb-8">
             <div className="mb-6">
               <label
@@ -224,7 +214,6 @@ const RequestApproval: React.FC = () => {
               </div>
             </div>
 
-            {/* Uploaded Files */}
             <div>
               <label
                 className="block mb-2"
@@ -256,7 +245,6 @@ const RequestApproval: React.FC = () => {
             </div>
           </div>
 
-          {/* Submit Button */}
           <div className="text-left">
             <button
               onClick={requestApprovalHandler}
