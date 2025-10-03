@@ -1,6 +1,20 @@
 import axios from 'axios';
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
+export const getAllRegistrationsByEventIdApi = async (eventId: string) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${backendUrl}/api/v1/registerations/get-registrations/${eventId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+}
+
 export const eventRegistratTeacherApi = async (eventId: string, foodPreference: string, foodAllergies: string) => {
     try {
         const token = localStorage.getItem('token');

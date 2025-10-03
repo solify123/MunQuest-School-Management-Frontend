@@ -36,7 +36,7 @@ const Organiser: React.FC = () => {
   };
 
   const handleEventClick = (eventId: number) => {
-    navigate(`/organiser-dashboard/${eventId}`);
+    navigate(`/event-dashboard/${eventId}`);
   };
 
   if (isLoading) {

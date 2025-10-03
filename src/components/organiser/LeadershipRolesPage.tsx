@@ -1,51 +1,253 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useApp } from '../../contexts/AppContext';
+import { getAllRegistrationsByEventIdApi } from '../../apis/registerations';
+import { saveLeadershipRoleByEventIdApi, getLeadershipRolesByEventIdApi } from '../../apis/Event_leaders';
+import { useParams } from 'react-router-dom';
+import { toast } from 'sonner';
 
 interface LeadershipRole {
   id: number;
-  abbr: string;
-  role: string;
-  username: string;
+  users: {
+    username: string;
+    fullname: string;
+  };
   name: string;
+  leadership_roles: {
+    abbr: string;
+    leadership_role: string;
+  };
 }
 
-interface LeadershipRolesPageProps {
-  leadershipRoles: LeadershipRole[];
-  editingRole: number | null;
-  editingFieldType: 'username' | 'name' | null;
-  tempValue: string;
-  isSaving: boolean;
-  onRoleFieldEdit: (roleId: number, fieldType: 'username' | 'name', currentValue: string) => void;
-  onRoleFieldChange: (value: string) => void;
-  onRoleFieldSave: () => void;
-  onRoleFieldCancel: () => void;
-  onAddRole: () => void;
-  onSaveLeadershipRoles: () => void;
-}
-
-const LeadershipRolesPage: React.FC<LeadershipRolesPageProps> = ({
-  leadershipRoles,
-  editingRole,
-  editingFieldType,
-  tempValue,
-  isSaving,
-  onRoleFieldEdit,
-  onRoleFieldChange,
-  onRoleFieldSave,
-  onRoleFieldCancel,
-  onAddRole,
-  onSaveLeadershipRoles
-}) => {
+const LeadershipRolesPage: React.FC = () => {
+  const { eventId } = useParams();
+  const { allLeadershipRoles } = useApp();
+  const [leadershipRoles, setLeadershipRoles] = useState<LeadershipRole[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
+  const [isAddingNew, setIsAddingNew] = useState<boolean>(false);
+  const [newRoleData, setNewRoleData] = useState({
+    abbr: '',
+    role: '',
+    username: '',
+    name: '',
+    selectedUserId: ''
+  });
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Autocomplete states
+  const [showRoleDropdown, setShowRoleDropdown] = useState<boolean>(false);
+  const [filteredRoles, setFilteredRoles] = useState<any[]>([]);
+  const [allRegistrations, setAllRegistrations] = useState<any[]>([]);
+  const roleDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Username autocomplete states
+  const [showUsernameDropdown, setShowUsernameDropdown] = useState<boolean>(false);
+  const [filteredUsernames, setFilteredUsernames] = useState<any[]>([]);
+  const usernameDropdownRef = useRef<HTMLDivElement>(null);
 
   const handleDropdownToggle = (roleId: number) => {
     setActiveDropdown(activeDropdown === roleId ? null : roleId);
   };
 
+  // Fetch leadership roles and registrations on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!eventId) return;
+      
+      setIsLoading(true);
+      try {
+        // Fetch leadership roles for this event
+        const leadershipRolesResponse = await getLeadershipRolesByEventIdApi(eventId);
+        console.log("leadershipRolesResponse", leadershipRolesResponse);
+        if (leadershipRolesResponse.success) {
+          setLeadershipRoles(leadershipRolesResponse.data || []);
+        }
+
+        // Fetch registrations for this event
+        const allRegistrationsResponse = await getAllRegistrationsByEventIdApi(eventId);
+        if (allRegistrationsResponse.success) {
+          setAllRegistrations(allRegistrationsResponse.data);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        toast.error('Failed to load leadership roles data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [eventId]);
+
   const handleMenuAction = (action: string, roleId: number) => {
     console.log(`Action: ${action}, Role ID: ${roleId}`);
     // TODO: Implement specific actions based on the action type
     setActiveDropdown(null);
+  };
+
+  const handleAddNew = () => {
+    setIsAddingNew(true);
+    setNewRoleData({
+      abbr: '',
+      role: '',
+      username: '',
+      name: '',
+      selectedUserId: ''
+    });
+  };
+
+  const handleNewRoleInputChange = (field: string, value: string) => {
+    setNewRoleData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+
+    // If role field is being changed, show dropdown and filter roles
+    if (field === 'role') {
+      if (value.trim()) {
+        setShowRoleDropdown(true);
+        filterRolesByInput(value.trim());
+      } else {
+        setShowRoleDropdown(false);
+        setFilteredRoles([]);
+      }
+    }
+
+    // If username field is being changed, show dropdown and filter usernames
+    if (field === 'username') {
+      if (value.trim()) {
+        setShowUsernameDropdown(true);
+        filterUsernamesByInput(value.trim());
+      } else {
+        setShowUsernameDropdown(false);
+        setFilteredUsernames([]);
+        // Clear name and selectedUserId fields when username is empty
+        setNewRoleData(prev => ({
+          ...prev,
+          name: '',
+          selectedUserId: ''
+        }));
+      }
+    }
+  };
+
+  // Function to filter roles by input
+  const filterRolesByInput = (input: string) => {
+    if (!allLeadershipRoles || allLeadershipRoles.length === 0) {
+      setFilteredRoles([]);
+      return;
+    }
+
+    const filtered = allLeadershipRoles.filter(role => {
+      const roleName = role.leadership_role || role.role || '';
+      const abbreviation = role.abbr || '';
+
+      return (
+        roleName.toLowerCase().includes(input.toLowerCase()) ||
+        abbreviation.toLowerCase().includes(input.toLowerCase())
+      );
+    });
+
+    setFilteredRoles(filtered);
+  };
+
+  // Function to filter usernames by input from registrations
+  const filterUsernamesByInput = (input: string) => {
+    if (!allRegistrations || allRegistrations.length === 0) {
+      setFilteredUsernames([]);
+      return;
+    }
+
+    const filtered = allRegistrations.filter(registration => {
+      const user = registration.user || registration;
+      const username = user.username || '';
+      const fullname = user.fullname || '';
+
+      return (
+        username.toLowerCase().includes(input.toLowerCase()) ||
+        fullname.toLowerCase().includes(input.toLowerCase())
+      );
+    });
+
+    setFilteredUsernames(filtered);
+  };
+
+  // Handle role selection from dropdown
+  const handleRoleSelect = (selectedRole: any) => {
+    setNewRoleData(prev => ({
+      ...prev,
+      role: selectedRole.leadership_role || selectedRole.role || '',
+      abbr: selectedRole.abbr || ''
+    }));
+    setShowRoleDropdown(false);
+    setFilteredRoles([]);
+  };
+
+  // Handle username selection from dropdown
+  const handleUsernameSelect = (selectedRegistration: any) => {
+    const user = selectedRegistration.user || selectedRegistration;
+    setNewRoleData(prev => ({
+      ...prev,
+      username: user.username || '',
+      name: user.fullname || '',
+      selectedUserId: user.id || ''
+    }));
+    setShowUsernameDropdown(false);
+    setFilteredUsernames([]);
+  };
+
+
+  const handleSaveNew = async () => {
+    try {
+      // Validate required fields
+      if (!newRoleData.role || !newRoleData.username || !newRoleData.selectedUserId) {
+        toast.error('Please fill in all required fields');
+        return;
+      }
+    
+      console.log("newRoleData", newRoleData);
+
+      // Find the selected role from allLeadershipRoles
+      const selectedRole = allLeadershipRoles.find(role =>
+        (role.leadership_role || role.role) === newRoleData.role
+      );
+
+      if (selectedRole && newRoleData.selectedUserId) {
+        // Call the API to save the leadership role
+        console.log("selectedRole", selectedRole.id);
+        console.log("selectedUserId", newRoleData.selectedUserId);
+        console.log("eventId", eventId);
+        const response = await saveLeadershipRoleByEventIdApi(
+          eventId || '',
+          newRoleData.selectedUserId,
+          selectedRole.id.toString()
+        );
+
+        if (response.success) {
+          toast.success('Leadership role added successfully');
+          setIsAddingNew(false);
+          setNewRoleData({
+            abbr: '',
+            role: '',
+            username: '',
+            name: '',
+            selectedUserId: ''
+          });
+          
+          // Refresh the leadership roles list
+          const updatedRolesResponse = await getLeadershipRolesByEventIdApi(eventId || '');
+          if (updatedRolesResponse.success) {
+            setLeadershipRoles(updatedRolesResponse.data || []);
+          }
+        } else {
+          toast.error(response.message);
+        }
+      } else {
+        toast.error('Unable to save leadership role. Please try again.');
+      }
+    } catch (error: any) {
+      toast.error('Failed to save leadership role: ' + error.message);
+    }
   };
 
   // Close dropdown when clicking outside
@@ -54,6 +256,12 @@ const LeadershipRolesPage: React.FC<LeadershipRolesPageProps> = ({
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setActiveDropdown(null);
       }
+      if (roleDropdownRef.current && !roleDropdownRef.current.contains(event.target as Node)) {
+        setShowRoleDropdown(false);
+      }
+      if (usernameDropdownRef.current && !usernameDropdownRef.current.contains(event.target as Node)) {
+        setShowUsernameDropdown(false);
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -61,93 +269,53 @@ const LeadershipRolesPage: React.FC<LeadershipRolesPageProps> = ({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <span className="ml-3 text-gray-600">Loading leadership roles...</span>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <div >
+      <div>
         {/* Grid Container */}
         <div className="grid grid-cols-[100px_200px_220px_280px_80px] gap-4">
           <div className="bg-[#C6DAF4] text-grey-800 px-4 py-3 rounded-lg text-sm font-medium text-center border border-gray-800">ABBR</div>
           <div className="bg-[#C6DAF4] text-grey-800 px-4 py-3 rounded-lg text-sm font-medium text-center border border-gray-800">Leadership Role</div>
           <div className="bg-[#C6DAF4] text-grey-800 px-4 py-3 rounded-lg text-sm font-medium text-center border border-gray-800">Username</div>
           <div className="bg-[#C6DAF4] text-grey-800 px-4 py-3 rounded-lg text-sm font-medium text-center border border-gray-800">Name</div>
-          <div ></div>
+          <div></div>
 
+          {/* Existing roles */}
           {leadershipRoles.map((role) => (
             <React.Fragment key={role.id}>
               <div className="bg-gray-50 border border-gray-800 rounded-lg px-4 py-3 flex items-center justify-center">
-                <span className="text-sm font-medium text-gray-900">{role.abbr}</span>
+                <div className="text-sm text-gray-900 text-center w-full">
+                  {role.leadership_roles.abbr || '-'}
+                </div>
               </div>
 
               <div className="bg-gray-50 border border-gray-800 rounded-lg px-4 py-3 flex items-center">
-                <span className="text-sm text-gray-900">{role.role}</span>
+                <div className="text-sm text-gray-900 w-full">
+                  {role.leadership_roles.leadership_role || '-'}
+                </div>
               </div>
 
               <div className="bg-gray-50 border border-gray-800 rounded-lg px-4 py-3 flex items-center">
-                {editingRole === role.id && editingFieldType === 'username' ? (
-                  <div className="flex items-center space-x-2 w-full">
-                    <input
-                      type="text"
-                      value={tempValue}
-                      onChange={(e) => onRoleFieldChange(e.target.value)}
-                      className="flex-1 px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
-                      placeholder="Enter username"
-                      autoFocus
-                    />
-                    <button
-                      onClick={onRoleFieldSave}
-                      className="text-green-600 hover:text-green-800 text-sm"
-                    >
-                      ✓
-                    </button>
-                    <button
-                      onClick={onRoleFieldCancel}
-                      className="text-red-600 hover:text-red-800 text-sm"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ) : (
-                  <div
-                    className="text-sm text-gray-900 cursor-pointer hover:bg-gray-100 px-2 py-1 rounded w-full"
-                    onClick={() => onRoleFieldEdit(role.id, 'username', role.username)}
-                  >
-                    {role.username || 'Enter username to populate fields'}
-                  </div>
-                )}
+                <div className="text-sm text-gray-900 w-full">
+                  {role.users?.username || '-'}
+                </div>
               </div>
 
               <div className="bg-gray-50 border border-gray-800 rounded-lg px-4 py-3 flex items-center">
-                {editingRole === role.id && editingFieldType === 'name' ? (
-                  <div className="flex items-center space-x-2 w-full">
-                    <input
-                      type="text"
-                      value={tempValue}
-                      onChange={(e) => onRoleFieldChange(e.target.value)}
-                      className="flex-1 px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
-                      placeholder="Enter name"
-                      autoFocus
-                    />
-                    <button
-                      onClick={onRoleFieldSave}
-                      className="text-green-600 hover:text-green-800 text-sm"
-                    >
-                      ✓
-                    </button>
-                    <button
-                      onClick={onRoleFieldCancel}
-                      className="text-red-600 hover:text-red-800 text-sm"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ) : (
-                  <div
-                    className="text-sm text-gray-900 cursor-pointer hover:bg-gray-100 px-2 py-1 rounded w-full"
-                    onClick={() => onRoleFieldEdit(role.id, 'name', role.name)}
-                  >
-                    {role.name || '-'}
-                  </div>
-                )}
+                <div className="text-sm text-gray-900 w-full">
+                  {role.users?.fullname || '-'}
+                </div>
               </div>
 
               {/* Actions Column */}
@@ -161,7 +329,7 @@ const LeadershipRolesPage: React.FC<LeadershipRolesPageProps> = ({
                   </button>
 
                   {/* Special headphone icon for Head of Delegate Affairs */}
-                  {role.role === 'Head of Delegate Affairs' && (
+                  {role.leadership_roles.leadership_role === 'Head of Delegate Affairs' && (
                     <button className="text-gray-600 hover:text-gray-800 p-1">
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M3 14v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3" />
@@ -172,7 +340,7 @@ const LeadershipRolesPage: React.FC<LeadershipRolesPageProps> = ({
 
                   {/* Three dots menu icon */}
                   <div ref={dropdownRef} className="relative">
-                    <button 
+                    <button
                       onClick={() => handleDropdownToggle(role.id)}
                       className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                     >
@@ -216,12 +384,117 @@ const LeadershipRolesPage: React.FC<LeadershipRolesPageProps> = ({
               </div>
             </React.Fragment>
           ))}
+
+          {/* New Role Input Row */}
+          {isAddingNew && (
+            <div className="col-span-5 grid grid-cols-[100px_200px_220px_280px_80px] gap-4">
+              <div className="bg-gray-100 px-3 py-2 text-sm rounded-md border border-gray-200">
+                <input
+                  type="text"
+                  value={newRoleData.abbr}
+                  readOnly
+                  placeholder="Auto-filled"
+                  className="w-full border-none outline-none text-gray-500 bg-transparent cursor-not-allowed"
+                />
+              </div>
+
+              <div
+                ref={roleDropdownRef}
+                className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200 relative"
+              >
+                <input
+                  type="text"
+                  value={newRoleData.role}
+                  onChange={(e) => handleNewRoleInputChange('role', e.target.value)}
+                  onFocus={() => {
+                    if (newRoleData.role.trim()) {
+                      setShowRoleDropdown(true);
+                      filterRolesByInput(newRoleData.role.trim());
+                    }
+                  }}
+                  placeholder="Enter role name"
+                  className="w-full border-none outline-none text-gray-900"
+                  autoComplete="off"
+                />
+
+                {/* Role Dropdown */}
+                {showRoleDropdown && filteredRoles.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
+                    {filteredRoles.map((role, index) => (
+                      <button
+                        key={role.id || index}
+                        type="button"
+                        onClick={() => handleRoleSelect(role)}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900 transition-colors duration-200 border-b border-gray-100 last:border-b-0"
+                      >
+                        <div className="font-medium">{role.leadership_role || role.role}</div>
+                        {role.abbr && (
+                          <div className="text-xs text-gray-500">({role.abbr})</div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div
+                ref={usernameDropdownRef}
+                className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200 relative"
+              >
+                <input
+                  type="text"
+                  value={newRoleData.username}
+                  onChange={(e) => handleNewRoleInputChange('username', e.target.value)}
+                  onFocus={() => {
+                    if (newRoleData.username.trim()) {
+                      setShowUsernameDropdown(true);
+                      filterUsernamesByInput(newRoleData.username.trim());
+                    }
+                  }}
+                  placeholder="Enter username"
+                  className="w-full border-none outline-none text-gray-900"
+                  autoComplete="off"
+                />
+
+                {/* Username Dropdown */}
+                {showUsernameDropdown && filteredUsernames.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
+                    {filteredUsernames.map((registration, index) => {
+                      const user = registration.user || registration;
+                      return (
+                        <button
+                          key={user.id || index}
+                          type="button"
+                          onClick={() => handleUsernameSelect(registration)}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900 transition-colors duration-200 border-b border-gray-100 last:border-b-0"
+                        >
+                          <div className="font-medium">{user.username}</div>
+                          <div className="text-xs text-gray-500">{user.fullname}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-gray-100 px-3 py-2 text-sm rounded-md border border-gray-200">
+                <input
+                  type="text"
+                  value={newRoleData.name}
+                  readOnly
+                  placeholder="Auto-filled"
+                  className="w-full border-none outline-none text-gray-500 bg-transparent cursor-not-allowed"
+                />
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       <div className="w-[925px] flex justify-between">
         <button
-          onClick={onAddRole}
+          onClick={handleAddNew}
+          disabled={isAddingNew}
           className={`text-white font-medium transition-colors`}
           style={{
             width: '105px',
@@ -230,8 +503,8 @@ const LeadershipRolesPage: React.FC<LeadershipRolesPageProps> = ({
             padding: '10px',
             gap: '10px',
             opacity: 1,
-            background: isSaving ? '#bdbdbd' : '#C2A46D',
-            cursor: isSaving ? 'not-allowed' : 'pointer',
+            background: isAddingNew ? '#bdbdbd' : '#C2A46D',
+            cursor: isAddingNew ? 'not-allowed' : 'pointer',
             border: 'none',
             boxShadow: 'none',
           }}
@@ -239,7 +512,7 @@ const LeadershipRolesPage: React.FC<LeadershipRolesPageProps> = ({
           Add Role
         </button>
         <button
-          onClick={onSaveLeadershipRoles}
+          onClick={handleSaveNew}
           className={`text-white font-medium transition-colors`}
           style={{
             width: '105px',
@@ -248,8 +521,8 @@ const LeadershipRolesPage: React.FC<LeadershipRolesPageProps> = ({
             padding: '10px',
             gap: '10px',
             opacity: 1,
-            background: isSaving ? '#bdbdbd' : '#C2A46D',
-            cursor: isSaving ? 'not-allowed' : 'pointer',
+            background: '#C2A46D',
+            cursor: 'pointer',
             border: 'none',
             boxShadow: 'none',
           }}

@@ -62,3 +62,5 @@ export const deleteLeadershipRoleApi = async (roleId: string) => {
         throw new Error(error.response?.data?.message || 'Failed to delete leadership role');
     }
 };
+
+

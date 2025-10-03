@@ -214,7 +214,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       }
     }
   }, [loginStatus]);
-
   // Update dashboard statistics
   const updateDashboardStats = (newStats: Partial<AppContextType['dashboardStats']>) => {
     setDashboardStats(prev => ({
@@ -318,7 +317,7 @@ export const useApp = (): AppContextType => {
       refreshLocalitiesData: async () => { },
       refreshSchoolsData: async () => { },
       refreshAreasData: async () => { },
-      refreshLeadershipRolesData: async () => { }
+      refreshLeadershipRolesData: async () => { },
     };
   }
   return context;

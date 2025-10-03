@@ -4,12 +4,13 @@ import { Header, UnsavedChangesModal } from '../components/ui';
 import { toast } from 'sonner';
 import { eventImagefileUploadApi, getEventByIdApi, updateEventApi } from '../apis/Events';
 import PageLoader from '../components/PageLoader';
-import { 
-  DashboardPage, 
-  EventDetailsPage, 
-  LeadershipRolesPage, 
-  CommitteesPage, 
-  OrganiserNavigation 
+import {
+  DashboardPage,
+  EventDetailsPage,
+  LeadershipRolesPage,
+  CommitteesPage,
+  AgendaPage,
+  OrganiserNavigation
 } from '../components/organiser';
 
 const OrganiserDashboard: React.FC = () => {
@@ -38,12 +39,12 @@ const OrganiserDashboard: React.FC = () => {
   const [editingField, setEditingField] = useState<string | null>(null);
   const [tempValue, setTempValue] = useState<string>('');
   const [isSaving, setIsSaving] = useState<boolean>(false);
-  
+
   // Unsaved changes states
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
   const [showUnsavedChangesModal, setShowUnsavedChangesModal] = useState<boolean>(false);
   const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
-  
+
   // Original values for resetting
   const [originalValues, setOriginalValues] = useState({
     eventName: '',
@@ -60,40 +61,28 @@ const OrganiserDashboard: React.FC = () => {
   });
 
   // Leadership Roles state
-  const [leadershipRoles, setLeadershipRoles] = useState([
-    { id: 1, abbr: 'SG', role: 'Secretary General', username: '@iman1234', name: 'Iman Praveesh Hassan' },
-    { id: 2, abbr: 'DG', role: 'Director General', username: '', name: '' },
-    { id: 3, abbr: 'COM', role: 'Head of Committees', username: '', name: '' },
-    { id: 4, abbr: 'DA', role: 'Head of Delegate Affairs', username: '', name: '' },
-    { id: 5, abbr: 'CHR', role: 'Head of Chairs', username: '', name: '' },
-    { id: 6, abbr: 'LOG', role: 'Head of Logistics', username: '', name: '' },
-    { id: 7, abbr: 'PR', role: 'Head of Public Relations', username: '', name: '' },
-    { id: 8, abbr: 'SM', role: 'Head of Social Media', username: '', name: '' }
-  ]);
-  const [editingRole, setEditingRole] = useState<number | null>(null);
-  const [editingFieldType, setEditingFieldType] = useState<'username' | 'name' | null>(null);
 
   // Committees state
   const [activeCommitteeType, setActiveCommitteeType] = useState('country');
   const [committees, setCommittees] = useState([
-    { 
-      id: 1, 
-      abbr: 'UNGA', 
-      committee: 'United Nations General Assembly', 
-      seatsTotal: '30', 
-      chairUsername: '@seema', 
+    {
+      id: 1,
+      abbr: 'UNGA',
+      committee: 'United Nations General Assembly',
+      seatsTotal: '30',
+      chairUsername: '@seema',
       chairName: 'Seema Shams',
       deputyChair1Username: '@username',
       deputyChair1Name: 'Full Name',
       deputyChair2Username: '@username',
       deputyChair2Name: 'Full Name'
     },
-    { 
-      id: 2, 
-      abbr: 'Auto Generated', 
-      committee: '', 
-      seatsTotal: '30', 
-      chairUsername: '', 
+    {
+      id: 2,
+      abbr: 'Auto Generated',
+      committee: '',
+      seatsTotal: '30',
+      chairUsername: '',
       chairName: '',
       deputyChair1Username: '',
       deputyChair1Name: '',
@@ -103,6 +92,18 @@ const OrganiserDashboard: React.FC = () => {
   ]);
   const [editingCommittee, setEditingCommittee] = useState<number | null>(null);
   const [editingCommitteeField, setEditingCommitteeField] = useState<string | null>(null);
+
+  // Agenda state
+  const [activeAgendaCommitteeType, setActiveAgendaCommitteeType] = useState('country');
+  const [activeAgendaCommittee, setActiveAgendaCommittee] = useState('UNGA');
+  const [agendas, setAgendas] = useState([
+    { id: 1, title: 'Climate Change in Africa' }
+  ]);
+  const [documents, setDocuments] = useState([
+    { id: 1, name: 'Climate Change Background Guide.pdf' }
+  ]);
+  const [editingAgenda, setEditingAgenda] = useState<number | null>(null);
+  const [editingDocument, setEditingDocument] = useState<number | null>(null);
 
   useEffect(() => {
     const getCurrentEvents = async () => {
@@ -126,7 +127,7 @@ const OrganiserDashboard: React.FC = () => {
             setLocality_id(eventData.locality.id);
             setSchool_id(eventData.school.id);
             setArea_id(eventData.school.area_id);
-            
+
             // Store original values for resetting
             setOriginalValues({
               eventName: eventData.name,
@@ -141,7 +142,7 @@ const OrganiserDashboard: React.FC = () => {
               instagram: eventData.instagram,
               coverImage: eventData.cover_image
             });
-            
+
             // Calculate total revenue
             calculateTotalRevenue(eventData.number_of_seats, eventData.fees_per_delegate);
           }
@@ -163,7 +164,7 @@ const OrganiserDashboard: React.FC = () => {
       setShowUnsavedChangesModal(true);
       return;
     }
-    
+
     setActiveStep(step);
   };
 
@@ -298,51 +299,6 @@ const OrganiserDashboard: React.FC = () => {
     setShowDatePicker(false);
   };
 
-  // Leadership Roles handlers
-  const handleRoleFieldEdit = (roleId: number, fieldType: 'username' | 'name', currentValue: string) => {
-    setEditingRole(roleId);
-    setEditingFieldType(fieldType);
-    setTempValue(currentValue);
-  };
-
-  const handleRoleFieldChange = (value: string) => {
-    setTempValue(value);
-  };
-
-  const handleRoleFieldSave = () => {
-    if (editingRole && editingFieldType) {
-      setLeadershipRoles(prev => prev.map(role =>
-        role.id === editingRole
-          ? { ...role, [editingFieldType]: tempValue }
-          : role
-      ));
-    }
-    setEditingRole(null);
-    setEditingFieldType(null);
-    setTempValue('');
-  };
-
-  const handleRoleFieldCancel = () => {
-    setEditingRole(null);
-    setEditingFieldType(null);
-    setTempValue('');
-  };
-
-  const handleAddRole = () => {
-    const newRole = {
-      id: Math.max(...leadershipRoles.map(r => r.id)) + 1,
-      abbr: '',
-      role: '',
-      username: '',
-      name: ''
-    };
-    setLeadershipRoles([...leadershipRoles, newRole]);
-  };
-
-  const handleSaveLeadershipRoles = () => {
-    // TODO: Implement API call to save leadership roles
-    toast.success('Leadership roles saved successfully');
-  };
 
   // Committees handlers
   const handleCommitteeTypeChange = (type: string) => {
@@ -361,8 +317,8 @@ const OrganiserDashboard: React.FC = () => {
 
   const handleCommitteeFieldSave = () => {
     if (editingCommittee && editingCommitteeField) {
-      setCommittees(prev => prev.map(committee => 
-        committee.id === editingCommittee 
+      setCommittees(prev => prev.map(committee =>
+        committee.id === editingCommittee
           ? { ...committee, [editingCommitteeField]: tempValue }
           : committee
       ));
@@ -399,6 +355,96 @@ const OrganiserDashboard: React.FC = () => {
     toast.success('Committees saved successfully');
   };
 
+  // Agenda handlers
+  const handleAgendaCommitteeTypeChange = (type: string) => {
+    setActiveAgendaCommitteeType(type);
+  };
+
+  const handleAgendaCommitteeChange = (committee: string) => {
+    setActiveAgendaCommittee(committee);
+  };
+
+  const handleAgendaEdit = (agendaId: number, currentValue: string) => {
+    setEditingAgenda(agendaId);
+    setTempValue(currentValue);
+  };
+
+  const handleAgendaChange = (value: string) => {
+    setTempValue(value);
+  };
+
+  const handleAgendaSave = () => {
+    if (editingAgenda) {
+      setAgendas(prev => prev.map(agenda =>
+        agenda.id === editingAgenda
+          ? { ...agenda, title: tempValue }
+          : agenda
+      ));
+    }
+    setEditingAgenda(null);
+    setTempValue('');
+  };
+
+  const handleAgendaCancel = () => {
+    setEditingAgenda(null);
+    setTempValue('');
+  };
+
+  const handleAgendaDelete = (agendaId: number) => {
+    setAgendas(prev => prev.filter(agenda => agenda.id !== agendaId));
+  };
+
+  const handleAddAgenda = () => {
+    const newAgenda = {
+      id: Math.max(...agendas.map(a => a.id)) + 1,
+      title: ''
+    };
+    setAgendas([...agendas, newAgenda]);
+    setEditingAgenda(newAgenda.id);
+    setTempValue('');
+  };
+
+  // Document handlers
+  const handleDocumentEdit = (documentId: number, currentValue: string) => {
+    setEditingDocument(documentId);
+    setTempValue(currentValue);
+  };
+
+  const handleDocumentChange = (value: string) => {
+    setTempValue(value);
+  };
+
+  const handleDocumentSave = () => {
+    if (editingDocument) {
+      setDocuments(prev => prev.map(document =>
+        document.id === editingDocument
+          ? { ...document, name: tempValue }
+          : document
+      ));
+    }
+    setEditingDocument(null);
+    setTempValue('');
+  };
+
+  const handleDocumentCancel = () => {
+    setEditingDocument(null);
+    setTempValue('');
+  };
+
+  const handleDocumentDelete = (documentId: number) => {
+    setDocuments(prev => prev.filter(document => document.id !== documentId));
+  };
+
+  const handleDocumentUpload = (file: File) => {
+    const newDocument = {
+      id: Math.max(...documents.map(d => d.id)) + 1,
+      name: file.name,
+      file: file
+    };
+    setDocuments([...documents, newDocument]);
+    toast.success('Document uploaded successfully');
+  };
+
   const calculateTotalRevenue = (seats: string, fees: string) => {
     const seatsNum = Number(seats);
     const feesNum = Number(fees);
@@ -417,7 +463,7 @@ const OrganiserDashboard: React.FC = () => {
       if (response.success) {
         toast.success(response.message);
         setHasUnsavedChanges(false); // Reset unsaved changes flag after successful save
-        
+
         // Update original values to current values after successful save
         setOriginalValues({
           eventName,
@@ -461,16 +507,16 @@ const OrganiserDashboard: React.FC = () => {
     setWebsite(originalValues.website);
     setInstagram(originalValues.instagram);
     setCoverImage(originalValues.coverImage);
-    
+
     // Recalculate total revenue with original values
     calculateTotalRevenue(originalValues.numberOfSeats, originalValues.feesPerDelegate);
-    
+
     // Reset editing states
     setEditingField(null);
     setTempValue('');
     setShowDatePicker(false);
     setHasUnsavedChanges(false);
-    
+
     // Close modal and navigate
     setShowUnsavedChangesModal(false);
     if (pendingNavigation) {
@@ -492,21 +538,7 @@ const OrganiserDashboard: React.FC = () => {
 
   // Leadership Roles component
   const renderLeadershipRoles = () => {
-    return (
-      <LeadershipRolesPage
-        leadershipRoles={leadershipRoles}
-        editingRole={editingRole}
-        editingFieldType={editingFieldType}
-        tempValue={tempValue}
-        isSaving={isSaving}
-        onRoleFieldEdit={handleRoleFieldEdit}
-        onRoleFieldChange={handleRoleFieldChange}
-        onRoleFieldSave={handleRoleFieldSave}
-        onRoleFieldCancel={handleRoleFieldCancel}
-        onAddRole={handleAddRole}
-        onSaveLeadershipRoles={handleSaveLeadershipRoles}
-      />
-    );
+    return <LeadershipRolesPage />;
   };
 
   // Committees component
@@ -530,8 +562,38 @@ const OrganiserDashboard: React.FC = () => {
     );
   };
 
+  // Agenda component
+  const renderAgenda = () => {
+    return (
+      <AgendaPage
+        activeCommitteeType={activeAgendaCommitteeType}
+        activeCommittee={activeAgendaCommittee}
+        agendas={agendas}
+        documents={documents}
+        editingAgenda={editingAgenda}
+        editingDocument={editingDocument}
+        tempValue={tempValue}
+        isSaving={isSaving}
+        onCommitteeTypeChange={handleAgendaCommitteeTypeChange}
+        onCommitteeChange={handleAgendaCommitteeChange}
+        onAgendaEdit={handleAgendaEdit}
+        onAgendaChange={handleAgendaChange}
+        onAgendaSave={handleAgendaSave}
+        onAgendaCancel={handleAgendaCancel}
+        onAgendaDelete={handleAgendaDelete}
+        onAddAgenda={handleAddAgenda}
+        onDocumentEdit={handleDocumentEdit}
+        onDocumentChange={handleDocumentChange}
+        onDocumentSave={handleDocumentSave}
+        onDocumentCancel={handleDocumentCancel}
+        onDocumentDelete={handleDocumentDelete}
+        onDocumentUpload={handleDocumentUpload}
+      />
+    );
+  };
+
   const renderDashboard = () => {
-      return (
+    return (
       <DashboardPage
         eventName={eventName}
         eventStartDate={eventStartDate}
@@ -546,7 +608,7 @@ const OrganiserDashboard: React.FC = () => {
   };
 
   const renderEventDetails = () => {
-      return (
+    return (
       <EventDetailsPage
         eventName={eventName}
         coverImage={coverImage}
@@ -588,7 +650,7 @@ const OrganiserDashboard: React.FC = () => {
       case 'committees':
         return renderCommittees();
       case 'agendas':
-        return <div className="text-center py-12"><h2 className="text-2xl font-bold text-gray-900">Agendas</h2><p className="text-gray-500 mt-2">Agendas management coming soon...</p></div>;
+        return renderAgenda();
       case 'delegates':
         return <div className="text-center py-12"><h2 className="text-2xl font-bold text-gray-900">Delegates</h2><p className="text-gray-500 mt-2">Delegates management coming soon...</p></div>;
       case 'general-documents':
@@ -626,7 +688,7 @@ const OrganiserDashboard: React.FC = () => {
           {renderStepContent()}
         </div>
       </div>
-      
+
       {/* Unsaved Changes Modal */}
       <UnsavedChangesModal
         isOpen={showUnsavedChangesModal}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Logo, LoadingSpinner, Header } from '../components/ui';
-import { getCurrentEventsApi } from '../apis/Events';
+import { getCurrentEventsApi, getEventsByOrganiserApi } from '../apis/Events';
 import PageLoader from '../components/PageLoader';
 
 const HomePage: React.FC = () => {
@@ -11,11 +11,19 @@ const HomePage: React.FC = () => {
   useEffect(() => {
     const checkEvents = async () => {
       try {
-        const response = await getCurrentEventsApi();
-        console.log("getCurrentEventsApi", response);
-        if (response.success && response.data && response.data.length > 0) {
-          navigate('/dashboard');
-          return;
+        const organiserId = localStorage.getItem('organiserId');
+        if (organiserId) {
+          const response = await getEventsByOrganiserApi();
+          if (response.success && response.data && response.data.length > 0) {
+            navigate('/dashboard');
+            return;
+          }
+        }else{
+           const response = await getCurrentEventsApi();
+           if (response.success && response.data && response.data.length > 0) {
+            navigate('/dashboard');
+            return;
+          }
         }
       } catch (error) {
         console.error('Error checking events:', error);

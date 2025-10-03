@@ -49,7 +49,7 @@ function App() {
           <Route path="/event-create" element={<PrivateRoute><EventCreate /></PrivateRoute>} />
           <Route path="/event-create-success" element={<PrivateRoute><EventCreateSuccess /></PrivateRoute>} />
           <Route path="/organiser" element={<PrivateRoute><Organiser /></PrivateRoute>} />
-          <Route path="/organiser-dashboard/:eventId" element={<PrivateRoute><OrganiserDashboard /></PrivateRoute>} />
+          <Route path="/event-dashboard/:eventId" element={<PrivateRoute><OrganiserDashboard /></PrivateRoute>} />
           <Route path="/super-user" element={<PrivateRoute><SuperUser /></PrivateRoute>} />
 
           {/* Student Routes */}
@@ -68,7 +68,7 @@ function App() {
           <Route path="/teacher-registration-success" element={<PrivateRoute><TeacherRegistrationSuccess /></PrivateRoute>} />
           <Route path="/profile-page" element={<PrivateRoute><ProfilePage userType="student" /></PrivateRoute>} />
           </Routes>
-          <Toaster position="top-right" richColors />
+          <Toaster position="bottom-right" richColors />
         </div>
         </Router>
       </AppProvider>
