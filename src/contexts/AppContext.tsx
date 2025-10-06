@@ -2,9 +2,9 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import type { ReactNode } from 'react';
 import { getAllUsersApi } from '../apis/Users.ts';
 import { getAllOrganisersApi } from '../apis/Organisers.ts';
-import { getAllLocalitiesApi } from '../apis/Localities.ts';
-import { getAllSchoolsApi } from '../apis/Schools.ts';
-import { getAllAreasApi } from '../apis/Areas.ts';
+import { getAllLocalitiesApi } from '../apis/localities.ts';
+import { getAllSchoolsApi } from '../apis/schools.ts';
+import { getAllAreasApi } from '../apis/areas.ts';
 import { getAllEventsApi } from '../apis/Events.ts';
 import { getAllLeadershipRolesApi } from '../apis/LeadershipRoles.ts';
 import { useSupabaseAuth } from './SupabaseAuthContext';
