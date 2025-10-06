@@ -10,6 +10,7 @@ import { getAllLeadershipRolesApi } from '../apis/LeadershipRoles.ts';
 import { useSupabaseAuth } from './SupabaseAuthContext';
 import { toast } from 'sonner';
 import { getAllCommitteesApi } from '../apis/Committees.ts';
+import { getAllRegistrationsByEventIdApi } from '../apis/Registerations.ts';
 
 // Define the context type
 interface AppContextType {
@@ -55,6 +56,9 @@ interface AppContextType {
   allAreas: any[];
   allCommittees: any[];
   refreshCommitteesData: () => Promise<void>;
+  allRegistrations: any[];
+  setAllRegistrations: (regs: any[]) => void;
+  refreshRegistrationsData: (eventId: string) => Promise<void>;
 }
 
 // Create the context with a default value to prevent undefined errors
@@ -81,6 +85,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [allAreas, setAllAreas] = useState<any[]>([]);
   const [allLeadershipRoles, setAllLeadershipRoles] = useState<any[]>([]);
   const [allCommittees, setAllCommittees] = useState<any[]>([]);
+  const [allRegistrations, setAllRegistrations] = useState<any[]>([]);
   // Dashboard statistics state
   const [dashboardStats, setDashboardStats] = useState({
     eventsUpcoming: 5,
@@ -236,6 +241,22 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   }, [loginStatus]);
 
+  const refreshRegistrationsData = useCallback(async (eventId: string) => {
+    try {
+      if (!eventId) return;
+      const response = await getAllRegistrationsByEventIdApi(eventId);
+      if (response.success) {
+        setAllRegistrations(response.data || []);
+      } else {
+        toast.error(response.message);
+      }
+    } catch (error) {
+      if (loginStatus) {
+        toast.error('JWT token is expired. Please login again.');
+      }
+    }
+  }, [loginStatus]);
+
   // Update dashboard statistics
   const updateDashboardStats = (newStats: Partial<AppContextType['dashboardStats']>) => {
     setDashboardStats(prev => ({
@@ -270,6 +291,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     allAreas,
     allLeadershipRoles,
     allCommittees,
+    allRegistrations,
     setAllEvents,
     setAllLocalities,
     setAllSchools,
@@ -277,6 +299,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     setAllLeadershipRoles,
     setAllUsers,
     setAllOrganisers,
+    setAllRegistrations,
     allOrganisers,
     setUserType,
     setIsOrganiser,
@@ -289,6 +312,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     refreshAreasData,
     refreshLeadershipRolesData,
     refreshCommitteesData,
+    refreshRegistrationsData,
   };
 
 
@@ -319,6 +343,7 @@ export const useApp = (): AppContextType => {
       allAreas: [],
       allLeadershipRoles: [],
       allCommittees: [],
+      allRegistrations: [],
       dashboardStats: {
         eventsUpcoming: 0,
         eventsCompleted: 0,
@@ -345,6 +370,8 @@ export const useApp = (): AppContextType => {
       refreshAreasData: async () => { },
       refreshLeadershipRolesData: async () => { },
       refreshCommitteesData: async () => { },
+      setAllRegistrations: () => { },
+      refreshRegistrationsData: async (_eventId: string) => { },
     };
   }
   return context;

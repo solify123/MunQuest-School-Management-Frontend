@@ -15,13 +15,22 @@ export const getAllEventCommitteesApi = async (eventId: string) => {
     }
 };
 
-export const saveEventCommitteesByEventIdApi = async (eventId: string, userId: string, roleId: string) => {
+export const saveEventCommitteesByEventIdApi = async (committeeId: string, eventId: string, category: string, seats: string,
+    chair_username: string, chair_fullname: string, deputy_chair1_username: string, deputy_chair1_fullname: string,
+    deputy_chair2_username: string, deputy_chair2_fullname: string) => {
     try {
         const token = localStorage.getItem('token');
         const response = await axios.post(`${backendUrl}/api/v1/event-committees/save-event-committees-by-event`, {
+            committeeId,
             eventId,
-            userId,
-            roleId
+            category,
+            seats,
+            chair_username,
+            chair_fullname,
+            deputy_chair1_username,
+            deputy_chair1_fullname,
+            deputy_chair2_username,
+            deputy_chair2_fullname
         }, {
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -47,13 +56,22 @@ export const getEventCommitteesByEventIdApi = async (eventId: string) => {
     }
 };
 
-export const updateEventCommitteesByEventIdApi = async (id: string, eventId: string, roleId: string, userId: string) => {
+export const updateEventCommitteesByEventIdApi = async (id: string, eventId: string, committeeId: string, category: string, seats: string,
+    chair_username: string, chair_fullname: string, deputy_chair1_username: string, deputy_chair1_fullname: string,
+    deputy_chair2_username: string, deputy_chair2_fullname: string) => {
     try {
         const token = localStorage.getItem('token');
         const response = await axios.patch(`${backendUrl}/api/v1/event-committees/update-event-committees-by-event/${id}`, {
+            committeeId,
             eventId,
-            roleId,
-            userId
+            category,
+            seats,
+            chair_username,
+            chair_fullname,
+            deputy_chair1_username,
+            deputy_chair1_fullname,
+            deputy_chair2_username,
+            deputy_chair2_fullname
         }, {
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -75,7 +93,7 @@ export const deleteEventCommitteesByEventIdApi = async (id: string) => {
         });
         return response.data;
     } catch (error: any) {
-            throw new Error(error.response?.data?.message || 'Failed to delete event committees by event id');
+        throw new Error(error.response?.data?.message || 'Failed to delete event committees by event id');
     }
 };
 

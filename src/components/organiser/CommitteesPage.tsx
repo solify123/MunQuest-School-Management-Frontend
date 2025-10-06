@@ -1,14 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
-import { createCommitteeApi, updateCommitteeApi } from '../../apis/Committees';
 import { useApp } from '../../contexts/AppContext';
 import { getAllEventCommitteesApi } from '../../apis/Event_committes';
+import { deleteEventCommitteesByEventIdApi } from '../../apis/Event_committes';
 import { useParams } from 'react-router-dom';
+import { saveEventCommitteesByEventIdApi } from '../../apis/Event_committes';
+// import { updateCommitteeApi } from '../../apis/Committees';
+import ConfirmationModal from '../ui/ConfirmationModal';
 
 interface Committee {
   id: number;
   abbr: string;
   committee: string;
+  // The selected master committee id from dropdown selection
+  committeeId?: number;
   seatsTotal: string;
   chairUsername: string;
   chairName: string;
@@ -16,6 +21,8 @@ interface Committee {
   deputyChair1Name: string;
   deputyChair2Username: string;
   deputyChair2Name: string;
+  // Local-only flag to prevent multiple unsaved rows
+  isNew?: boolean;
 }
 
 const CommitteesPage: React.FC = () => {
@@ -31,6 +38,9 @@ const CommitteesPage: React.FC = () => {
   const [showContextMenu, setShowContextMenu] = useState<boolean>(false);
   const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [contextMenuCommitteeId, setContextMenuCommitteeId] = useState<number | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
+  // Keep a ref in sync with hasUnsavedChanges to avoid stale closures in async effects
+  const hasUnsavedChangesRef = useRef<boolean>(false);
 
   // Committee autocomplete states
   const [showCommitteeDropdown, setShowCommitteeDropdown] = useState<boolean>(false);
@@ -55,20 +65,56 @@ const CommitteesPage: React.FC = () => {
 
 
   const { eventId } = useParams();
-  const { allCommittees, allUsers, refreshCommitteesData, isLoading } = useApp();
+  const { allCommittees, allRegistrations, refreshCommitteesData, refreshRegistrationsData, isLoading } = useApp();
 
   useEffect(() => {
     refreshCommitteesData();
   }, []);
 
-  // Filter committees based on active committee type
+  // Load registrations for this event
+  useEffect(() => {
+    if (eventId) {
+      refreshRegistrationsData(eventId);
+    }
+  }, [eventId]);
+
+  // Keep ref synced with state
+  useEffect(() => {
+    hasUnsavedChangesRef.current = hasUnsavedChanges;
+  }, [hasUnsavedChanges]);
+
+  // Fetch committees for event and active type. Avoid overwriting local edits using ref.
   useEffect(() => {
     const fetchEventCommittees = async () => {
       try {
         const response = await getAllEventCommitteesApi(eventId as string);
-        // Only update if we don't have unsaved changes
-        if (!hasUnsavedChanges) {
-          setCommittees(response.data || []);
+        // Only update if we don't have unsaved changes at response time
+        if (!hasUnsavedChangesRef.current) {
+          const raw = response.data || [];
+          const normalized = raw.map((item: any) => {
+            console.log('[CommitteesPage] Normalizing committee:', item);
+            const master = item && typeof item.committee === 'object' ? item.committee : null;
+            const committeeText = master
+              ? (master.committee ?? master.name ?? '')
+              : (typeof item.committee === 'string' ? item.committee : '');
+            const abbreviation = master ? (master.abbr ?? item.abbr ?? '') : (item.abbr ?? '');
+            const masterId = master ? master.id : (item.committee_id ?? item.committeeId ?? undefined);
+            return {
+              id: item.id,
+              committee: committeeText,
+              abbr: abbreviation,
+              committeeId: masterId,
+              seatsTotal: String(item.seats ?? item.seatsTotal ?? ''),
+              chairUsername: item.chair_username ?? '',
+              chairName: item.chair_name ?? '',
+              deputyChair1Username: item.deputy_chair_1_username ?? '',
+              deputyChair1Name: item.deputy_chair_1_name ?? '',
+              deputyChair2Username: item.deputy_chair_2_username ?? '',
+              deputyChair2Name: item.deputy_chair_2_name ?? '',
+              isNew: false
+            };
+          });
+          setCommittees(Array.isArray(normalized) ? normalized : []);
         }
       } catch (error: any) {
         console.error('Error fetching event committees:', error);
@@ -79,7 +125,7 @@ const CommitteesPage: React.FC = () => {
     if (eventId) {
       fetchEventCommittees();
     }
-  }, [eventId, activeCommitteeType, hasUnsavedChanges]);
+  }, [eventId, activeCommitteeType]);
 
   // Handle click outside to close dropdowns
   useEffect(() => {
@@ -97,7 +143,7 @@ const CommitteesPage: React.FC = () => {
       }
       if (contextMenuRef.current && !contextMenuRef.current.contains(event.target as Node)) {
         setShowContextMenu(false);
-    setContextMenuCommitteeId(null);
+        setContextMenuCommitteeId(null);
       }
     };
 
@@ -133,13 +179,23 @@ const CommitteesPage: React.FC = () => {
     setEditingCommitteeField(fieldType);
     setTempValue(currentValue);
 
-    // Clear user dropdown states when starting to edit a field
-    setShowUserDropdown(false);
-    setFilteredUsers([]);
-    setActiveUserDropdown(null);
-    setActiveUserField(null);
+    // Prepare user dropdown state if editing a username field
+    if (
+      fieldType === 'chairUsername' ||
+      fieldType === 'deputyChair1Username' ||
+      fieldType === 'deputyChair2Username'
+    ) {
+      setActiveUserDropdown(committeeId);
+      setActiveUserField(fieldType);
+      setShowUserDropdown(false);
+      setFilteredUsers([]);
+    } else {
+      setShowUserDropdown(false);
+      setFilteredUsers([]);
+      setActiveUserDropdown(null);
+      setActiveUserField(null);
+    }
     setShowContextMenu(false);
-    setContextMenuCommitteeId(null);
     setContextMenuCommitteeId(null);
   };
 
@@ -159,8 +215,16 @@ const CommitteesPage: React.FC = () => {
       }
     }
 
-    // If username field is being changed, show dropdown and filter users
-    if (editingCommitteeField === 'chairUsername' || editingCommitteeField === 'deputyChair1Username' || editingCommitteeField === 'deputyChair2Username') {
+    // If username or name field is being changed, show dropdown and filter users
+    if (
+      editingCommitteeField === 'chairUsername' ||
+      editingCommitteeField === 'deputyChair1Username' ||
+      editingCommitteeField === 'deputyChair2Username' ||
+      editingCommitteeField === 'chairName' ||
+      editingCommitteeField === 'deputyChair1Name' ||
+      editingCommitteeField === 'deputyChair2Name'
+    ) {
+      console.log('[CommitteesPage] User input for', editingCommitteeField, ':', value);
       if (value.trim()) {
         setShowUserDropdown(true);
         setActiveUserDropdown(committeeId || null);
@@ -205,13 +269,16 @@ const CommitteesPage: React.FC = () => {
 
   // Function to filter users by input
   const filterUsersByInput = (input: string) => {
-    if (!allUsers || allUsers.length === 0) {
+    console.log('[CommitteesPage] Filtering registrations by input:', input);
+    if (!allRegistrations || allRegistrations.length === 0) {
+      console.log('[CommitteesPage] No registrations available to filter');
       setFilteredUsers([]);
       return;
     }
 
-    // Filter users by username or fullname
-    const filtered = allUsers.filter((user: any) => {
+    // Filter registrations by username or fullname
+    const filtered = allRegistrations.filter((registration: any) => {
+      const user = registration.user || registration;
       const username = user.username || '';
       const fullname = user.fullname || '';
 
@@ -221,18 +288,23 @@ const CommitteesPage: React.FC = () => {
       );
     });
 
+    console.log('[CommitteesPage] Filtered registrations count:', filtered.length);
+    console.log('[CommitteesPage] Filtered registrations sample:', filtered.slice(0, 5));
     setFilteredUsers(filtered);
   };
 
   // Handle committee selection from dropdown
   const handleCommitteeSelect = (selectedCommittee: any) => {
+    console.log('[CommitteesPage] Selected committee from dropdown:', selectedCommittee);
     if (editingCommittee && editingCommitteeField === 'committee') {
       setCommittees(prev => prev.map((committee: any) =>
         committee.id === editingCommittee
           ? {
             ...committee,
             committee: selectedCommittee.committee || selectedCommittee.name || '',
-            abbr: selectedCommittee.abbr || 'Auto'
+            abbr: selectedCommittee.abbr || 'Auto',
+            // store actual committee id from master list
+            committeeId: selectedCommittee.id
           }
           : committee
       ));
@@ -242,23 +314,48 @@ const CommitteesPage: React.FC = () => {
     setShowCommitteeDropdown(false);
     setFilteredCommittees([]);
     setActiveCommitteeDropdown(null);
-    setEditingCommittee(null);
-    setEditingCommitteeField(null);
-    setTempValue('');
+    // Keep row in edit mode; advance to seats for continued input
+    if (editingCommittee) {
+      const c = committees.find((c: any) => c.id === editingCommittee);
+      setEditingCommitteeField('seatsTotal');
+      setTempValue(c?.seatsTotal || '');
+    }
   };
 
   // Handle user selection from dropdown
   const handleUserSelect = (selectedUser: any) => {
+    const selected = selectedUser && selectedUser.user ? selectedUser.user : selectedUser;
     if (editingCommittee && activeUserField) {
-      setCommittees(prev => prev.map((committee: any) =>
-        committee.id === editingCommittee
-          ? {
+      setCommittees(prev => prev.map((committee: any) => {
+        if (committee.id !== editingCommittee) return committee;
+        // If editing a Username field, set both username and corresponding Name
+        if (
+          activeUserField === 'chairUsername' ||
+          activeUserField === 'deputyChair1Username' ||
+          activeUserField === 'deputyChair2Username'
+        ) {
+          const nameField = activeUserField.replace('Username', 'Name');
+          return {
             ...committee,
-            [activeUserField]: selectedUser.username || '',
-            [activeUserField.replace('Username', 'Name')]: selectedUser.fullname || ''
-          }
-          : committee
-      ));
+            [activeUserField]: selected?.username || '',
+            [nameField]: selected?.fullname || ''
+          };
+        }
+        // If editing a Name field, set both name and corresponding Username
+        if (
+          activeUserField === 'chairName' ||
+          activeUserField === 'deputyChair1Name' ||
+          activeUserField === 'deputyChair2Name'
+        ) {
+          const usernameField = activeUserField.replace('Name', 'Username');
+          return {
+            ...committee,
+            [activeUserField]: selected?.fullname || '',
+            [usernameField]: selected?.username || ''
+          };
+        }
+        return committee;
+      }));
       // Mark as having unsaved changes after user selection
       setHasUnsavedChanges(true);
     }
@@ -266,59 +363,20 @@ const CommitteesPage: React.FC = () => {
     setFilteredUsers([]);
     setActiveUserDropdown(null);
     setActiveUserField(null);
-    setEditingCommittee(null);
-    setEditingCommitteeField(null);
+    // Keep row in edit mode to continue editing other fields
     setTempValue('');
   };
 
-  const handleCommitteeFieldSave = async () => {
-    if (editingCommittee && editingCommitteeField) {
-      try {
-        setIsSaving(true);
-        const committeeToUpdate = committees.find((c: any) => c.id === editingCommittee);
-        if (committeeToUpdate) {
-          const response = await updateCommitteeApi(
-            editingCommittee.toString(),
-            committeeToUpdate.abbr,
-            editingCommitteeField === 'committee' ? tempValue : committeeToUpdate.committee,
-            activeCommitteeType
-          );
+  // Removed per-cell save function (superseded by unified Save)
+  // const handleCommitteeFieldSave = async () => {};
 
-          if (response.success) {
-            setCommittees(prev => prev.map((committee: any) =>
-              committee.id === editingCommittee
-                ? { ...committee, [editingCommitteeField]: tempValue }
-                : committee
-            ));
-            toast.success('Committee updated successfully');
-            // Mark as having unsaved changes after successful update
-            setHasUnsavedChanges(true);
-          } else {
-            toast.error(response.message || 'Failed to update committee');
-          }
-        }
-      } catch (error: any) {
-        console.error('Error updating committee:', error);
-        toast.error(error.message || 'Failed to update committee');
-      } finally {
-        setIsSaving(false);
-        setEditingCommittee(null);
-        setEditingCommitteeField(null);
-        setTempValue('');
-      }
-    }
-  };
-
-  const handleCommitteeFieldCancel = () => {
-    setEditingCommittee(null);
-    setEditingCommitteeField(null);
-    setTempValue('');
-  };
+  // Removed per-cell cancel (use context menu or leave edit mode by Save)
+  // const handleCommitteeFieldCancel = () => {};
 
   const handleContextMenuClick = (event: React.MouseEvent, committeeId: number) => {
     event.preventDefault();
     event.stopPropagation();
-    
+
     const rect = event.currentTarget.getBoundingClientRect();
     setContextMenuPosition({
       x: rect.right,
@@ -329,20 +387,31 @@ const CommitteesPage: React.FC = () => {
   };
 
   const handleAddCommittee = () => {
+    // Prevent generating another row if one unsaved new row already exists
+    const hasPendingNewRow = committees.some((c: any) => c.isNew);
+    if (hasPendingNewRow) {
+      return;
+    }
     const newId = committees.length > 0 ? Math.max(...committees.map((c: any) => c.id)) + 1 : 1;
     const newCommittee: Committee = {
       id: newId,
       abbr: 'Auto Generated',
       committee: '',
+      committeeId: undefined,
       seatsTotal: '30',
       chairUsername: '',
       chairName: '',
       deputyChair1Username: '',
       deputyChair1Name: '',
       deputyChair2Username: '',
-      deputyChair2Name: ''
+      deputyChair2Name: '',
+      isNew: true
     };
     setCommittees(prev => [...prev, newCommittee as any]);
+    // Immediately enable editing for the chair username field on the newly added row
+    setEditingCommittee(newId);
+    setEditingCommitteeField('chairUsername');
+    setTempValue(newCommittee.chairUsername);
 
     // Mark as having unsaved changes
     setHasUnsavedChanges(true);
@@ -359,20 +428,71 @@ const CommitteesPage: React.FC = () => {
     setContextMenuCommitteeId(null);
   };
 
-  const handleDeleteCommittee = () => {
-    if (contextMenuCommitteeId) {
-      setCommittees(prev => prev.filter((c: any) => c.id !== contextMenuCommitteeId));
-      setHasUnsavedChanges(true);
+  const handleDeleteCommittee = async () => {
+    try {
+      if (!contextMenuCommitteeId) return;
+      const target = committees.find((c: any) => c.id === contextMenuCommitteeId);
+      if (!target) return;
+
+      // If it's a new unsaved row, just remove locally
+      if (target.isNew) {
+        setCommittees(prev => prev.filter((c: any) => c.id !== contextMenuCommitteeId));
+        setShowContextMenu(false);
+        setContextMenuCommitteeId(null);
+        return;
+      }
+
+      const response = await deleteEventCommitteesByEventIdApi(String(contextMenuCommitteeId));
+      if (!response.success) {
+        toast.error('Failed to delete committee');
+        return;
+      }
+      // After successful delete, refresh from backend to reflect latest data
+      try {
+        const refreshed = await getAllEventCommitteesApi(eventId as string);
+        const raw = refreshed.data || [];
+        const normalized = raw.map((item: any) => {
+          const master = item && typeof item.committee === 'object' ? item.committee : null;
+          const committeeText = master
+            ? (master.committee ?? master.name ?? '')
+            : (typeof item.committee === 'string' ? item.committee : '');
+          const abbreviation = master ? (master.abbr ?? item.abbr ?? '') : (item.abbr ?? '');
+          const masterId = master ? master.id : (item.committee_id ?? item.committeeId ?? undefined);
+          return {
+            id: item.id,
+            committee: committeeText,
+            abbr: abbreviation,
+            committeeId: masterId,
+            seatsTotal: String(item.seats ?? item.seatsTotal ?? ''),
+            chairUsername: item.chair_username ?? '',
+            chairName: item.chair_name ?? '',
+            deputyChair1Username: item.deputy_chair_1_username ?? '',
+            deputyChair1Name: item.deputy_chair_1_name ?? '',
+            deputyChair2Username: item.deputy_chair_2_username ?? '',
+            deputyChair2Name: item.deputy_chair_2_name ?? '',
+            isNew: false
+          };
+        });
+        setCommittees(Array.isArray(normalized) ? normalized : []);
+      } catch (refreshErr) {
+        // Fallback to local removal if refresh fails
+        setCommittees(prev => prev.filter((c: any) => c.id !== contextMenuCommitteeId));
+      }
+      toast.success('Committee deleted');
+    } catch (error: any) {
+      console.error('Error deleting committee:', error);
+      toast.error(error.message || 'Failed to delete committee');
+    } finally {
+      setShowContextMenu(false);
+      setContextMenuCommitteeId(null);
     }
-    setShowContextMenu(false);
-    setContextMenuCommitteeId(null);
-    setContextMenuCommitteeId(null);
   };
 
   const handleEditCommittee = () => {
     if (contextMenuCommitteeId) {
       const committee = committees.find((c: any) => c.id === contextMenuCommitteeId);
       if (committee) {
+        // Prevent editing fields for rows that are pending new (still allowed, but we set editing to specific field)
         setEditingCommittee(contextMenuCommitteeId);
         setEditingCommitteeField('committee');
         setTempValue(committee.committee || '');
@@ -386,21 +506,49 @@ const CommitteesPage: React.FC = () => {
   const handleSaveCommittees = async () => {
     try {
       setIsSaving(true);
-      // Save all committees that have been modified
-      for (const committee of committees as any) {
-        if (committee.committee && committee.committee !== '') {
-          const response = await createCommitteeApi(
-            committee.abbr,
-            committee.committee,
-            activeCommitteeType
-          );
+      // Only save the currently editing row (or the new pending row if present)
+      const target =
+        (editingCommittee && committees.find((c: any) => c.id === editingCommittee)) ||
+        committees.find((c: any) => c.isNew) ||
+        null;
 
-          if (!response.success) {
-            toast.error(`Failed to save committee: ${committee.committee}`);
-            return;
-          }
-        }
+      if (!target) {
+        toast.error('No row selected to save');
+        return;
       }
+
+      if (!target.committee || target.committee === '') {
+        toast.error('Please select a committee before saving');
+        return;
+      }
+
+      // Require a selected master committee id; do not fallback to local row id
+      const committeeIdentifier = (target as any).committeeId;
+      if (!committeeIdentifier) {
+        toast.error('Please select a committee from the dropdown before saving');
+        return;
+      }
+      console.log('[CommitteesPage] Saving committee with identifier:', committeeIdentifier, 'target:', target);
+      const response = await saveEventCommitteesByEventIdApi(
+        committeeIdentifier.toString(),
+        eventId as string,
+        activeCommitteeType,
+        target.seatsTotal,
+        target.chairUsername,
+        target.chairName,
+        target.deputyChair1Username,
+        target.deputyChair1Name,
+        target.deputyChair2Username,
+        target.deputyChair2Name
+      );
+
+      if (!response.success) {
+        toast.error(`Failed to save committee: ${target.committee}`);
+        return;
+      }
+
+      // Clear isNew flag after successful save
+      setCommittees(prev => prev.map((c: any) => (c.id === target.id ? { ...c, isNew: false } : c)));
       toast.success('Committees saved successfully');
       // Reset unsaved changes flag after successful save
       setHasUnsavedChanges(false);
@@ -471,13 +619,13 @@ const CommitteesPage: React.FC = () => {
 
             {committees.map((committee: any) => (
               <React.Fragment key={committee.id}>
-                <div className="bg-gray-50 border border-gray-800 rounded-lg px-4 py-3 flex items-center justify-center">
+                <div className="bg-gray-50 border border-gray-800 rounded-lg px-3 py-2 flex items-center justify-center">
                   <div className="text-sm text-gray-900 text-center w-full">
                     {committee.abbr}
                   </div>
                 </div>
 
-                <div className="bg-gray-50 border border-gray-800 rounded-lg px-4 py-3 flex items-center">
+                <div className="bg-gray-50 border border-gray-800 rounded-lg px-3 py-2 flex items-center">
                   {editingCommittee === committee.id && editingCommitteeField === 'committee' ? (
                     <div className=" text-sm rounded-md relative w-full" ref={committeeDropdownRef}>
                       <div className="flex items-center">
@@ -531,17 +679,17 @@ const CommitteesPage: React.FC = () => {
                     </div>
                   ) : (
                     <div
-                      className="text-sm text-gray-900 w-full cursor-pointer"
-                      onClick={() => handleCommitteeFieldEdit(committee.id, 'committee', committee.committee)}
+                      className="text-sm text-gray-900 w-full"
+                      onClick={editingCommittee === committee.id ? () => handleCommitteeFieldEdit(committee.id, 'committee', committee.committee || '') : undefined}
                     >
                       {committee.committee || 'E.g. United Nations Security Council'}
                     </div>
                   )}
                 </div>
 
-                <div className="bg-gray-50 border border-gray-800 rounded-lg px-4 py-3 flex items-center">
+                <div className="bg-gray-50 border border-gray-800 rounded-lg px-3 py-2 flex items-center">
                   {editingCommittee === committee.id && editingCommitteeField === 'seatsTotal' ? (
-                    <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200 relative w-full">
+                    <div className="text-sm relative w-full">
                       <input
                         type="text"
                         value={tempValue}
@@ -552,14 +700,17 @@ const CommitteesPage: React.FC = () => {
                       />
                     </div>
                   ) : (
-                    <div className="text-sm text-gray-900 w-full">
+                    <div
+                      className="text-sm text-gray-900 w-full"
+                      onClick={editingCommittee === committee.id ? () => handleCommitteeFieldEdit(committee.id, 'seatsTotal', committee.seatsTotal) : undefined}
+                    >
                       {committee.seatsTotal}
                     </div>
                   )}
                 </div>
 
                 {/* Chair Username */}
-                <div className="bg-gray-50 border border-gray-800 rounded-lg px-4 py-3 flex items-center">
+                <div className="bg-gray-50 border border-gray-800 rounded-lg px-3 py-2 flex items-center">
                   {editingCommittee === committee.id && editingCommitteeField === 'chairUsername' ? (
                     <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200 relative w-full" ref={userDropdownRef}>
                       <div className="flex items-center">
@@ -596,36 +747,82 @@ const CommitteesPage: React.FC = () => {
                       {/* User Dropdown */}
                       {showUserDropdown && activeUserDropdown === committee.id && activeUserField === 'chairUsername' && filteredUsers.length > 0 && (
                         <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
-                          {filteredUsers.map((user, index) => (
-                            <button
-                              key={user.id || index}
-                              type="button"
-                              onClick={() => handleUserSelect(user)}
-                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900 transition-colors duration-200 border-b border-gray-100 last:border-b-0"
-                            >
-                              <div className="font-medium">@{user.username}</div>
-                              <div className="text-xs text-gray-500">{user.fullname}</div>
-                            </button>
-                          ))}
+                          {filteredUsers.map((user, index) => {
+                            const u = user && user.user ? user.user : user;
+                            return (
+                              <button
+                                key={u?.id || index}
+                                type="button"
+                                onClick={() => handleUserSelect(user)}
+                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900 transition-colors duration-200 border-b border-gray-100 last:border-b-0"
+                              >
+                                <div className="font-medium">@{u?.username}</div>
+                                <div className="text-xs text-gray-500">{u?.fullname}</div>
+                              </button>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
                   ) : (
-                    <div className="text-sm text-gray-900 w-full">
+                    <div
+                      className="text-sm text-gray-900 w-full"
+                      onClick={editingCommittee === committee.id ? () => handleCommitteeFieldEdit(committee.id, 'chairUsername', committee.chairUsername || '') : undefined}
+                    >
                       {committee.chairUsername || '-'}
                     </div>
                   )}
                 </div>
 
                 {/* Chair Name */}
-                <div className="bg-gray-50 border border-gray-800 rounded-lg px-4 py-3 flex items-center">
-                  <div className="text-sm text-gray-900 w-full">
-                    {committee.chairName || '-'}
-                  </div>
+                <div className="bg-gray-50 border border-gray-800 rounded-lg px-3 py-2 flex items-center">
+                  {editingCommittee === committee.id && editingCommitteeField === 'chairName' ? (
+                    <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200 relative w-full" ref={userDropdownRef}>
+                      <div className="flex items-center">
+                        <svg className="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <input
+                          type="text"
+                          value={tempValue}
+                          onChange={(e) => handleCommitteeFieldChange(e.target.value, committee.id)}
+                          placeholder="Full name"
+                          className="w-full border-none outline-none text-gray-900"
+                          autoFocus
+                          autoComplete="off"
+                        />
+                      </div>
+                      {showUserDropdown && activeUserDropdown === committee.id && activeUserField === 'chairName' && filteredUsers.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
+                          {filteredUsers.map((user, index) => {
+                            const u = user && user.user ? user.user : user;
+                            return (
+                              <button
+                                key={u?.id || index}
+                                type="button"
+                                onClick={() => handleUserSelect(user)}
+                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900 transition-colors duration-200 border-b border-gray-100 last:border-b-0"
+                              >
+                                <div className="font-medium">{u?.fullname}</div>
+                                <div className="text-xs text-gray-500">@{u?.username}</div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div
+                      className="text-sm text-gray-900 w-full"
+                      onClick={editingCommittee === committee.id ? () => handleCommitteeFieldEdit(committee.id, 'chairName', committee.chairName || '') : undefined}
+                    >
+                      {committee.chairName || '-'}
+                    </div>
+                  )}
                 </div>
 
                 {/* Deputy Chair 1 Username */}
-                <div className="bg-gray-50 border border-gray-800 rounded-lg px-4 py-3 flex items-center">
+                <div className="bg-gray-50 border border-gray-800 rounded-lg px-3 py-2 flex items-center">
                   {editingCommittee === committee.id && editingCommitteeField === 'deputyChair1Username' ? (
                     <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200 relative w-full" ref={userDropdownRef}>
                       <div className="flex items-center">
@@ -662,36 +859,82 @@ const CommitteesPage: React.FC = () => {
                       {/* User Dropdown */}
                       {showUserDropdown && activeUserDropdown === committee.id && activeUserField === 'deputyChair1Username' && filteredUsers.length > 0 && (
                         <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
-                          {filteredUsers.map((user, index) => (
-                            <button
-                              key={user.id || index}
-                              type="button"
-                              onClick={() => handleUserSelect(user)}
-                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900 transition-colors duration-200 border-b border-gray-100 last:border-b-0"
-                            >
-                              <div className="font-medium">@{user.username}</div>
-                              <div className="text-xs text-gray-500">{user.fullname}</div>
-                            </button>
-                          ))}
+                          {filteredUsers.map((user, index) => {
+                            const u = user && user.user ? user.user : user;
+                            return (
+                              <button
+                                key={u?.id || index}
+                                type="button"
+                                onClick={() => handleUserSelect(user)}
+                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900 transition-colors duration-200 border-b border-gray-100 last:border-b-0"
+                              >
+                                <div className="font-medium">@{u?.username}</div>
+                                <div className="text-xs text-gray-500">{u?.fullname}</div>
+                              </button>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
                   ) : (
-                    <div className="text-sm text-gray-900 w-full">
+                    <div
+                      className="text-sm text-gray-900 w-full"
+                      onClick={editingCommittee === committee.id ? () => handleCommitteeFieldEdit(committee.id, 'deputyChair1Username', committee.deputyChair1Username || '') : undefined}
+                    >
                       {committee.deputyChair1Username || '-'}
                     </div>
                   )}
                 </div>
 
                 {/* Deputy Chair 1 Name */}
-                <div className="bg-gray-50 border border-gray-800 rounded-lg px-4 py-3 flex items-center">
-                  <div className="text-sm text-gray-900 w-full">
-                    {committee.deputyChair1Name || '-'}
-                  </div>
+                <div className="bg-gray-50 border border-gray-800 rounded-lg px-3 py-2 flex items-center">
+                  {editingCommittee === committee.id && editingCommitteeField === 'deputyChair1Name' ? (
+                    <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200 relative w-full" ref={userDropdownRef}>
+                      <div className="flex items-center">
+                        <svg className="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <input
+                          type="text"
+                          value={tempValue}
+                          onChange={(e) => handleCommitteeFieldChange(e.target.value, committee.id)}
+                          placeholder="Full name"
+                          className="w-full border-none outline-none text-gray-900"
+                          autoFocus
+                          autoComplete="off"
+                        />
+                      </div>
+                      {showUserDropdown && activeUserDropdown === committee.id && activeUserField === 'deputyChair1Name' && filteredUsers.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
+                          {filteredUsers.map((user, index) => {
+                            const u = user && user.user ? user.user : user;
+                            return (
+                              <button
+                                key={u?.id || index}
+                                type="button"
+                                onClick={() => handleUserSelect(user)}
+                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900 transition-colors duration-200 border-b border-gray-100 last:border-b-0"
+                              >
+                                <div className="font-medium">{u?.fullname}</div>
+                                <div className="text-xs text-gray-500">@{u?.username}</div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div
+                      className="text-sm text-gray-900 w-full"
+                      onClick={editingCommittee === committee.id ? () => handleCommitteeFieldEdit(committee.id, 'deputyChair1Name', committee.deputyChair1Name || '') : undefined}
+                    >
+                      {committee.deputyChair1Name || '-'}
+                    </div>
+                  )}
                 </div>
 
                 {/* Deputy Chair 2 Username */}
-                <div className="bg-gray-50 border border-gray-800 rounded-lg px-4 py-3 flex items-center">
+                <div className="bg-gray-50 border border-gray-800 rounded-lg px-3 py-2 flex items-center">
                   {editingCommittee === committee.id && editingCommitteeField === 'deputyChair2Username' ? (
                     <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200 relative w-full" ref={userDropdownRef}>
                       <div className="flex items-center">
@@ -728,70 +971,92 @@ const CommitteesPage: React.FC = () => {
                       {/* User Dropdown */}
                       {showUserDropdown && activeUserDropdown === committee.id && activeUserField === 'deputyChair2Username' && filteredUsers.length > 0 && (
                         <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
-                          {filteredUsers.map((user, index) => (
-                            <button
-                              key={user.id || index}
-                              type="button"
-                              onClick={() => handleUserSelect(user)}
-                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900 transition-colors duration-200 border-b border-gray-100 last:border-b-0"
-                            >
-                              <div className="font-medium">@{user.username}</div>
-                              <div className="text-xs text-gray-500">{user.fullname}</div>
-                            </button>
-                          ))}
+                          {filteredUsers.map((user, index) => {
+                            const u = user && user.user ? user.user : user;
+                            return (
+                              <button
+                                key={u?.id || index}
+                                type="button"
+                                onClick={() => handleUserSelect(user)}
+                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900 transition-colors duration-200 border-b border-gray-100 last:border-b-0"
+                              >
+                                <div className="font-medium">@{u?.username}</div>
+                                <div className="text-xs text-gray-500">{u?.fullname}</div>
+                              </button>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
                   ) : (
-                    <div className="text-sm text-gray-900 w-full">
+                    <div
+                      className="text-sm text-gray-900 w-full"
+                      onClick={editingCommittee === committee.id ? () => handleCommitteeFieldEdit(committee.id, 'deputyChair2Username', committee.deputyChair2Username || '') : undefined}
+                    >
                       {committee.deputyChair2Username || '-'}
                     </div>
                   )}
                 </div>
 
                 {/* Deputy Chair 2 Name */}
-                <div className="bg-gray-50 border border-gray-800 rounded-lg px-4 py-3 flex items-center">
-                  <div className="text-sm text-gray-900 w-full">
-                    {committee.deputyChair2Name || '-'}
-                  </div>
+                <div className="bg-gray-50 border border-gray-800 rounded-lg px-3 py-2 flex items-center">
+                  {editingCommittee === committee.id && editingCommitteeField === 'deputyChair2Name' ? (
+                    <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200 relative w-full" ref={userDropdownRef}>
+                      <div className="flex items-center">
+                        <svg className="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <input
+                          type="text"
+                          value={tempValue}
+                          onChange={(e) => handleCommitteeFieldChange(e.target.value, committee.id)}
+                          placeholder="Full name"
+                          className="w-full border-none outline-none text-gray-900"
+                          autoFocus
+                          autoComplete="off"
+                        />
+                      </div>
+                      {showUserDropdown && activeUserDropdown === committee.id && activeUserField === 'deputyChair2Name' && filteredUsers.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
+                          {filteredUsers.map((user, index) => {
+                            const u = user && user.user ? user.user : user;
+                            return (
+                              <button
+                                key={u?.id || index}
+                                type="button"
+                                onClick={() => handleUserSelect(user)}
+                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900 transition-colors duration-200 border-b border-gray-100 last:border-b-0"
+                              >
+                                <div className="font-medium">{u?.fullname}</div>
+                                <div className="text-xs text-gray-500">@{u?.username}</div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div
+                      className="text-sm text-gray-900 w-full"
+                      onClick={editingCommittee === committee.id ? () => handleCommitteeFieldEdit(committee.id, 'deputyChair2Name', committee.deputyChair2Name || '') : undefined}
+                    >
+                      {committee.deputyChair2Name || '-'}
+                    </div>
+                  )}
                 </div>
 
                 {/* Actions Column */}
                 <div className="bg-gray-50 px-3 py-2 text-sm font-medium relative">
                   <div className="relative flex items-center justify-center space-x-3">
-                    {/* Edit/Save/Cancel buttons */}
-                    {editingCommittee === committee.id ? (
-                      <>
-                        <button
-                          onClick={handleCommitteeFieldSave}
-                          className="text-green-600 hover:text-green-800 p-1"
-                          title="Save"
-                        >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M20 6L9 17l-5-5" />
-                          </svg>
-                        </button>
-                        <button
-                          onClick={handleCommitteeFieldCancel}
-                          className="text-red-600 hover:text-red-800 p-1"
-                          title="Cancel"
-                        >
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M18 6L6 18M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </>
-                    ) : (
-                      <button
-                        onClick={(e) => handleContextMenuClick(e, committee.id)}
-                        className="text-blue-600 hover:text-blue-800 p-1"
-                        title="Actions"
-                      >
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                        </svg>
-                      </button>
-                    )}
+                    <button
+                      onClick={(e) => handleContextMenuClick(e, committee.id)}
+                      className="text-blue-600 hover:text-blue-800 p-1"
+                      title="Actions"
+                    >
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                      </svg>
+                    </button>
                   </div>
                 </div>
               </React.Fragment>
@@ -819,7 +1084,7 @@ const CommitteesPage: React.FC = () => {
               Edit
             </button>
             <button
-              onClick={handleDeleteCommittee}
+              onClick={() => { setShowDeleteConfirm(true); setShowContextMenu(false); }}
               className="w-full px-4 py-2 text-left text-sm text-black hover:bg-yellow-200 transition-colors"
             >
               Delete
@@ -833,6 +1098,21 @@ const CommitteesPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Delete confirmation modal */}
+      <ConfirmationModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={async () => {
+          await handleDeleteCommittee();
+          setShowDeleteConfirm(false);
+        }}
+        title="Delete committee?"
+        message="Are you sure you want to delete this committee from this event?"
+        confirmText="Yes"
+        cancelText="No"
+        confirmButtonColor="text-red-600"
+      />
 
       <div className="w-[925px] flex justify-between">
         <button
