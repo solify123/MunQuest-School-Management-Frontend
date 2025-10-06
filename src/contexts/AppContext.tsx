@@ -2,13 +2,14 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import type { ReactNode } from 'react';
 import { getAllUsersApi } from '../apis/Users';
 import { getAllOrganisersApi } from '../apis/Organisers';
-import { getAllLocalitiesApi } from '../apis/localities';
-import { getAllSchoolsApi } from '../apis/schools';
-import { getAllAreasApi } from '../apis/areas';
+import { getAllLocalitiesApi } from '../apis/Localities';
+import { getAllSchoolsApi } from '../apis/Schools';
+import { getAllAreasApi } from '../apis/Areas';
 import { getAllEventsApi } from '../apis/Events';
 import { getAllLeadershipRolesApi } from '../apis/LeadershipRoles';
 import { useSupabaseAuth } from './SupabaseAuthContext';
 import { toast } from 'sonner';
+import { getAllCommitteesApi } from '../apis/Committees';
 
 // Define the context type
 interface AppContextType {
@@ -52,6 +53,8 @@ interface AppContextType {
   allLocalities: any[];
   allSchools: any[];
   allAreas: any[];
+  allCommittees: any[];
+  refreshCommitteesData: () => Promise<void>;
 }
 
 // Create the context with a default value to prevent undefined errors
@@ -77,6 +80,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [allSchools, setAllSchools] = useState<any[]>([]);
   const [allAreas, setAllAreas] = useState<any[]>([]);
   const [allLeadershipRoles, setAllLeadershipRoles] = useState<any[]>([]);
+  const [allCommittees, setAllCommittees] = useState<any[]>([]);
   // Dashboard statistics state
   const [dashboardStats, setDashboardStats] = useState({
     eventsUpcoming: 5,
@@ -214,6 +218,24 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       }
     }
   }, [loginStatus]);
+
+  const refreshCommitteesData = useCallback(async () => {
+    try {
+      const allCommitteesResponse = await getAllCommitteesApi();
+      if (allCommitteesResponse.success) {
+        setAllCommittees(allCommitteesResponse.data);
+      }
+      else {
+        toast.error(allCommitteesResponse.message);
+      }
+    } catch (error) {
+      // Only show JWT expiration toast if user was logged in
+      if (loginStatus) {
+        toast.error('JWT token is expired. Please login again.');
+      }
+    }
+  }, [loginStatus]);
+
   // Update dashboard statistics
   const updateDashboardStats = (newStats: Partial<AppContextType['dashboardStats']>) => {
     setDashboardStats(prev => ({
@@ -231,6 +253,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       refreshSchoolsData();
       refreshLocalitiesData();
       refreshAreasData();
+      refreshCommitteesData();
     }
   }, [supabaseUser, session, authLoading, refreshUserData, refreshEventsData, refreshLeadershipRolesData, refreshSchoolsData, refreshLocalitiesData, refreshAreasData]);
 
@@ -246,6 +269,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     allSchools,
     allAreas,
     allLeadershipRoles,
+    allCommittees,
     setAllEvents,
     setAllLocalities,
     setAllSchools,
@@ -264,6 +288,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     refreshSchoolsData,
     refreshAreasData,
     refreshLeadershipRolesData,
+    refreshCommitteesData,
   };
 
 
@@ -293,6 +318,7 @@ export const useApp = (): AppContextType => {
       allSchools: [],
       allAreas: [],
       allLeadershipRoles: [],
+      allCommittees: [],
       dashboardStats: {
         eventsUpcoming: 0,
         eventsCompleted: 0,
@@ -318,6 +344,7 @@ export const useApp = (): AppContextType => {
       refreshSchoolsData: async () => { },
       refreshAreasData: async () => { },
       refreshLeadershipRolesData: async () => { },
+      refreshCommitteesData: async () => { },
     };
   }
   return context;

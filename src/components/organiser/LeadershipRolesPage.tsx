@@ -1,13 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../../contexts/AppContext';
 import { getAllRegistrationsByEventIdApi } from '../../apis/registerations';
-import { saveLeadershipRoleByEventIdApi, getLeadershipRolesByEventIdApi } from '../../apis/Event_leaders';
+import { saveLeadershipRoleByEventIdApi, getLeadershipRolesByEventIdApi, updateLeadershipRoleByEventIdApi, deleteLeadershipRoleByEventIdApi, updateLeadershipRoleRankingByEventIdApi } from '../../apis/Event_leaders';
 import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
+import ConfirmationModal from '../ui/ConfirmationModal';
 
 interface LeadershipRole {
   id: number;
   users: {
+    id: number;
     username: string;
     fullname: string;
   };
@@ -16,6 +18,7 @@ interface LeadershipRole {
     abbr: string;
     leadership_role: string;
   };
+  ranking?: number;
 }
 
 const LeadershipRolesPage: React.FC = () => {
@@ -25,6 +28,7 @@ const LeadershipRolesPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
   const [isAddingNew, setIsAddingNew] = useState<boolean>(false);
+  const [editingRole, setEditingRole] = useState<number | null>(null);
   const [newRoleData, setNewRoleData] = useState({
     abbr: '',
     role: '',
@@ -32,7 +36,15 @@ const LeadershipRolesPage: React.FC = () => {
     name: '',
     selectedUserId: ''
   });
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [editRoleData, setEditRoleData] = useState({
+    abbr: '',
+    role: '',
+    username: '',
+    name: '',
+    selectedUserId: '',
+    id: ''
+  });
+  const dropdownRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
 
   // Autocomplete states
   const [showRoleDropdown, setShowRoleDropdown] = useState<boolean>(false);
@@ -45,25 +57,35 @@ const LeadershipRolesPage: React.FC = () => {
   const [filteredUsernames, setFilteredUsernames] = useState<any[]>([]);
   const usernameDropdownRef = useRef<HTMLDivElement>(null);
 
+  // Delete confirmation modal states
+  const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
+  const [roleToDelete, setRoleToDelete] = useState<number | null>(null);
+
+  // Support toggle states
+  const [supportEnabledRoles, setSupportEnabledRoles] = useState<Set<number>>(new Set());
+
   const handleDropdownToggle = (roleId: number) => {
     setActiveDropdown(activeDropdown === roleId ? null : roleId);
   };
 
-  // Fetch leadership roles and registrations on component mount
   useEffect(() => {
     const fetchData = async () => {
       if (!eventId) return;
-      
+
       setIsLoading(true);
       try {
-        // Fetch leadership roles for this event
         const leadershipRolesResponse = await getLeadershipRolesByEventIdApi(eventId);
-        console.log("leadershipRolesResponse", leadershipRolesResponse);
         if (leadershipRolesResponse.success) {
-          setLeadershipRoles(leadershipRolesResponse.data || []);
+          const roles = leadershipRolesResponse.data || [];
+          // Sort by ranking property (ascending order)
+          const sortedRoles = roles.sort((a: LeadershipRole, b: LeadershipRole) => {
+            const rankingA = a.ranking ?? 0;
+            const rankingB = b.ranking ?? 0;
+            return rankingA - rankingB;
+          });
+          setLeadershipRoles(sortedRoles);
         }
 
-        // Fetch registrations for this event
         const allRegistrationsResponse = await getAllRegistrationsByEventIdApi(eventId);
         if (allRegistrationsResponse.success) {
           setAllRegistrations(allRegistrationsResponse.data);
@@ -80,9 +102,93 @@ const LeadershipRolesPage: React.FC = () => {
   }, [eventId]);
 
   const handleMenuAction = (action: string, roleId: number) => {
-    console.log(`Action: ${action}, Role ID: ${roleId}`);
-    // TODO: Implement specific actions based on the action type
+    if (action === 'edit') {
+      const roleToEdit = leadershipRoles.find(role => role.id === roleId);
+      if (roleToEdit) {
+        setEditRoleData({
+          abbr: roleToEdit.leadership_roles?.abbr || '',
+          role: roleToEdit.leadership_roles?.leadership_role || '',
+          username: roleToEdit.users?.username || '',
+          name: roleToEdit.users?.fullname || '',
+          selectedUserId: roleToEdit.users?.id?.toString() || '',
+          id: roleToEdit.id.toString()
+        });
+        setEditingRole(roleId);
+      }
+    } else if (action === 'delete') {
+      setRoleToDelete(roleId);
+      setShowDeleteModal(true);
+    } else if (action === 'add_support') {
+      // Toggle support status
+      setSupportEnabledRoles(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(roleId)) {
+          newSet.delete(roleId);
+        } else {
+          newSet.add(roleId);
+        }
+        return newSet;
+      });
+    }
+
     setActiveDropdown(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (roleToDelete) {
+      try {
+        console.log("roleToDelete", roleToDelete);
+        const response = await deleteLeadershipRoleByEventIdApi(roleToDelete.toString());
+
+        if (response.success) {
+          toast.success('Leadership role deleted successfully');
+          const updatedRolesResponse = await getLeadershipRolesByEventIdApi(eventId || '');
+          if (updatedRolesResponse.success) {
+            const roles = updatedRolesResponse.data || [];
+            // Sort by ranking property (ascending order)
+            const sortedRoles = roles.sort((a: LeadershipRole, b: LeadershipRole) => {
+              const rankingA = a.ranking ?? 0;
+              const rankingB = b.ranking ?? 0;
+              return rankingA - rankingB;
+            });
+            setLeadershipRoles(sortedRoles);
+          }
+        }
+      } catch (error: any) {
+        toast.error(error.message || 'Failed to delete leadership role');
+      }
+    }
+
+    setShowDeleteModal(false);
+    setRoleToDelete(null);
+  };
+
+  const handleCloseDeleteModal = () => {
+    setShowDeleteModal(false);
+    setRoleToDelete(null);
+  };
+
+  // Handle ranking changes (move up/down)
+  const handleRankingAdjust = async (roleId: number, direction: number) => {
+    try {
+      const response = await updateLeadershipRoleRankingByEventIdApi(roleId.toString(), direction);
+      if (response.success) {
+        toast.success('Ranking updated successfully');
+        const updatedRolesResponse = await getLeadershipRolesByEventIdApi(eventId || '');
+        if (updatedRolesResponse.success) {
+          const roles = updatedRolesResponse.data || [];
+          // Sort by ranking property (ascending order)
+          const sortedRoles = roles.sort((a: LeadershipRole, b: LeadershipRole) => {
+            const rankingA = a.ranking ?? 0;
+            const rankingB = b.ranking ?? 0;
+            return rankingA - rankingB;
+          });
+          setLeadershipRoles(sortedRoles);
+        }
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update ranking');
+    }
   };
 
   const handleAddNew = () => {
@@ -123,6 +229,41 @@ const LeadershipRolesPage: React.FC = () => {
         setFilteredUsernames([]);
         // Clear name and selectedUserId fields when username is empty
         setNewRoleData(prev => ({
+          ...prev,
+          name: '',
+          selectedUserId: ''
+        }));
+      }
+    }
+  };
+
+  const handleEditRoleInputChange = (field: string, value: string) => {
+    setEditRoleData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+
+    // If role field is being changed, show dropdown and filter roles
+    if (field === 'role') {
+      if (value.trim()) {
+        setShowRoleDropdown(true);
+        filterRolesByInput(value.trim());
+      } else {
+        setShowRoleDropdown(false);
+        setFilteredRoles([]);
+      }
+    }
+
+    // If username field is being changed, show dropdown and filter usernames
+    if (field === 'username') {
+      if (value.trim()) {
+        setShowUsernameDropdown(true);
+        filterUsernamesByInput(value.trim());
+      } else {
+        setShowUsernameDropdown(false);
+        setFilteredUsernames([]);
+        // Clear name and selectedUserId fields when username is empty
+        setEditRoleData(prev => ({
           ...prev,
           name: '',
           selectedUserId: ''
@@ -174,11 +315,19 @@ const LeadershipRolesPage: React.FC = () => {
 
   // Handle role selection from dropdown
   const handleRoleSelect = (selectedRole: any) => {
-    setNewRoleData(prev => ({
-      ...prev,
-      role: selectedRole.leadership_role || selectedRole.role || '',
-      abbr: selectedRole.abbr || ''
-    }));
+    if (editingRole) {
+      setEditRoleData(prev => ({
+        ...prev,
+        role: selectedRole.leadership_role || selectedRole.role || '',
+        abbr: selectedRole.abbr || ''
+      }));
+    } else {
+      setNewRoleData(prev => ({
+        ...prev,
+        role: selectedRole.leadership_role || selectedRole.role || '',
+        abbr: selectedRole.abbr || ''
+      }));
+    }
     setShowRoleDropdown(false);
     setFilteredRoles([]);
   };
@@ -186,12 +335,21 @@ const LeadershipRolesPage: React.FC = () => {
   // Handle username selection from dropdown
   const handleUsernameSelect = (selectedRegistration: any) => {
     const user = selectedRegistration.user || selectedRegistration;
-    setNewRoleData(prev => ({
-      ...prev,
-      username: user.username || '',
-      name: user.fullname || '',
-      selectedUserId: user.id || ''
-    }));
+    if (editingRole) {
+      setEditRoleData(prev => ({
+        ...prev,
+        username: user.username || '',
+        name: user.fullname || '',
+        selectedUserId: user.id || ''
+      }));
+    } else {
+      setNewRoleData(prev => ({
+        ...prev,
+        username: user.username || '',
+        name: user.fullname || '',
+        selectedUserId: user.id || ''
+      }));
+    }
     setShowUsernameDropdown(false);
     setFilteredUsernames([]);
   };
@@ -199,24 +357,14 @@ const LeadershipRolesPage: React.FC = () => {
 
   const handleSaveNew = async () => {
     try {
-      // Validate required fields
       if (!newRoleData.role || !newRoleData.username || !newRoleData.selectedUserId) {
         toast.error('Please fill in all required fields');
         return;
       }
-    
-      console.log("newRoleData", newRoleData);
-
-      // Find the selected role from allLeadershipRoles
       const selectedRole = allLeadershipRoles.find(role =>
         (role.leadership_role || role.role) === newRoleData.role
       );
-
       if (selectedRole && newRoleData.selectedUserId) {
-        // Call the API to save the leadership role
-        console.log("selectedRole", selectedRole.id);
-        console.log("selectedUserId", newRoleData.selectedUserId);
-        console.log("eventId", eventId);
         const response = await saveLeadershipRoleByEventIdApi(
           eventId || '',
           newRoleData.selectedUserId,
@@ -233,11 +381,16 @@ const LeadershipRolesPage: React.FC = () => {
             name: '',
             selectedUserId: ''
           });
-          
-          // Refresh the leadership roles list
           const updatedRolesResponse = await getLeadershipRolesByEventIdApi(eventId || '');
           if (updatedRolesResponse.success) {
-            setLeadershipRoles(updatedRolesResponse.data || []);
+            const roles = updatedRolesResponse.data || [];
+            // Sort by ranking property (ascending order)
+            const sortedRoles = roles.sort((a: LeadershipRole, b: LeadershipRole) => {
+              const rankingA = a.ranking ?? 0;
+              const rankingB = b.ranking ?? 0;
+              return rankingA - rankingB;
+            });
+            setLeadershipRoles(sortedRoles);
           }
         } else {
           toast.error(response.message);
@@ -250,12 +403,89 @@ const LeadershipRolesPage: React.FC = () => {
     }
   };
 
+  const handleSaveEdit = async () => {
+    try {
+      // Validate required fields
+      if (!editRoleData.role || !editRoleData.username || !editRoleData.selectedUserId) {
+        toast.error('Please fill in all required fields');
+        return;
+      }
+
+      // Find the selected role from allLeadershipRoles
+      const selectedRole = allLeadershipRoles.find(role =>
+        (role.leadership_role || role.role) === editRoleData.role
+      );
+
+      if (selectedRole && editRoleData.selectedUserId) {
+        console.log("eventId", eventId);
+        console.log("selectedUserId", editRoleData.selectedUserId);
+        console.log("roleId", selectedRole.id.toString());
+        console.log("id", editRoleData.id.toString());
+        const response = await updateLeadershipRoleByEventIdApi(
+          editRoleData.id.toString(),
+          eventId || '',
+          selectedRole.id.toString(),
+          editRoleData.selectedUserId
+        );
+
+        if (response.success) {
+          toast.success('Leadership role updated successfully');
+          setEditingRole(null);
+          setEditRoleData({
+            abbr: '',
+            role: '',
+            username: '',
+            name: '',
+            selectedUserId: '',
+            id: ''
+          });
+
+          const updatedRolesResponse = await getLeadershipRolesByEventIdApi(eventId || '');
+          if (updatedRolesResponse.success) {
+            const roles = updatedRolesResponse.data || [];
+            // Sort by ranking property (ascending order)
+            const sortedRoles = roles.sort((a: LeadershipRole, b: LeadershipRole) => {
+              const rankingA = a.ranking ?? 0;
+              const rankingB = b.ranking ?? 0;
+              return rankingA - rankingB;
+            });
+            setLeadershipRoles(sortedRoles);
+          }
+        } else {
+          toast.error(response.message);
+        }
+      } else {
+        toast.error('Unable to update leadership role. Please try again.');
+      }
+    } catch (error: any) {
+      toast.error('Failed to update leadership role: ' + error.message);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingRole(null);
+    setEditRoleData({
+      abbr: '',
+      role: '',
+      username: '',
+      name: '',
+      selectedUserId: '',
+      id: ''
+    });
+  };
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      // Check if click is outside any dropdown menu
+      const clickedOutsideAllDropdowns = Object.values(dropdownRefs.current).every(ref =>
+        !ref || !ref.contains(event.target as Node)
+      );
+
+      if (clickedOutsideAllDropdowns) {
         setActiveDropdown(null);
       }
+
       if (roleDropdownRef.current && !roleDropdownRef.current.contains(event.target as Node)) {
         setShowRoleDropdown(false);
       }
@@ -281,10 +511,10 @@ const LeadershipRolesPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
+    <>
+      <div className="space-y-6 " style={{ marginBottom: '16px' }}>
         {/* Grid Container */}
-        <div className="grid grid-cols-[100px_200px_220px_280px_80px] gap-4">
+        <div className="grid grid-cols-[100px_200px_220px_280px_120px] gap-4">
           <div className="bg-[#C6DAF4] text-grey-800 px-4 py-3 rounded-lg text-sm font-medium text-center border border-gray-800">ABBR</div>
           <div className="bg-[#C6DAF4] text-grey-800 px-4 py-3 rounded-lg text-sm font-medium text-center border border-gray-800">Leadership Role</div>
           <div className="bg-[#C6DAF4] text-grey-800 px-4 py-3 rounded-lg text-sm font-medium text-center border border-gray-800">Username</div>
@@ -294,52 +524,185 @@ const LeadershipRolesPage: React.FC = () => {
           {/* Existing roles */}
           {leadershipRoles.map((role) => (
             <React.Fragment key={role.id}>
-              <div className="bg-gray-50 border border-gray-800 rounded-lg px-4 py-3 flex items-center justify-center">
-                <div className="text-sm text-gray-900 text-center w-full">
-                  {role.leadership_roles.abbr || '-'}
-                </div>
-              </div>
+              {editingRole === role.id ? (
+                // Edit mode
+                <>
+                  <div className="bg-gray-100 px-3 py-2 text-sm rounded-md border border-gray-200">
+                    <input
+                      type="text"
+                      value={editRoleData.abbr}
+                      readOnly
+                      placeholder="Auto-filled"
+                      className="w-full border-none outline-none text-gray-500 bg-transparent cursor-not-allowed"
+                    />
+                  </div>
 
-              <div className="bg-gray-50 border border-gray-800 rounded-lg px-4 py-3 flex items-center">
-                <div className="text-sm text-gray-900 w-full">
-                  {role.leadership_roles.leadership_role || '-'}
-                </div>
-              </div>
+                  <div
+                    ref={roleDropdownRef}
+                    className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200 relative"
+                  >
+                    <input
+                      type="text"
+                      value={editRoleData.role}
+                      onChange={(e) => handleEditRoleInputChange('role', e.target.value)}
+                      onFocus={() => {
+                        if (editRoleData.role.trim()) {
+                          setShowRoleDropdown(true);
+                          filterRolesByInput(editRoleData.role.trim());
+                        }
+                      }}
+                      placeholder="Enter role name"
+                      className="w-full border-none outline-none text-gray-900"
+                      autoComplete="off"
+                    />
 
-              <div className="bg-gray-50 border border-gray-800 rounded-lg px-4 py-3 flex items-center">
-                <div className="text-sm text-gray-900 w-full">
-                  {role.users?.username || '-'}
-                </div>
-              </div>
+                    {/* Role Dropdown */}
+                    {showRoleDropdown && filteredRoles.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
+                        {filteredRoles.map((role, index) => (
+                          <button
+                            key={role.id || index}
+                            type="button"
+                            onClick={() => handleRoleSelect(role)}
+                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900 transition-colors duration-200 border-b border-gray-100 last:border-b-0"
+                          >
+                            <div className="font-medium">{role.leadership_role || role.role}</div>
+                            {role.abbr && (
+                              <div className="text-xs text-gray-500">({role.abbr})</div>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
 
-              <div className="bg-gray-50 border border-gray-800 rounded-lg px-4 py-3 flex items-center">
-                <div className="text-sm text-gray-900 w-full">
-                  {role.users?.fullname || '-'}
-                </div>
-              </div>
+                  <div
+                    ref={usernameDropdownRef}
+                    className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200 relative"
+                  >
+                    <input
+                      type="text"
+                      value={editRoleData.username}
+                      onChange={(e) => handleEditRoleInputChange('username', e.target.value)}
+                      onFocus={() => {
+                        if (editRoleData.username.trim()) {
+                          setShowUsernameDropdown(true);
+                          filterUsernamesByInput(editRoleData.username.trim());
+                        }
+                      }}
+                      placeholder="Enter username"
+                      className="w-full border-none outline-none text-gray-900"
+                      autoComplete="off"
+                    />
+
+                    {/* Username Dropdown */}
+                    {showUsernameDropdown && filteredUsernames.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
+                        {filteredUsernames.map((registration, index) => {
+                          const user = registration.user || registration;
+                          return (
+                            <button
+                              key={user.id || index}
+                              type="button"
+                              onClick={() => handleUsernameSelect(registration)}
+                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900 transition-colors duration-200 border-b border-gray-100 last:border-b-0"
+                            >
+                              <div className="font-medium">{user.username}</div>
+                              <div className="text-xs text-gray-500">{user.fullname}</div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="bg-gray-100 px-3 py-2 text-sm rounded-md border border-gray-200">
+                    <input
+                      type="text"
+                      value={editRoleData.name}
+                      readOnly
+                      placeholder="Auto-filled"
+                      className="w-full border-none outline-none text-gray-500 bg-transparent cursor-not-allowed"
+                    />
+                  </div>
+
+                  
+                </>
+              ) : (
+                // View mode
+                <>
+                  <div className="bg-gray-50 border border-gray-800 rounded-lg px-4 py-3 flex items-center justify-center">
+                    <div className="text-sm text-gray-900 text-center w-full">
+                      {role.leadership_roles?.abbr || '-'}
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 border border-gray-800 rounded-lg px-4 py-3 flex items-center">
+                    <div className="text-sm text-gray-900 w-full">
+                      {role.leadership_roles?.leadership_role || '-'}
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 border border-gray-800 rounded-lg px-4 py-3 flex items-center">
+                    <div className="text-sm text-gray-900 w-full">
+                      {role.users?.username || '-'}
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 border border-gray-800 rounded-lg px-4 py-3 flex items-center">
+                    <div className="text-sm text-gray-900 w-full">
+                      {role.users?.fullname || '-'}
+                    </div>
+                  </div>
+                </>
+              )}
 
               {/* Actions Column */}
               <div className="bg-gray-50 px-3 py-2 text-sm font-medium relative">
                 <div className="relative flex items-center justify-center space-x-3">
-                  <button className="text-gray-600 hover:text-gray-800 p-1">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M7 13l3 3 3-3" />
-                      <path d="M7 6l3-3 3 3" />
-                    </svg>
-                  </button>
+                  
+                  <button className="text-yellow-600 hover:text-yellow-800 p-1" title="Editing Mode">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2">
+                          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                        </svg>
+                      </button>
+                  {/* Ranking buttons - Up and Down */}
+                  <div className="flex flex-col space-y-1">
+                    <button
+                      onClick={() => handleRankingAdjust(role.id, -1)}
+                      disabled={leadershipRoles.findIndex(r => r.id === role.id) === 0}
+                      className="text-gray-600 hover:text-gray-800 p-1 disabled:opacity-30 disabled:cursor-not-allowed"
+                      title="Move up"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M18 15l-6-6-6 6" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => handleRankingAdjust(role.id, 1)}
+                      disabled={leadershipRoles.findIndex(r => r.id === role.id) === leadershipRoles.length - 1}
+                      className="text-gray-600 hover:text-gray-800 p-1 disabled:opacity-30 disabled:cursor-not-allowed"
+                      title="Move down"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M6 9l6 6 6-6" />
+                      </svg>
+                    </button>
+                  </div>
 
-                  {/* Special headphone icon for Head of Delegate Affairs */}
-                  {role.leadership_roles.leadership_role === 'Head of Delegate Affairs' && (
-                    <button className="text-gray-600 hover:text-gray-800 p-1">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  {/* Headphone icon for roles with support enabled */}
+                  {supportEnabledRoles.has(role.id) && (
+                    <button className="text-blue-600 hover:text-blue-800 p-1" title="Support Enabled">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none">
                         <path d="M3 14v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3" />
                         <path d="M12 2a5 5 0 0 0-5 5v6a5 5 0 0 0 10 0V7a5 5 0 0 0-5-5z" />
+                        <path d="M8 12h8" stroke="currentColor" strokeWidth="1" strokeLinecap="round" />
                       </svg>
                     </button>
                   )}
 
                   {/* Three dots menu icon */}
-                  <div ref={dropdownRef} className="relative">
+                  <div ref={(el) => { dropdownRefs.current[role.id] = el; }} className="relative">
                     <button
                       onClick={() => handleDropdownToggle(role.id)}
                       className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
@@ -365,7 +728,7 @@ const LeadershipRolesPage: React.FC = () => {
                             Delete
                           </button>
                           <button
-                            onClick={() => handleMenuAction('add_role', role.id)}
+                            onClick={handleAddNew}
                             className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900 transition-colors duration-200"
                           >
                             Add Role
@@ -374,7 +737,7 @@ const LeadershipRolesPage: React.FC = () => {
                             onClick={() => handleMenuAction('add_support', role.id)}
                             className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900 transition-colors duration-200"
                           >
-                            Add as Support
+                            {supportEnabledRoles.has(role.id) ? 'Remove Support' : 'Add as Support'}
                           </button>
                         </div>
                       </div>
@@ -387,7 +750,7 @@ const LeadershipRolesPage: React.FC = () => {
 
           {/* New Role Input Row */}
           {isAddingNew && (
-            <div className="col-span-5 grid grid-cols-[100px_200px_220px_280px_80px] gap-4">
+            <div className={`col-span-${editingRole !== null ? '6' : '5'} grid gap-4 ${editingRole !== null ? 'grid-cols-[100px_200px_220px_280px_80px_80px]' : 'grid-cols-[100px_200px_220px_280px_80px]'}`}>
               <div className="bg-gray-100 px-3 py-2 text-sm rounded-md border border-gray-200">
                 <input
                   type="text"
@@ -486,51 +849,123 @@ const LeadershipRolesPage: React.FC = () => {
                   className="w-full border-none outline-none text-gray-500 bg-transparent cursor-not-allowed"
                 />
               </div>
+
+              {/* Actions Column for Add New Row */}
+              <div className="bg-gray-50 px-3 py-2 text-sm font-medium relative">
+                <div className="relative flex items-center justify-center">
+                  {/* Bookmark icon for add new mode */}
+                  <button className="text-yellow-600 hover:text-yellow-800 p-1" title="Adding New Role">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2">
+                      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              {editingRole !== null && <div></div>}
             </div>
           )}
         </div>
-      </div>
+      </div >
 
       <div className="w-[925px] flex justify-between">
-        <button
-          onClick={handleAddNew}
-          disabled={isAddingNew}
-          className={`text-white font-medium transition-colors`}
-          style={{
-            width: '105px',
-            height: '44px',
-            borderRadius: '30px',
-            padding: '10px',
-            gap: '10px',
-            opacity: 1,
-            background: isAddingNew ? '#bdbdbd' : '#C2A46D',
-            cursor: isAddingNew ? 'not-allowed' : 'pointer',
-            border: 'none',
-            boxShadow: 'none',
-          }}
-        >
-          Add Role
-        </button>
-        <button
-          onClick={handleSaveNew}
-          className={`text-white font-medium transition-colors`}
-          style={{
-            width: '105px',
-            height: '44px',
-            borderRadius: '30px',
-            padding: '10px',
-            gap: '10px',
-            opacity: 1,
-            background: '#C2A46D',
-            cursor: 'pointer',
-            border: 'none',
-            boxShadow: 'none',
-          }}
-        >
-          Save
-        </button>
+        {editingRole !== null ? (
+          // Edit mode buttons
+          <>
+            <button
+              onClick={handleCancelEdit}
+              className={`text-white font-medium transition-colors`}
+              style={{
+                width: '105px',
+                height: '44px',
+                borderRadius: '30px',
+                padding: '10px',
+                gap: '10px',
+                opacity: 1,
+                background: '#C2A46D',
+                cursor: 'pointer',
+                border: 'none',
+                boxShadow: 'none',
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSaveEdit}
+              className={`text-white font-medium transition-colors`}
+              style={{
+                width: '105px',
+                height: '44px',
+                borderRadius: '30px',
+                padding: '10px',
+                gap: '10px',
+                opacity: 1,
+                background: '#607DA3',
+                cursor: 'pointer',
+                border: 'none',
+                boxShadow: 'none',
+              }}
+            >
+              Save
+            </button>
+          </>
+        ) : (
+          // Normal mode buttons
+          <>
+            <button
+              onClick={handleAddNew}
+              disabled={isAddingNew}
+              className={`text-white font-medium transition-colors`}
+              style={{
+                width: '105px',
+                height: '44px',
+                borderRadius: '30px',
+                padding: '10px',
+                gap: '10px',
+                opacity: 1,
+                background: isAddingNew ? '#bdbdbd' : '#C2A46D',
+                cursor: isAddingNew ? 'not-allowed' : 'pointer',
+                border: 'none',
+                boxShadow: 'none',
+              }}
+            >
+              Add Role
+            </button>
+            {isAddingNew && (
+              <button
+                onClick={handleSaveNew}
+                className={`text-white font-medium transition-colors`}
+                style={{
+                  width: '105px',
+                  height: '44px',
+                  borderRadius: '30px',
+                  padding: '10px',
+                  gap: '10px',
+                  opacity: 1,
+                  background: '#C2A46D',
+                  cursor: 'pointer',
+                  border: 'none',
+                  boxShadow: 'none',
+                }}
+              >
+                Save
+              </button>
+            )}
+          </>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={showDeleteModal}
+          onClose={handleCloseDeleteModal}
+          onConfirm={handleConfirmDelete}
+          title="Confirm Delete"
+          message="Are you sure you want to delete this leadership role? This action cannot be undone."
+          confirmText="Yes"
+          cancelText="No"
+          confirmButtonColor="text-red-600"
+        />
       </div>
-    </div>
+    </>
   );
 };
 

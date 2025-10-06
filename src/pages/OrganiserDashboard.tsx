@@ -62,36 +62,6 @@ const OrganiserDashboard: React.FC = () => {
 
   // Leadership Roles state
 
-  // Committees state
-  const [activeCommitteeType, setActiveCommitteeType] = useState('country');
-  const [committees, setCommittees] = useState([
-    {
-      id: 1,
-      abbr: 'UNGA',
-      committee: 'United Nations General Assembly',
-      seatsTotal: '30',
-      chairUsername: '@seema',
-      chairName: 'Seema Shams',
-      deputyChair1Username: '@username',
-      deputyChair1Name: 'Full Name',
-      deputyChair2Username: '@username',
-      deputyChair2Name: 'Full Name'
-    },
-    {
-      id: 2,
-      abbr: 'Auto Generated',
-      committee: '',
-      seatsTotal: '30',
-      chairUsername: '',
-      chairName: '',
-      deputyChair1Username: '',
-      deputyChair1Name: '',
-      deputyChair2Username: '',
-      deputyChair2Name: ''
-    }
-  ]);
-  const [editingCommittee, setEditingCommittee] = useState<number | null>(null);
-  const [editingCommitteeField, setEditingCommitteeField] = useState<string | null>(null);
 
   // Agenda state
   const [activeAgendaCommitteeType, setActiveAgendaCommitteeType] = useState('country');
@@ -300,60 +270,6 @@ const OrganiserDashboard: React.FC = () => {
   };
 
 
-  // Committees handlers
-  const handleCommitteeTypeChange = (type: string) => {
-    setActiveCommitteeType(type);
-  };
-
-  const handleCommitteeFieldEdit = (committeeId: number, fieldType: string, currentValue: string) => {
-    setEditingCommittee(committeeId);
-    setEditingCommitteeField(fieldType);
-    setTempValue(currentValue);
-  };
-
-  const handleCommitteeFieldChange = (value: string) => {
-    setTempValue(value);
-  };
-
-  const handleCommitteeFieldSave = () => {
-    if (editingCommittee && editingCommitteeField) {
-      setCommittees(prev => prev.map(committee =>
-        committee.id === editingCommittee
-          ? { ...committee, [editingCommitteeField]: tempValue }
-          : committee
-      ));
-    }
-    setEditingCommittee(null);
-    setEditingCommitteeField(null);
-    setTempValue('');
-  };
-
-  const handleCommitteeFieldCancel = () => {
-    setEditingCommittee(null);
-    setEditingCommitteeField(null);
-    setTempValue('');
-  };
-
-  const handleAddCommittee = () => {
-    const newCommittee = {
-      id: Math.max(...committees.map(c => c.id)) + 1,
-      abbr: 'Auto Generated',
-      committee: '',
-      seatsTotal: '30',
-      chairUsername: '',
-      chairName: '',
-      deputyChair1Username: '',
-      deputyChair1Name: '',
-      deputyChair2Username: '',
-      deputyChair2Name: ''
-    };
-    setCommittees([...committees, newCommittee]);
-  };
-
-  const handleSaveCommittees = () => {
-    // TODO: Implement API call to save committees
-    toast.success('Committees saved successfully');
-  };
 
   // Agenda handlers
   const handleAgendaCommitteeTypeChange = (type: string) => {
@@ -543,23 +459,7 @@ const OrganiserDashboard: React.FC = () => {
 
   // Committees component
   const renderCommittees = () => {
-    return (
-      <CommitteesPage
-        activeCommitteeType={activeCommitteeType}
-        committees={committees}
-        editingCommittee={editingCommittee}
-        editingCommitteeField={editingCommitteeField}
-        tempValue={tempValue}
-        isSaving={isSaving}
-        onCommitteeTypeChange={handleCommitteeTypeChange}
-        onCommitteeFieldEdit={handleCommitteeFieldEdit}
-        onCommitteeFieldChange={handleCommitteeFieldChange}
-        onCommitteeFieldSave={handleCommitteeFieldSave}
-        onCommitteeFieldCancel={handleCommitteeFieldCancel}
-        onAddCommittee={handleAddCommittee}
-        onSaveCommittees={handleSaveCommittees}
-      />
-    );
+    return <CommitteesPage />;
   };
 
   // Agenda component
