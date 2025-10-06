@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../../contexts/AppContext';
-import { getAllRegistrationsByEventIdApi } from '../../apis/Registerations';
+import { getAllRegistrationsByEventIdApi } from '../../apis/Registerations.ts';
 import { saveLeadershipRoleByEventIdApi, getLeadershipRolesByEventIdApi, updateLeadershipRoleByEventIdApi, deleteLeadershipRoleByEventIdApi, updateLeadershipRoleRankingByEventIdApi } from '../../apis/Event_leaders';
 import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';

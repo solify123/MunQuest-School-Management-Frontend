@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { useApp } from '../../contexts/AppContext';
 import { ConfirmationModal } from '../ui';
-import { updateSchoolStatusApi, deleteSchoolApi, createSchoolApi, updateSchoolApi, mergeSchoolsApi } from '../../apis/Schools';
+import { updateSchoolStatusApi, deleteSchoolApi, createSchoolApi, updateSchoolApi, mergeSchoolsApi } from '../../apis/Schools.ts';
 import { generateSchoolCode } from '../../utils/schoolCodeGenerator';
 import saveIcon from '../../assets/save_icon.svg'
 

@@ -1,15 +1,15 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
-import { getAllUsersApi } from '../apis/Users';
-import { getAllOrganisersApi } from '../apis/Organisers';
-import { getAllLocalitiesApi } from '../apis/Localities';
-import { getAllSchoolsApi } from '../apis/Schools';
-import { getAllAreasApi } from '../apis/Areas';
-import { getAllEventsApi } from '../apis/Events';
-import { getAllLeadershipRolesApi } from '../apis/LeadershipRoles';
+import { getAllUsersApi } from '../apis/Users.ts';
+import { getAllOrganisersApi } from '../apis/Organisers.ts';
+import { getAllLocalitiesApi } from '../apis/Localities.ts';
+import { getAllSchoolsApi } from '../apis/Schools.ts';
+import { getAllAreasApi } from '../apis/Areas.ts';
+import { getAllEventsApi } from '../apis/Events.ts';
+import { getAllLeadershipRolesApi } from '../apis/LeadershipRoles.ts';
 import { useSupabaseAuth } from './SupabaseAuthContext';
 import { toast } from 'sonner';
-import { getAllCommitteesApi } from '../apis/Committees';
+import { getAllCommitteesApi } from '../apis/Committees.ts';
 
 // Define the context type
 interface AppContextType {
