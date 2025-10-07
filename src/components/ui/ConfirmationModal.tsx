@@ -24,18 +24,18 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 " style={{ marginTop: '0px' }}>
       <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
         {/* Title */}
         <h2 className="text-xl font-bold text-black mb-4 text-center">
           {title}
         </h2>
-        
+
         {/* Message */}
         <p className="text-black text-center mb-6 leading-relaxed">
           {message}
         </p>
-        
+
         {/* Buttons */}
         <div className="flex justify-center space-x-4">
           <button

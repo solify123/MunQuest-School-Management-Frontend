@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
+import { v4 as uuidv4 } from 'uuid';
 import { useApp } from '../../contexts/AppContext';
 import { getAllEventCommitteesApi } from '../../apis/Event_committes';
 import { deleteEventCommitteesByEventIdApi } from '../../apis/Event_committes';
 import { useParams } from 'react-router-dom';
-import { saveEventCommitteesByEventIdApi } from '../../apis/Event_committes';
+import { saveEventCommitteesByEventIdApi, updateEventCommitteesByEventIdApi } from '../../apis/Event_committes';
 // import { updateCommitteeApi } from '../../apis/Committees';
 import ConfirmationModal from '../ui/ConfirmationModal';
 
 interface Committee {
-  id: number;
+  id: string;
   abbr: string;
   committee: string;
   // The selected master committee id from dropdown selection
@@ -23,35 +24,43 @@ interface Committee {
   deputyChair2Name: string;
   // Local-only flag to prevent multiple unsaved rows
   isNew?: boolean;
+  // Category to filter by tabs
+  category?: string;
 }
 
 const CommitteesPage: React.FC = () => {
 
   // State variables
   const [activeCommitteeType, setActiveCommitteeType] = useState('country');
+  const [allCommitteesData, setAllCommitteesData] = useState<any[]>([]);
   const [committees, setCommittees] = useState<any[]>([]);
-  const [editingCommittee, setEditingCommittee] = useState<number | null>(null);
+  const [editingCommittee, setEditingCommittee] = useState<string | null>(null);
   const [editingCommitteeField, setEditingCommitteeField] = useState<string | null>(null);
-  const [tempValue, setTempValue] = useState<string>('');
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [isUpdating, setIsUpdating] = useState<boolean>(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
+  const [isUpdateMode, setIsUpdateMode] = useState<boolean>(false);
   const [showContextMenu, setShowContextMenu] = useState<boolean>(false);
   const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  const [contextMenuCommitteeId, setContextMenuCommitteeId] = useState<number | null>(null);
+  const [contextMenuCommitteeId, setContextMenuCommitteeId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
+  // Limit initial spinner visibility to at most 1 second
+  const [showInitialSpinner, setShowInitialSpinner] = useState<boolean>(true);
+  // Loading state for tab switching
+  const [isTabLoading, setIsTabLoading] = useState<boolean>(false);
   // Keep a ref in sync with hasUnsavedChanges to avoid stale closures in async effects
   const hasUnsavedChangesRef = useRef<boolean>(false);
 
   // Committee autocomplete states
   const [showCommitteeDropdown, setShowCommitteeDropdown] = useState<boolean>(false);
   const [filteredCommittees, setFilteredCommittees] = useState<any[]>([]);
-  const [activeCommitteeDropdown, setActiveCommitteeDropdown] = useState<number | null>(null);
+  const [activeCommitteeDropdown, setActiveCommitteeDropdown] = useState<string | null>(null);
   const committeeDropdownRef = useRef<HTMLDivElement>(null);
 
   // User autocomplete states
   const [showUserDropdown, setShowUserDropdown] = useState<boolean>(false);
   const [filteredUsers, setFilteredUsers] = useState<any[]>([]);
-  const [activeUserDropdown, setActiveUserDropdown] = useState<number | null>(null);
+  const [activeUserDropdown, setActiveUserDropdown] = useState<string | null>(null);
   const [activeUserField, setActiveUserField] = useState<string | null>(null);
   const userDropdownRef = useRef<HTMLDivElement>(null);
   const contextMenuRef = useRef<HTMLDivElement>(null);
@@ -71,6 +80,18 @@ const CommitteesPage: React.FC = () => {
     refreshCommitteesData();
   }, []);
 
+  // Cap initial spinner to 1 second and hide sooner if loading completes
+  useEffect(() => {
+    const timerId = setTimeout(() => setShowInitialSpinner(false), 1000);
+    return () => clearTimeout(timerId);
+  }, []);
+
+  useEffect(() => {
+    if (!isLoading) {
+      setShowInitialSpinner(false);
+    }
+  }, [isLoading]);
+
   // Load registrations for this event
   useEffect(() => {
     if (eventId) {
@@ -83,24 +104,36 @@ const CommitteesPage: React.FC = () => {
     hasUnsavedChangesRef.current = hasUnsavedChanges;
   }, [hasUnsavedChanges]);
 
-  // Fetch committees for event and active type. Avoid overwriting local edits using ref.
+  // Filter committees based on active tab category
+  useEffect(() => {
+    // Only filter if we don't have unsaved changes to avoid overwriting new committees
+    if (!hasUnsavedChanges) {
+      // Get committees from allCommitteesData that match the active category
+      const filteredFromAll = allCommitteesData.filter((committee: any) => {
+        return committee.category === activeCommitteeType;
+      });
+      setCommittees(filteredFromAll);
+    }
+  }, [allCommitteesData, activeCommitteeType, hasUnsavedChanges]);
+
+  // Fetch committees for event and active type. Avoid overwriting local edits.
   useEffect(() => {
     const fetchEventCommittees = async () => {
       try {
         const response = await getAllEventCommitteesApi(eventId as string);
         // Only update if we don't have unsaved changes at response time
-        if (!hasUnsavedChangesRef.current) {
+        if (!hasUnsavedChanges) {
           const raw = response.data || [];
           const normalized = raw.map((item: any) => {
-            console.log('[CommitteesPage] Normalizing committee:', item);
             const master = item && typeof item.committee === 'object' ? item.committee : null;
             const committeeText = master
               ? (master.committee ?? master.name ?? '')
               : (typeof item.committee === 'string' ? item.committee : '');
             const abbreviation = master ? (master.abbr ?? item.abbr ?? '') : (item.abbr ?? '');
             const masterId = master ? master.id : (item.committee_id ?? item.committeeId ?? undefined);
+            const category = master ? master.category : item.category;
             return {
-              id: item.id,
+              id: String(item.id),
               committee: committeeText,
               abbr: abbreviation,
               committeeId: masterId,
@@ -111,10 +144,11 @@ const CommitteesPage: React.FC = () => {
               deputyChair1Name: item.deputy_chair_1_name ?? '',
               deputyChair2Username: item.deputy_chair_2_username ?? '',
               deputyChair2Name: item.deputy_chair_2_name ?? '',
-              isNew: false
+              isNew: false,
+              category: category || 'country' // Default to 'country' if no category
             };
           });
-          setCommittees(Array.isArray(normalized) ? normalized : []);
+          setAllCommitteesData(Array.isArray(normalized) ? normalized : []);
         }
       } catch (error: any) {
         console.error('Error fetching event committees:', error);
@@ -125,8 +159,7 @@ const CommitteesPage: React.FC = () => {
     if (eventId) {
       fetchEventCommittees();
     }
-  }, [eventId, activeCommitteeType]);
-
+  }, [eventId, activeCommitteeType, hasUnsavedChanges]);
   // Handle click outside to close dropdowns
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -144,6 +177,7 @@ const CommitteesPage: React.FC = () => {
       if (contextMenuRef.current && !contextMenuRef.current.contains(event.target as Node)) {
         setShowContextMenu(false);
         setContextMenuCommitteeId(null);
+        setIsUpdateMode(false); // Reset update mode when clicking outside
       }
     };
 
@@ -154,7 +188,8 @@ const CommitteesPage: React.FC = () => {
   }, []);
 
   // Handler functions
-  const handleCommitteeTypeChange = (type: string) => {
+  const handleCommitteeTypeChange = async (type: string) => {
+    setIsTabLoading(true);
     setActiveCommitteeType(type);
     // Clear dropdown states when switching tabs
     setShowCommitteeDropdown(false);
@@ -166,18 +201,50 @@ const CommitteesPage: React.FC = () => {
     setActiveUserField(null);
     setShowContextMenu(false);
     setContextMenuCommitteeId(null);
-    setContextMenuCommitteeId(null);
     setEditingCommittee(null);
     setEditingCommitteeField(null);
-    setTempValue('');
-    // Reset unsaved changes when switching tabs
-    setHasUnsavedChanges(false);
+    setIsUpdateMode(false); // Reset update mode when switching tabs
+    
+    // Check if there are any new unsaved rows before resetting unsaved changes
+    const hasNewRows = committees.some((c: any) => c.isNew);
+    
+    if (!hasNewRows) {
+      // No new rows, safe to reset and filter from backend data
+      setHasUnsavedChanges(false);
+      
+      // Filter committees for the new tab from backend data
+      const filteredFromAll = allCommitteesData.filter((committee: any) => {
+        return committee.category === type;
+      });
+      setCommittees(filteredFromAll);
+    } else {
+      // There are new rows, preserve them and only filter existing ones
+      setCommittees(prev => prev.filter((committee: any) => {
+        return committee.category === type;
+      }));
+    }
+    
+    // Add a small delay to show loading state
+    setTimeout(() => {
+      setIsTabLoading(false);
+    }, 500);
   };
 
-  const handleCommitteeFieldEdit = (committeeId: number, fieldType: string, currentValue: string) => {
+  const handleCommitteeFieldEdit = (committeeId: string, fieldType: string) => {
+    // Define which fields are editable in edit mode
+    const editableFields = ['committee', 'seatsTotal', 'chairUsername', 'deputyChair1Username', 'deputyChair2Username'];
+    
+    // Only allow editing if it's a new committee or if the field is in the editable list
+    const committee = committees.find((c: any) => c.id === committeeId);
+    const isNewCommittee = committee?.isNew;
+    
+    if (!isNewCommittee && !editableFields.includes(fieldType)) {
+      // Field is not editable in edit mode, don't allow editing
+      return;
+    }
+    
     setEditingCommittee(committeeId);
     setEditingCommitteeField(fieldType);
-    setTempValue(currentValue);
 
     // Prepare user dropdown state if editing a username field
     if (
@@ -199,8 +266,16 @@ const CommitteesPage: React.FC = () => {
     setContextMenuCommitteeId(null);
   };
 
-  const handleCommitteeFieldChange = (value: string, committeeId?: number) => {
-    setTempValue(value);
+  const handleCommitteeFieldChange = (value: string, committeeId?: string) => {
+    // Update the committee data directly
+    if (editingCommittee && editingCommitteeField && committeeId) {
+      setCommittees(prev => prev.map((committee: any) =>
+        committee.id === committeeId
+          ? { ...committee, [editingCommitteeField]: value }
+          : committee
+      ));
+      setHasUnsavedChanges(true);
+    }
 
     // If committee field is being changed, show dropdown and filter committees
     if (editingCommitteeField === 'committee') {
@@ -215,16 +290,12 @@ const CommitteesPage: React.FC = () => {
       }
     }
 
-    // If username or name field is being changed, show dropdown and filter users
+    // If username field is being changed, show dropdown and filter users
     if (
       editingCommitteeField === 'chairUsername' ||
       editingCommitteeField === 'deputyChair1Username' ||
-      editingCommitteeField === 'deputyChair2Username' ||
-      editingCommitteeField === 'chairName' ||
-      editingCommitteeField === 'deputyChair1Name' ||
-      editingCommitteeField === 'deputyChair2Name'
+      editingCommitteeField === 'deputyChair2Username'
     ) {
-      console.log('[CommitteesPage] User input for', editingCommitteeField, ':', value);
       if (value.trim()) {
         setShowUserDropdown(true);
         setActiveUserDropdown(committeeId || null);
@@ -269,9 +340,7 @@ const CommitteesPage: React.FC = () => {
 
   // Function to filter users by input
   const filterUsersByInput = (input: string) => {
-    console.log('[CommitteesPage] Filtering registrations by input:', input);
     if (!allRegistrations || allRegistrations.length === 0) {
-      console.log('[CommitteesPage] No registrations available to filter');
       setFilteredUsers([]);
       return;
     }
@@ -288,14 +357,11 @@ const CommitteesPage: React.FC = () => {
       );
     });
 
-    console.log('[CommitteesPage] Filtered registrations count:', filtered.length);
-    console.log('[CommitteesPage] Filtered registrations sample:', filtered.slice(0, 5));
     setFilteredUsers(filtered);
   };
 
   // Handle committee selection from dropdown
   const handleCommitteeSelect = (selectedCommittee: any) => {
-    console.log('[CommitteesPage] Selected committee from dropdown:', selectedCommittee);
     if (editingCommittee && editingCommitteeField === 'committee') {
       setCommittees(prev => prev.map((committee: any) =>
         committee.id === editingCommittee
@@ -316,9 +382,7 @@ const CommitteesPage: React.FC = () => {
     setActiveCommitteeDropdown(null);
     // Keep row in edit mode; advance to seats for continued input
     if (editingCommittee) {
-      const c = committees.find((c: any) => c.id === editingCommittee);
       setEditingCommitteeField('seatsTotal');
-      setTempValue(c?.seatsTotal || '');
     }
   };
 
@@ -364,7 +428,6 @@ const CommitteesPage: React.FC = () => {
     setActiveUserDropdown(null);
     setActiveUserField(null);
     // Keep row in edit mode to continue editing other fields
-    setTempValue('');
   };
 
   // Removed per-cell save function (superseded by unified Save)
@@ -373,13 +436,13 @@ const CommitteesPage: React.FC = () => {
   // Removed per-cell cancel (use context menu or leave edit mode by Save)
   // const handleCommitteeFieldCancel = () => {};
 
-  const handleContextMenuClick = (event: React.MouseEvent, committeeId: number) => {
+  const handleContextMenuClick = (event: React.MouseEvent, committeeId: string) => {
     event.preventDefault();
     event.stopPropagation();
 
     const rect = event.currentTarget.getBoundingClientRect();
     setContextMenuPosition({
-      x: rect.right,
+      x: rect.left,
       y: rect.bottom
     });
     setContextMenuCommitteeId(committeeId);
@@ -392,40 +455,53 @@ const CommitteesPage: React.FC = () => {
     if (hasPendingNewRow) {
       return;
     }
-    const newId = committees.length > 0 ? Math.max(...committees.map((c: any) => c.id)) + 1 : 1;
+    
+    // Generate a unique UUID for the new committee
+    const newId = uuidv4();
     const newCommittee: Committee = {
       id: newId,
-      abbr: 'Auto Generated',
+      abbr: 'Auto',
       committee: '',
       committeeId: undefined,
-      seatsTotal: '30',
+      seatsTotal: '',
       chairUsername: '',
       chairName: '',
       deputyChair1Username: '',
       deputyChair1Name: '',
       deputyChair2Username: '',
       deputyChair2Name: '',
-      isNew: true
+      isNew: true,
+      category: activeCommitteeType
     };
-    setCommittees(prev => [...prev, newCommittee as any]);
-    // Immediately enable editing for the chair username field on the newly added row
-    setEditingCommittee(newId);
-    setEditingCommitteeField('chairUsername');
-    setTempValue(newCommittee.chairUsername);
-
-    // Mark as having unsaved changes
+    
+    // Clear any existing editing states first
+    setEditingCommittee(null);
+    setEditingCommitteeField(null);
+    setIsUpdateMode(false); // Reset update mode for new committees
+    
+    // Mark as having unsaved changes FIRST to prevent filtering effect from running
     setHasUnsavedChanges(true);
+    
+    // Add the new committee
+    setCommittees(prev => [...prev, newCommittee as any]);
+    
+    // Use setTimeout to ensure state updates are processed before setting editing state
+    setTimeout(() => {
+      // Enable editing for the committee field on the newly added row
+      setEditingCommittee(newId);
+      setEditingCommitteeField('committee');
 
-    // Clear any existing dropdown states
-    setShowCommitteeDropdown(false);
-    setFilteredCommittees([]);
-    setActiveCommitteeDropdown(null);
-    setShowUserDropdown(false);
-    setFilteredUsers([]);
-    setActiveUserDropdown(null);
-    setActiveUserField(null);
-    setShowContextMenu(false);
-    setContextMenuCommitteeId(null);
+      // Clear any existing dropdown states
+      setShowCommitteeDropdown(false);
+      setFilteredCommittees([]);
+      setActiveCommitteeDropdown(null);
+      setShowUserDropdown(false);
+      setFilteredUsers([]);
+      setActiveUserDropdown(null);
+      setActiveUserField(null);
+      setShowContextMenu(false);
+      setContextMenuCommitteeId(null);
+    }, 0);
   };
 
   const handleDeleteCommittee = async () => {
@@ -458,8 +534,9 @@ const CommitteesPage: React.FC = () => {
             : (typeof item.committee === 'string' ? item.committee : '');
           const abbreviation = master ? (master.abbr ?? item.abbr ?? '') : (item.abbr ?? '');
           const masterId = master ? master.id : (item.committee_id ?? item.committeeId ?? undefined);
+          const category = master ? master.category : item.category;
           return {
-            id: item.id,
+            id: String(item.id),
             committee: committeeText,
             abbr: abbreviation,
             committeeId: masterId,
@@ -470,10 +547,11 @@ const CommitteesPage: React.FC = () => {
             deputyChair1Name: item.deputy_chair_1_name ?? '',
             deputyChair2Username: item.deputy_chair_2_username ?? '',
             deputyChair2Name: item.deputy_chair_2_name ?? '',
-            isNew: false
+            isNew: false,
+            category: category || 'country'
           };
         });
-        setCommittees(Array.isArray(normalized) ? normalized : []);
+        setAllCommitteesData(Array.isArray(normalized) ? normalized : []);
       } catch (refreshErr) {
         // Fallback to local removal if refresh fails
         setCommittees(prev => prev.filter((c: any) => c.id !== contextMenuCommitteeId));
@@ -492,14 +570,14 @@ const CommitteesPage: React.FC = () => {
     if (contextMenuCommitteeId) {
       const committee = committees.find((c: any) => c.id === contextMenuCommitteeId);
       if (committee) {
-        // Prevent editing fields for rows that are pending new (still allowed, but we set editing to specific field)
+        // Set update mode for existing committees
+        setIsUpdateMode(true);
         setEditingCommittee(contextMenuCommitteeId);
         setEditingCommitteeField('committee');
-        setTempValue(committee.committee || '');
+        setHasUnsavedChanges(true);
       }
     }
     setShowContextMenu(false);
-    setContextMenuCommitteeId(null);
     setContextMenuCommitteeId(null);
   };
 
@@ -560,16 +638,72 @@ const CommitteesPage: React.FC = () => {
     }
   };
 
+  const handleUpdateCommittees = async () => {
+    try {
+      setIsUpdating(true);
+      // Only update the currently editing row
+      const target = editingCommittee && committees.find((c: any) => c.id === editingCommittee);
+
+      if (!target) {
+        toast.error('No row selected to update');
+        return;
+      }
+
+      if (!target.committee || target.committee === '') {
+        toast.error('Please select a committee before updating');
+        return;
+      }
+
+      // Require a selected master committee id
+      const committeeIdentifier = (target as any).committeeId;
+      if (!committeeIdentifier) {
+        toast.error('Please select a committee from the dropdown before updating');
+        return;
+      }
+
+      console.log('[CommitteesPage] Updating committee with ID:', target.id, 'identifier:', committeeIdentifier);
+      const response = await updateEventCommitteesByEventIdApi(
+        target.id, // Use the committee's ID for updating
+        eventId as string,
+        committeeIdentifier.toString(),
+        activeCommitteeType,
+        target.seatsTotal,
+        target.chairUsername,
+        target.chairName,
+        target.deputyChair1Username,
+        target.deputyChair1Name,
+        target.deputyChair2Username,
+        target.deputyChair2Name
+      );
+
+      if (!response.success) {
+        toast.error(`Failed to update committee: ${target.committee}`);
+        return;
+      }
+
+      toast.success('Committee updated successfully');
+      // Reset unsaved changes flag after successful update
+      setHasUnsavedChanges(false);
+      setIsUpdateMode(false);
+    } catch (error: any) {
+      console.error('Error updating committees:', error);
+      toast.error(error.message || 'Failed to update committees');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   // Show loading state
-  if (isLoading) {
+  if (isLoading || showInitialSpinner || isTabLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-3 text-gray-600">Loading committees...</span>
+        <span className="ml-3 text-gray-600">
+          {isTabLoading ? 'Loading committee data...' : 'Loading committees...'}
+        </span>
       </div>
     );
   }
-
   return (
     <div className="space-y-6">
       <div className="flex space-x-2">
@@ -577,19 +711,27 @@ const CommitteesPage: React.FC = () => {
           <button
             key={type.id}
             onClick={() => handleCommitteeTypeChange(type.id)}
+            disabled={isTabLoading}
             className={`w-[200px] h-[58px] rounded-[20px] p-[5px] opacity-100 transition-colors text-sm font-medium ${activeCommitteeType === type.id
               ? 'bg-[#6A8BAF] text-white'
               : 'bg-white text-black border border-gray-800'
-              }`}
+              } ${isTabLoading ? 'opacity-60 cursor-not-allowed' : ''}`}
             style={{ transform: 'rotate(0deg)' }}
           >
-            {type.name}
+            {isTabLoading && activeCommitteeType === type.id ? (
+              <div className="flex items-center justify-center">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Loading...
+              </div>
+            ) : (
+              type.name
+            )}
           </button>
         ))}
       </div>
 
       {/* Show message if no committees */}
-      {committees.length === 0 && !isLoading && (
+      {committees.length === 0 && !isLoading && !isTabLoading && (
         <div className="text-center py-8">
           <div className="text-gray-400 mb-4">
             <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -634,17 +776,17 @@ const CommitteesPage: React.FC = () => {
                         </svg>
                         <input
                           type="text"
-                          value={tempValue}
+                          value={committee.committee || ''}
                           onChange={(e) => handleCommitteeFieldChange(e.target.value, committee.id)}
                           placeholder="E.g. United Nations Security Council"
                           className="w-full border-none outline-none text-gray-900"
                           autoFocus
                           autoComplete="off"
                         />
-                        {tempValue && (
+                        {committee.committee && (
                           <button
                             onClick={() => {
-                              setTempValue('');
+                              handleCommitteeFieldChange('', committee.id);
                               setShowCommitteeDropdown(false);
                               setFilteredCommittees([]);
                               setActiveCommitteeDropdown(null);
@@ -680,7 +822,7 @@ const CommitteesPage: React.FC = () => {
                   ) : (
                     <div
                       className="text-sm text-gray-900 w-full"
-                      onClick={editingCommittee === committee.id ? () => handleCommitteeFieldEdit(committee.id, 'committee', committee.committee || '') : undefined}
+                      onClick={editingCommittee === committee.id ? () => handleCommitteeFieldEdit(committee.id, 'committee') : undefined}
                     >
                       {committee.committee || 'E.g. United Nations Security Council'}
                     </div>
@@ -692,9 +834,9 @@ const CommitteesPage: React.FC = () => {
                     <div className="text-sm relative w-full">
                       <input
                         type="text"
-                        value={tempValue}
-                        onChange={(e) => handleCommitteeFieldChange(e.target.value)}
-                        placeholder="30"
+                        value={committee.seatsTotal || ''}
+                        onChange={(e) => handleCommitteeFieldChange(e.target.value, committee.id)}
+                        placeholder="Enter number of seats"
                         className="w-full border-none outline-none text-gray-900"
                         autoFocus
                       />
@@ -702,7 +844,7 @@ const CommitteesPage: React.FC = () => {
                   ) : (
                     <div
                       className="text-sm text-gray-900 w-full"
-                      onClick={editingCommittee === committee.id ? () => handleCommitteeFieldEdit(committee.id, 'seatsTotal', committee.seatsTotal) : undefined}
+                      onClick={editingCommittee === committee.id ? () => handleCommitteeFieldEdit(committee.id, 'seatsTotal') : undefined}
                     >
                       {committee.seatsTotal}
                     </div>
@@ -719,17 +861,17 @@ const CommitteesPage: React.FC = () => {
                         </svg>
                         <input
                           type="text"
-                          value={tempValue}
+                          value={committee.chairUsername || ''}
                           onChange={(e) => handleCommitteeFieldChange(e.target.value, committee.id)}
                           placeholder="@username"
                           className="w-full border-none outline-none text-gray-900"
                           autoFocus
                           autoComplete="off"
                         />
-                        {tempValue && (
+                        {committee.chairUsername && (
                           <button
                             onClick={() => {
-                              setTempValue('');
+                              handleCommitteeFieldChange('', committee.id);
                               setShowUserDropdown(false);
                               setFilteredUsers([]);
                               setActiveUserDropdown(null);
@@ -767,7 +909,7 @@ const CommitteesPage: React.FC = () => {
                   ) : (
                     <div
                       className="text-sm text-gray-900 w-full"
-                      onClick={editingCommittee === committee.id ? () => handleCommitteeFieldEdit(committee.id, 'chairUsername', committee.chairUsername || '') : undefined}
+                      onClick={editingCommittee === committee.id ? () => handleCommitteeFieldEdit(committee.id, 'chairUsername') : undefined}
                     >
                       {committee.chairUsername || '-'}
                     </div>
@@ -776,49 +918,9 @@ const CommitteesPage: React.FC = () => {
 
                 {/* Chair Name */}
                 <div className="bg-gray-50 border border-gray-800 rounded-lg px-3 py-2 flex items-center">
-                  {editingCommittee === committee.id && editingCommitteeField === 'chairName' ? (
-                    <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200 relative w-full" ref={userDropdownRef}>
-                      <div className="flex items-center">
-                        <svg className="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                        <input
-                          type="text"
-                          value={tempValue}
-                          onChange={(e) => handleCommitteeFieldChange(e.target.value, committee.id)}
-                          placeholder="Full name"
-                          className="w-full border-none outline-none text-gray-900"
-                          autoFocus
-                          autoComplete="off"
-                        />
-                      </div>
-                      {showUserDropdown && activeUserDropdown === committee.id && activeUserField === 'chairName' && filteredUsers.length > 0 && (
-                        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
-                          {filteredUsers.map((user, index) => {
-                            const u = user && user.user ? user.user : user;
-                            return (
-                              <button
-                                key={u?.id || index}
-                                type="button"
-                                onClick={() => handleUserSelect(user)}
-                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900 transition-colors duration-200 border-b border-gray-100 last:border-b-0"
-                              >
-                                <div className="font-medium">{u?.fullname}</div>
-                                <div className="text-xs text-gray-500">@{u?.username}</div>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div
-                      className="text-sm text-gray-900 w-full"
-                      onClick={editingCommittee === committee.id ? () => handleCommitteeFieldEdit(committee.id, 'chairName', committee.chairName || '') : undefined}
-                    >
-                      {committee.chairName || '-'}
-                    </div>
-                  )}
+                  <div className="text-sm text-gray-900 w-full">
+                    {committee.chairName || '-'}
+                  </div>
                 </div>
 
                 {/* Deputy Chair 1 Username */}
@@ -831,17 +933,17 @@ const CommitteesPage: React.FC = () => {
                         </svg>
                         <input
                           type="text"
-                          value={tempValue}
+                          value={committee.deputyChair1Username || ''}
                           onChange={(e) => handleCommitteeFieldChange(e.target.value, committee.id)}
                           placeholder="@username"
                           className="w-full border-none outline-none text-gray-900"
                           autoFocus
                           autoComplete="off"
                         />
-                        {tempValue && (
+                        {committee.deputyChair1Username && (
                           <button
                             onClick={() => {
-                              setTempValue('');
+                              handleCommitteeFieldChange('', committee.id);
                               setShowUserDropdown(false);
                               setFilteredUsers([]);
                               setActiveUserDropdown(null);
@@ -879,7 +981,7 @@ const CommitteesPage: React.FC = () => {
                   ) : (
                     <div
                       className="text-sm text-gray-900 w-full"
-                      onClick={editingCommittee === committee.id ? () => handleCommitteeFieldEdit(committee.id, 'deputyChair1Username', committee.deputyChair1Username || '') : undefined}
+                      onClick={editingCommittee === committee.id ? () => handleCommitteeFieldEdit(committee.id, 'deputyChair1Username') : undefined}
                     >
                       {committee.deputyChair1Username || '-'}
                     </div>
@@ -888,49 +990,9 @@ const CommitteesPage: React.FC = () => {
 
                 {/* Deputy Chair 1 Name */}
                 <div className="bg-gray-50 border border-gray-800 rounded-lg px-3 py-2 flex items-center">
-                  {editingCommittee === committee.id && editingCommitteeField === 'deputyChair1Name' ? (
-                    <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200 relative w-full" ref={userDropdownRef}>
-                      <div className="flex items-center">
-                        <svg className="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                        <input
-                          type="text"
-                          value={tempValue}
-                          onChange={(e) => handleCommitteeFieldChange(e.target.value, committee.id)}
-                          placeholder="Full name"
-                          className="w-full border-none outline-none text-gray-900"
-                          autoFocus
-                          autoComplete="off"
-                        />
-                      </div>
-                      {showUserDropdown && activeUserDropdown === committee.id && activeUserField === 'deputyChair1Name' && filteredUsers.length > 0 && (
-                        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
-                          {filteredUsers.map((user, index) => {
-                            const u = user && user.user ? user.user : user;
-                            return (
-                              <button
-                                key={u?.id || index}
-                                type="button"
-                                onClick={() => handleUserSelect(user)}
-                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900 transition-colors duration-200 border-b border-gray-100 last:border-b-0"
-                              >
-                                <div className="font-medium">{u?.fullname}</div>
-                                <div className="text-xs text-gray-500">@{u?.username}</div>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div
-                      className="text-sm text-gray-900 w-full"
-                      onClick={editingCommittee === committee.id ? () => handleCommitteeFieldEdit(committee.id, 'deputyChair1Name', committee.deputyChair1Name || '') : undefined}
-                    >
-                      {committee.deputyChair1Name || '-'}
-                    </div>
-                  )}
+                  <div className="text-sm text-gray-900 w-full">
+                    {committee.deputyChair1Name || '-'}
+                  </div>
                 </div>
 
                 {/* Deputy Chair 2 Username */}
@@ -943,17 +1005,17 @@ const CommitteesPage: React.FC = () => {
                         </svg>
                         <input
                           type="text"
-                          value={tempValue}
+                          value={committee.deputyChair2Username || ''}
                           onChange={(e) => handleCommitteeFieldChange(e.target.value, committee.id)}
                           placeholder="@username"
                           className="w-full border-none outline-none text-gray-900"
                           autoFocus
                           autoComplete="off"
                         />
-                        {tempValue && (
+                        {committee.deputyChair2Username && (
                           <button
                             onClick={() => {
-                              setTempValue('');
+                              handleCommitteeFieldChange('', committee.id);
                               setShowUserDropdown(false);
                               setFilteredUsers([]);
                               setActiveUserDropdown(null);
@@ -991,7 +1053,7 @@ const CommitteesPage: React.FC = () => {
                   ) : (
                     <div
                       className="text-sm text-gray-900 w-full"
-                      onClick={editingCommittee === committee.id ? () => handleCommitteeFieldEdit(committee.id, 'deputyChair2Username', committee.deputyChair2Username || '') : undefined}
+                      onClick={editingCommittee === committee.id ? () => handleCommitteeFieldEdit(committee.id, 'deputyChair2Username') : undefined}
                     >
                       {committee.deputyChair2Username || '-'}
                     </div>
@@ -1000,63 +1062,25 @@ const CommitteesPage: React.FC = () => {
 
                 {/* Deputy Chair 2 Name */}
                 <div className="bg-gray-50 border border-gray-800 rounded-lg px-3 py-2 flex items-center">
-                  {editingCommittee === committee.id && editingCommitteeField === 'deputyChair2Name' ? (
-                    <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200 relative w-full" ref={userDropdownRef}>
-                      <div className="flex items-center">
-                        <svg className="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                        <input
-                          type="text"
-                          value={tempValue}
-                          onChange={(e) => handleCommitteeFieldChange(e.target.value, committee.id)}
-                          placeholder="Full name"
-                          className="w-full border-none outline-none text-gray-900"
-                          autoFocus
-                          autoComplete="off"
-                        />
-                      </div>
-                      {showUserDropdown && activeUserDropdown === committee.id && activeUserField === 'deputyChair2Name' && filteredUsers.length > 0 && (
-                        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
-                          {filteredUsers.map((user, index) => {
-                            const u = user && user.user ? user.user : user;
-                            return (
-                              <button
-                                key={u?.id || index}
-                                type="button"
-                                onClick={() => handleUserSelect(user)}
-                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900 transition-colors duration-200 border-b border-gray-100 last:border-b-0"
-                              >
-                                <div className="font-medium">{u?.fullname}</div>
-                                <div className="text-xs text-gray-500">@{u?.username}</div>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div
-                      className="text-sm text-gray-900 w-full"
-                      onClick={editingCommittee === committee.id ? () => handleCommitteeFieldEdit(committee.id, 'deputyChair2Name', committee.deputyChair2Name || '') : undefined}
-                    >
-                      {committee.deputyChair2Name || '-'}
-                    </div>
-                  )}
+                  <div className="text-sm text-gray-900 w-full">
+                    {committee.deputyChair2Name || '-'}
+                  </div>
                 </div>
 
                 {/* Actions Column */}
                 <div className="bg-gray-50 px-3 py-2 text-sm font-medium relative">
                   <div className="relative flex items-center justify-center space-x-3">
-                    <button
-                      onClick={(e) => handleContextMenuClick(e, committee.id)}
-                      className="text-blue-600 hover:text-blue-800 p-1"
-                      title="Actions"
-                    >
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                      </svg>
-                    </button>
+                    {!committee.isNew && (
+                      <button
+                        onClick={(e) => handleContextMenuClick(e, committee.id)}
+                        className="text-blue-600 hover:text-blue-800 p-1"
+                        title="Actions"
+                      >
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                        </svg>
+                      </button>
+                    )}
                   </div>
                 </div>
               </React.Fragment>
@@ -1069,11 +1093,12 @@ const CommitteesPage: React.FC = () => {
       {showContextMenu && (
         <div
           ref={contextMenuRef}
-          className="fixed bg-gray-100 border border-black rounded-lg shadow-lg z-50"
+          className="fixed bg-gray-100 border border-black rounded-lg shadow-lg z-50 w-40"
           style={{
-            left: `${contextMenuPosition.x}px`,
+            left: `${contextMenuPosition.x - 100}px`,
             top: `${contextMenuPosition.y}px`,
-            minWidth: '150px'
+            minWidth: '150px',
+            marginTop: '0px'
           }}
         >
           <div className="py-1">
@@ -1133,24 +1158,41 @@ const CommitteesPage: React.FC = () => {
         >
           Add
         </button>
-        <button
-          onClick={handleSaveCommittees}
-          className={`text-white font-medium transition-colors`}
-          style={{
+        {/* Only show Save/Update button when there's a new committee or in update mode, and not currently saving/updating */}
+        {(committees.some((c: any) => c.isNew) || isUpdateMode) && !isSaving && !isUpdating && (
+          <button
+            onClick={isUpdateMode ? handleUpdateCommittees : handleSaveCommittees}
+            className={`text-white font-medium transition-colors`}
+            style={{
+              width: '105px',
+              height: '44px',
+              borderRadius: '30px',
+              padding: '10px',
+              gap: '10px',
+              opacity: 1,
+              background: '#607DA3',
+              cursor: 'pointer',
+              border: 'none',
+              boxShadow: 'none',
+            }}
+          >
+            {isUpdateMode ? 'Update' : 'Save'}
+          </button>
+        )}
+        {/* Show loading state when saving/updating */}
+        {(isSaving || isUpdating) && (
+          <div className="flex items-center justify-center" style={{
             width: '105px',
             height: '44px',
             borderRadius: '30px',
-            padding: '10px',
-            gap: '10px',
-            opacity: 1,
-            background: isSaving ? '#bdbdbd' : '#607DA3',
-            cursor: isSaving ? 'not-allowed' : 'pointer',
-            border: 'none',
-            boxShadow: 'none',
-          }}
-        >
-          Save
-        </button>
+            background: '#bdbdbd',
+            color: '#666',
+            fontSize: '14px',
+            fontWeight: '500'
+          }}>
+            {isSaving ? 'Saving...' : 'Updating...'}
+          </div>
+        )}
       </div>
     </div>
   );

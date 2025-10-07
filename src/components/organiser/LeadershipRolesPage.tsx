@@ -64,6 +64,10 @@ const LeadershipRolesPage: React.FC = () => {
   // Support toggle states
   const [supportEnabledRoles, setSupportEnabledRoles] = useState<Set<number>>(new Set());
 
+  // Loading states for save buttons
+  const [isSavingNew, setIsSavingNew] = useState<boolean>(false);
+  const [isSavingEdit, setIsSavingEdit] = useState<boolean>(false);
+
   const handleDropdownToggle = (roleId: number) => {
     setActiveDropdown(activeDropdown === roleId ? null : roleId);
   };
@@ -356,7 +360,11 @@ const LeadershipRolesPage: React.FC = () => {
 
 
   const handleSaveNew = async () => {
+    if (isSavingNew) return; // Prevent double-clicking
+    
     try {
+      setIsSavingNew(true);
+      
       if (!newRoleData.role || !newRoleData.username || !newRoleData.selectedUserId) {
         toast.error('Please fill in all required fields');
         return;
@@ -400,11 +408,17 @@ const LeadershipRolesPage: React.FC = () => {
       }
     } catch (error: any) {
       toast.error('Failed to save leadership role: ' + error.message);
+    } finally {
+      setIsSavingNew(false);
     }
   };
 
   const handleSaveEdit = async () => {
+    if (isSavingEdit) return; // Prevent double-clicking
+    
     try {
+      setIsSavingEdit(true);
+      
       // Validate required fields
       if (!editRoleData.role || !editRoleData.username || !editRoleData.selectedUserId) {
         toast.error('Please fill in all required fields');
@@ -459,6 +473,8 @@ const LeadershipRolesPage: React.FC = () => {
       }
     } catch (error: any) {
       toast.error('Failed to update leadership role: ' + error.message);
+    } finally {
+      setIsSavingEdit(false);
     }
   };
 
@@ -891,6 +907,7 @@ const LeadershipRolesPage: React.FC = () => {
             </button>
             <button
               onClick={handleSaveEdit}
+              disabled={isSavingEdit}
               className={`text-white font-medium transition-colors`}
               style={{
                 width: '105px',
@@ -898,14 +915,14 @@ const LeadershipRolesPage: React.FC = () => {
                 borderRadius: '30px',
                 padding: '10px',
                 gap: '10px',
-                opacity: 1,
-                background: '#607DA3',
-                cursor: 'pointer',
+                opacity: isSavingEdit ? 0.6 : 1,
+                background: isSavingEdit ? '#bdbdbd' : '#607DA3',
+                cursor: isSavingEdit ? 'not-allowed' : 'pointer',
                 border: 'none',
                 boxShadow: 'none',
               }}
             >
-              Save
+              {isSavingEdit ? 'Saving...' : 'Save'}
             </button>
           </>
         ) : (
@@ -933,6 +950,7 @@ const LeadershipRolesPage: React.FC = () => {
             {isAddingNew && (
               <button
                 onClick={handleSaveNew}
+                disabled={isSavingNew}
                 className={`text-white font-medium transition-colors`}
                 style={{
                   width: '105px',
@@ -940,14 +958,14 @@ const LeadershipRolesPage: React.FC = () => {
                   borderRadius: '30px',
                   padding: '10px',
                   gap: '10px',
-                  opacity: 1,
-                  background: '#C2A46D',
-                  cursor: 'pointer',
+                  opacity: isSavingNew ? 0.6 : 1,
+                  background: isSavingNew ? '#bdbdbd' : '#C2A46D',
+                  cursor: isSavingNew ? 'not-allowed' : 'pointer',
                   border: 'none',
                   boxShadow: 'none',
                 }}
               >
-                Save
+                {isSavingNew ? 'Saving...' : 'Save'}
               </button>
             )}
           </>
