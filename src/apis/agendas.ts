@@ -4,14 +4,14 @@ const backendUrl = import.meta.env.VITE_BACKEND_URL;
 export const getAllEventCommitteesAgendaApi = async (eventId: string) => {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.get(`${backendUrl}/api/v1/event-committees/get-all-event-committees/${eventId}`, {
+        const response = await axios.get(`${backendUrl}/api/v1/event-committees-agendas/get-all-event-committees-agendas/${eventId}`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response?.data?.message || 'Failed to fetch all event committees');
+        throw new Error(error.response?.data?.message || 'Failed to fetch all event committees agendas');
     }
 };
 
@@ -48,22 +48,11 @@ export const getEventCommitteesByEventIdAgendaApi = async (eventId: string) => {
     }
 };
 
-export const updateEventCommitteesByEventIdAgendaApi = async (id: string, eventId: string, committeeId: string, category: string, seats: string,
-    chair_username: string, chair_fullname: string, deputy_chair1_username: string, deputy_chair1_fullname: string,
-    deputy_chair2_username: string, deputy_chair2_fullname: string) => {
+export const updateEventCommitteesAgendaByIdApi = async (id: string, agenda_title: string) => {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.patch(`${backendUrl}/api/v1/event-committees/update-event-committees-by-event/${id}`, {
-            committeeId,
-            eventId,
-            category,
-            seats,
-            chair_username,
-            chair_fullname,
-            deputy_chair1_username,
-            deputy_chair1_fullname,
-            deputy_chair2_username,
-            deputy_chair2_fullname
+        const response = await axios.patch(`${backendUrl}/api/v1/event-committees-agendas/update-event-committees-agendas-by-id/${id}`, {
+            agenda_title
         }, {
             headers: {
                 'Authorization': `Bearer ${token}`
@@ -71,20 +60,20 @@ export const updateEventCommitteesByEventIdAgendaApi = async (id: string, eventI
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response?.data?.message || 'Failed to update event committees by event id');
+        throw new Error(error.response?.data?.message || 'Failed to update event committees agenda by id');
     }
 };
 
-export const deleteEventCommitteesByEventIdAgendaApi = async (id: string) => {
+export const deleteEventCommitteesAgendaByIdApi = async (id: string) => {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.delete(`${backendUrl}/api/v1/event-committees/delete-event-committees-by-event/${id}`, {
+        const response = await axios.delete(`${backendUrl}/api/v1/event-committees-agendas/delete-event-committees-agendas-by-id/${id}`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response?.data?.message || 'Failed to delete event committees by event id');
+        throw new Error(error.response?.data?.message || 'Failed to delete event committees agenda by id');
     }
 };

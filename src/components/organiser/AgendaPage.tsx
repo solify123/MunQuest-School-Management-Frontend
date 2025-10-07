@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { getAllEventCommitteesApi } from '../../apis/Event_committes';
 import { toast } from 'sonner';
-import { saveEventCommitteesByEventIdAgendaApi } from '../../apis/agendas';
+import { saveEventCommitteesByEventIdAgendaApi, getEventCommitteesByEventIdAgendaApi, updateEventCommitteesAgendaByIdApi, deleteEventCommitteesAgendaByIdApi } from '../../apis/agendas';
+import ConfirmationModal from '../ui/ConfirmationModal';
 
 interface AgendaItem {
   id: number;
@@ -25,13 +26,25 @@ const AgendaPage: React.FC = () => {
 
   // Internal state management for agendas and documents
   const [activeCommitteeType, setActiveCommitteeType] = useState('country');
-  const [activeCommittee, setActiveCommittee] = useState('UNGA');
-  const [agendas, setAgendas] = useState<AgendaItem[]>([]);
+  const [activeCommittee, setActiveCommittee] = useState('');
+  const [allAgendas, setAllAgendas] = useState<any[]>([]); // Store all agendas from API
+  const [filteredAgendas, setFilteredAgendas] = useState<AgendaItem[]>([]); // Display filtered agendas
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [editingAgenda, setEditingAgenda] = useState<number | null>(null);
   const [editingDocument, setEditingDocument] = useState<number | null>(null);
   const [tempValue, setTempValue] = useState<string>('');
-  const [isSaving] = useState<boolean>(false);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [isUpdating, setIsUpdating] = useState<boolean>(false);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+
+  // Refs for detecting clicks outside menus
+  const agendaMenuRef = useRef<HTMLDivElement>(null);
+  const documentMenuRef = useRef<HTMLDivElement>(null);
+
+  // Confirmation modal state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [agendaToDelete, setAgendaToDelete] = useState<number | null>(null);
+  const [documentToDelete, setDocumentToDelete] = useState<number | null>(null);
 
   const { eventId } = useParams();
 
@@ -41,6 +54,23 @@ const AgendaPage: React.FC = () => {
     { id: 'crisis', name: 'Crisis Committees' },
     { id: 'open', name: 'Open Committees' }
   ];
+
+  // Close menus when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (agendaMenuRef.current && !agendaMenuRef.current.contains(event.target as Node)) {
+        setShowAgendaMenu(null);
+      }
+      if (documentMenuRef.current && !documentMenuRef.current.contains(event.target as Node)) {
+        setShowDocumentMenu(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Fetch event committees data
   useEffect(() => {
@@ -89,13 +119,59 @@ const AgendaPage: React.FC = () => {
     fetchEventCommittees();
   }, [eventId]);
 
+  // Fetch all agendas data once on initial load
+  useEffect(() => {
+    const fetchAgendas = async () => {
+      if (!eventId) return;
+
+      try {
+        const response = await getEventCommitteesByEventIdAgendaApi(eventId);
+        if (response.success) {
+          const agendasData = response.data || [];
+          setAllAgendas(agendasData);
+        }
+      } catch (error: any) {
+        console.error('Error fetching agendas:', error);
+        setAllAgendas([]);
+      }
+    };
+
+    fetchAgendas();
+  }, [eventId]);
+
   // Filter committees based on active category
   useEffect(() => {
     const filtered = allCommitteesData.filter(committee =>
       committee.category === activeCommitteeType
     );
     setFilteredCommittees(filtered);
+
+    // Set first committee as active when category changes
+    if (filtered.length > 0) {
+      const abbrs = filtered.map(committee => committee.abbr).filter(Boolean);
+      const uniqueAbbrs = [...new Set(abbrs)];
+      if (uniqueAbbrs.length > 0) {
+        setActiveCommittee(uniqueAbbrs[0]);
+      }
+    }
   }, [allCommitteesData, activeCommitteeType]);
+
+  // Filter agendas based on active committee
+  useEffect(() => {
+    if (!activeCommittee) {
+      setFilteredAgendas([]);
+      return;
+    }
+
+    const filtered = allAgendas
+      .filter((item: any) => item.agenda_abbr === activeCommittee)
+      .map((item: any) => ({
+        id: item.id,
+        title: item.agenda_title || ''
+      }));
+
+    setFilteredAgendas(filtered);
+  }, [allAgendas, activeCommittee]);
 
   // Get unique committee abbreviations for sub-tabs
   const getCommitteeAbbreviations = () => {
@@ -116,8 +192,10 @@ const AgendaPage: React.FC = () => {
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      // Use timestamp for unique temporary ID
+      const tempId = -Date.now();
       const newDocument = {
-        id: Math.max(...documents.map(d => d.id)) + 1,
+        id: tempId,
         name: file.name,
         file: file
       };
@@ -137,12 +215,44 @@ const AgendaPage: React.FC = () => {
     setTempValue(currentValue);
   };
 
+  const handleAgendaUpdate = async (agendaId: number, newTitle: string) => {
+    if (editingAgenda && !isUpdating) {
+      try {
+        if (!newTitle.trim()) {
+          toast.error('Agenda title cannot be empty');
+          return;
+        }
+
+        setIsUpdating(true);
+        const response = await updateEventCommitteesAgendaByIdApi(agendaId.toString(), newTitle);
+        if (response.success) {
+          toast.success('Agenda updated successfully');
+          
+          // Refresh all agendas from API
+          const agendasResponse = await getEventCommitteesByEventIdAgendaApi(eventId || '');
+          if (agendasResponse.success) {
+            const agendasData = agendasResponse.data || [];
+            setAllAgendas(agendasData);
+          }
+        } else {
+          toast.error(response.message || 'Failed to update agenda');
+        }
+      } catch (error: any) {
+        toast.error(error.message || 'Failed to update agenda');
+      } finally {
+        setIsUpdating(false);
+      }
+    }
+    setEditingAgenda(null);
+    setTempValue('');
+  };
+
   const handleAgendaChange = (value: string) => {
     setTempValue(value);
   };
 
   const handleAgendaSave = async () => {
-    if (editingAgenda) {
+    if (editingAgenda && !isSaving) {
       try {
         // Find the current committee data
         const currentCommittee = filteredCommittees.find(committee => committee.abbr === activeCommittee);
@@ -150,19 +260,29 @@ const AgendaPage: React.FC = () => {
         const agenda_abbr = activeCommittee;
         const agenda_title = tempValue;
 
+        if (!agenda_title.trim()) {
+          toast.error('Agenda title cannot be empty');
+          return;
+        }
+
+        setIsSaving(true);
         const response = await saveEventCommitteesByEventIdAgendaApi(eventId || '', event_committeeId, agenda_abbr, agenda_title);
         if (response.success) {
           toast.success('Agenda saved successfully');
-          setAgendas(prev => prev.map(agenda =>
-            agenda.id === editingAgenda
-              ? { ...agenda, title: tempValue }
-              : agenda
-          ));
+
+          // Refresh all agendas from API
+          const agendasResponse = await getEventCommitteesByEventIdAgendaApi(eventId || '');
+          if (agendasResponse.success) {
+            const agendasData = agendasResponse.data || [];
+            setAllAgendas(agendasData);
+          }
         } else {
           toast.error(response.message || 'Failed to save agenda');
         }
       } catch (error: any) {
         toast.error(error.message || 'Failed to save agenda');
+      } finally {
+        setIsSaving(false);
       }
     }
     setEditingAgenda(null);
@@ -171,24 +291,63 @@ const AgendaPage: React.FC = () => {
 
   const handleAgendaCancel = () => {
     // If canceling a new agenda item, remove it from the list
-    if (editingAgenda && agendas.find(agenda => agenda.id === editingAgenda)?.title === 'New Agenda Item') {
-      setAgendas(prev => prev.filter(agenda => agenda.id !== editingAgenda));
+    if (editingAgenda && filteredAgendas.find(agenda => agenda.id === editingAgenda)?.title === 'New Agenda Item') {
+      setFilteredAgendas(prev => prev.filter(agenda => agenda.id !== editingAgenda));
     }
     setEditingAgenda(null);
     setTempValue('');
   };
 
-  const handleAgendaDelete = (agendaId: number) => {
-    setAgendas(prev => prev.filter(agenda => agenda.id !== agendaId));
+  const handleAgendaDeleteClick = (agendaId: number) => {
+    setAgendaToDelete(agendaId);
+    setShowDeleteConfirm(true);
+    setShowAgendaMenu(null);
+  };
+
+  const handleAgendaDelete = async () => {
+    if (agendaToDelete === null || isDeleting) return;
+
+    try {
+      setIsDeleting(true);
+      const response = await deleteEventCommitteesAgendaByIdApi(agendaToDelete.toString());
+      if (response.success) {
+        toast.success('Agenda deleted successfully');
+        
+        // Refresh all agendas from API
+        const agendasResponse = await getEventCommitteesByEventIdAgendaApi(eventId || '');
+        if (agendasResponse.success) {
+          const agendasData = agendasResponse.data || [];
+          setAllAgendas(agendasData);
+        }
+      } else {
+        toast.error(response.message || 'Failed to delete agenda');
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete agenda');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+      setAgendaToDelete(null);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteConfirm(false);
+    setAgendaToDelete(null);
+    setDocumentToDelete(null);
   };
 
   const handleAddAgenda = () => {
+    // Generate unique temporary ID using timestamp to avoid NaN and duplicates
+    // Use negative numbers for temporary items to avoid conflicts with database IDs
+    const tempId = -Date.now();
+
     const newAgenda = {
-      id: Math.max(...agendas.map(a => a.id), 0) + 1,
+      id: tempId,
       title: 'New Agenda Item'
     };
-    setAgendas([...agendas, newAgenda]);
-    setEditingAgenda(newAgenda.id);
+    setFilteredAgendas([...filteredAgendas, newAgenda]);
+    setEditingAgenda(tempId);
     setTempValue('New Agenda Item');
   };
   // Document handlers
@@ -218,8 +377,19 @@ const AgendaPage: React.FC = () => {
     setTempValue('');
   };
 
-  const handleDocumentDelete = (documentId: number) => {
-    setDocuments(prev => prev.filter(document => document.id !== documentId));
+  const handleDocumentDeleteClick = (documentId: number) => {
+    setDocumentToDelete(documentId);
+    setShowDeleteConfirm(true);
+    setShowDocumentMenu(null);
+  };
+
+  const handleDocumentDelete = () => {
+    if (documentToDelete === null) return;
+
+    setDocuments(prev => prev.filter(document => document.id !== documentToDelete));
+    toast.success('Document deleted successfully');
+    setShowDeleteConfirm(false);
+    setDocumentToDelete(null);
   };
 
   const handleUploadDocument = () => {
@@ -240,16 +410,29 @@ const AgendaPage: React.FC = () => {
   const committeeAbbreviations = getCommitteeAbbreviations();
 
   return (
-    <div className="space-y-6">
-      {/* Committee Type Filters */}
+    <>
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteConfirm}
+        onClose={handleDeleteCancel}
+        onConfirm={agendaToDelete !== null ? handleAgendaDelete : handleDocumentDelete}
+        title="Confirm Delete"
+        message={`Are you sure you want to delete this ${agendaToDelete !== null ? 'agenda' : 'document'}? This action cannot be undone.`}
+        confirmText="Yes"
+        cancelText="No"
+        confirmButtonColor="text-red-600"
+      />
+
+      <div className="space-y-6">
+        {/* Committee Type Filters */}
       <div className="flex space-x-2">
         {committeeTypes.map((type) => (
           <button
             key={type.id}
             onClick={() => handleAgendaCommitteeTypeChange(type.id)}
             className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm font-medium rounded-[20px] transition-colors duration-200 ${activeCommitteeType === type.id
-              ? 'bg-[#607DA3] text-white'
-              : 'bg-white text-black border border-gray-800'
+                ? 'bg-[#607DA3] text-white'
+                : 'bg-white text-black border border-gray-800'
               }`}
           >
             {type.name}
@@ -266,8 +449,8 @@ const AgendaPage: React.FC = () => {
               onClick={() => handleSubTabChange(abbr)}
               disabled={subTabLoading}
               className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm font-medium rounded-[20px] transition-colors duration-200 ${activeCommittee === abbr
-                ? 'bg-[#84B5F3] text-white'
-                : 'bg-white text-black border border-gray-800'
+                  ? 'bg-[#84B5F3] text-white'
+                  : 'bg-white text-black border border-gray-800'
                 } ${subTabLoading ? 'opacity-60 cursor-not-allowed' : ''}`}
             >
               {abbr}
@@ -294,17 +477,17 @@ const AgendaPage: React.FC = () => {
         <h2 className="text-xl font-bold text-gray-900">Committee Agendas</h2>
 
         {/* Existing Agendas */}
-        {agendas.length === 0 ? (
+        {filteredAgendas.length === 0 ? (
           <div className="text-red-500 font-medium text-sm">None</div>
         ) : (
-          agendas.map((agenda) => (
-          <div key={agenda.id} className="flex items-center space-x-2">
-            <div className="flex-1">
+          filteredAgendas.map((agenda) => (
+            <div key={agenda.id} className="w-[400px] flex items-center space-x-2">
+              <div className="flex-1">
               {editingAgenda === agenda.id ? (
                 <input
                   type="text"
                   value={tempValue}
-                  onChange={(e) => handleAgendaChange(e.target.value)}
+                    onChange={(e) => handleAgendaChange(e.target.value)}
                   className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
                   placeholder="Enter agenda title"
                   autoFocus
@@ -319,8 +502,71 @@ const AgendaPage: React.FC = () => {
               )}
             </div>
 
-            {/* Cancel button for editing - only show for new agenda items */}
-            {editingAgenda === agenda.id && agenda.title === 'New Agenda Item' && (
+
+              {/* Three-dot menu - hide when editing */}
+              {editingAgenda !== agenda.id && (
+                <div className="relative" ref={showAgendaMenu === agenda.id ? agendaMenuRef : null}>
+              <button
+                onClick={() => setShowAgendaMenu(showAgendaMenu === agenda.id ? null : agenda.id)}
+                    className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                </svg>
+              </button>
+
+              {showAgendaMenu === agenda.id && (
+                    <div className="absolute right-0 mt-2 w-36 bg-white rounded-lg shadow-xl z-50 border border-gray-200">
+                      <div className="py-2">
+                    <button
+                      onClick={() => {
+                            handleAgendaEdit(agenda.id, agenda.title);
+                        setShowAgendaMenu(null);
+                      }}
+                          className="block w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      Edit
+                    </button>
+                    <button
+                           onClick={() => handleAgendaDeleteClick(agenda.id)}
+                           className="block w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+              )}
+            </div>
+          ))
+        )}
+
+        {/* Add Agenda Button OR Save/Cancel Buttons OR Update/Cancel Buttons*/}
+              <div className="flex space-x-2">
+          {editingAgenda !== null && filteredAgendas.find(agenda => agenda.id === editingAgenda)?.title === 'New Agenda Item' ? (
+            <>
+               {/* Save Button - replaces Add button when editing new agenda */}
+               <button
+                 onClick={handleAgendaSave}
+                 disabled={isSaving}
+                 className="text-white font-medium transition-colors hover:opacity-90"
+                 style={{
+                   width: '120px',
+                   height: '44px',
+                   borderRadius: '30px',
+                   padding: '10px',
+                   gap: '10px',
+                   background: isSaving ? '#bdbdbd' : '#C2A46D',
+                   cursor: isSaving ? 'not-allowed' : 'pointer',
+                   border: 'none',
+                   boxShadow: 'none',
+                   opacity: isSaving ? 0.6 : 1,
+                 }}
+               >
+                 {isSaving ? 'Saving...' : 'Save'}
+               </button>
+              {/* Cancel Button - next to Save button */}
               <button
                 onClick={() => {
                   handleAgendaCancel();
@@ -328,12 +574,12 @@ const AgendaPage: React.FC = () => {
                 }}
                 className="text-white font-medium transition-colors hover:opacity-90"
                 style={{
-                  width: '100px',
+                  width: '120px',
                   height: '44px',
                   borderRadius: '30px',
                   padding: '10px',
                   gap: '10px',
-                  background: '#dc3545',
+                  background: '#84B5F3',
                   cursor: 'pointer',
                   border: 'none',
                   boxShadow: 'none',
@@ -341,93 +587,74 @@ const AgendaPage: React.FC = () => {
               >
                 Cancel
               </button>
-            )}
-
-            {/* Three-dot menu - hide when editing */}
-            {editingAgenda !== agenda.id && (
-              <div className="relative">
+            </>
+          ) :
+            editingAgenda !== null && filteredAgendas.find(a => a.id === editingAgenda)?.title !== 'New Agenda Item' ? (
+              <>
+                 <button
+                   onClick={() => handleAgendaUpdate(editingAgenda, tempValue)}
+                   disabled={isUpdating}
+                   className="text-white font-medium transition-colors hover:opacity-90"
+                   style={{
+                     width: '120px',
+                     height: '44px',
+                     borderRadius: '30px',
+                     padding: '10px',
+                     gap: '10px',
+                     background: isUpdating ? '#bdbdbd' : '#C2A46D',
+                     cursor: isUpdating ? 'not-allowed' : 'pointer',
+                     border: 'none',
+                     boxShadow: 'none',
+                     opacity: isUpdating ? 0.6 : 1,
+                   }}
+                 >
+                   {isUpdating ? 'Updating...' : 'Update'}
+                 </button>
                 <button
-                  onClick={() => setShowAgendaMenu(showAgendaMenu === agenda.id ? null : agenda.id)}
-                  className="p-2 text-gray-400 hover:text-gray-600"
+                  onClick={() => {
+                    handleAgendaCancel();
+                    setShowAgendaMenu(null);
+                  }}
+                  className="text-white font-medium transition-colors hover:opacity-90"
+                  style={{
+                    width: '120px',
+                    height: '44px',
+                    borderRadius: '30px',
+                    padding: '10px',
+                    gap: '10px',
+                    background: '#84B5F3',
+                    cursor: 'pointer',
+                    border: 'none',
+                    boxShadow: 'none',
+                  }}
                 >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                  </svg>
+                  Cancel
                 </button>
-
-                {showAgendaMenu === agenda.id && (
-                  <div className="absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg z-10 border border-gray-200">
-                    <div className="py-1">
-                      <button
-                        onClick={() => {
-                          handleAgendaEdit(agenda.id, agenda.title);
-                          setShowAgendaMenu(null);
-                        }}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => {
-                          handleAgendaDelete(agenda.id);
-                          setShowAgendaMenu(null);
-                        }}
-                        className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
+              </>
+            ) : (
+              <>
+        <button
+                  onClick={handleAddAgenda}
+          className={`text-white font-medium transition-colors ${isSaving ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'
+            }`}
+          style={{
+            width: '140px',
+            height: '44px',
+            borderRadius: '30px',
+            padding: '10px',
+            gap: '10px',
+            opacity: isSaving ? 0.5 : 1,
+            background: isSaving ? '#bdbdbd' : '#C2A46D',
+            cursor: isSaving ? 'not-allowed' : 'pointer',
+            border: 'none',
+            boxShadow: 'none',
+          }}
+          disabled={isSaving}
+        >
+          Add Agenda
+        </button>
+              </>
             )}
-          </div>
-        ))
-        )}
-
-        {/* Add Agenda Button and Save Button */}
-        <div className="flex space-x-2">
-          <button
-            onClick={handleAddAgenda}
-            className={`text-white font-medium transition-colors ${isSaving ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'
-              }`}
-            style={{
-              width: '140px',
-              height: '44px',
-              borderRadius: '30px',
-              padding: '10px',
-              gap: '10px',
-              opacity: isSaving ? 0.5 : 1,
-              background: isSaving ? '#bdbdbd' : '#C2A46D',
-              cursor: isSaving ? 'not-allowed' : 'pointer',
-              border: 'none',
-              boxShadow: 'none',
-            }}
-            disabled={isSaving}
-          >
-            Add Agenda
-          </button>
-
-          {/* Save Button - only show when there's a new agenda being edited */}
-          {editingAgenda && agendas.find(agenda => agenda.id === editingAgenda)?.title === 'New Agenda Item' && (
-            <button
-              onClick={handleAgendaSave}
-              className="text-white font-medium transition-colors hover:opacity-90"
-              style={{
-                width: '100px',
-                height: '44px',
-                borderRadius: '30px',
-                padding: '10px',
-                gap: '10px',
-                background: '#28a745',
-                cursor: 'pointer',
-                border: 'none',
-                boxShadow: 'none',
-              }}
-            >
-              Save
-            </button>
-          )}
         </div>
       </div>
 
@@ -440,13 +667,13 @@ const AgendaPage: React.FC = () => {
           <div className="text-red-500 font-medium text-sm">None</div>
         ) : (
           documents.map((document) => (
-          <div key={document.id} className="flex items-center space-x-2">
-            <div className="flex-1">
+            <div key={document.id} className="w-[400px] flex items-center space-x-2">
+              <div className="flex-1">
               {editingDocument === document.id ? (
                 <input
                   type="text"
                   value={tempValue}
-                  onChange={(e) => handleDocumentChange(e.target.value)}
+                    onChange={(e) => handleDocumentChange(e.target.value)}
                   className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
                   placeholder="Enter document name"
                   autoFocus
@@ -461,67 +688,86 @@ const AgendaPage: React.FC = () => {
               )}
             </div>
 
-            {/* Save/Cancel buttons for editing */}
-            {editingDocument === document.id && (
-              <div className="flex space-x-2">
-                <button
-                  onClick={handleDocumentSave}
-                  className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition-colors"
-                >
-                  Save
-                </button>
-                <button
-                  onClick={() => {
-                    handleDocumentCancel();
-                    setShowDocumentMenu(null);
-                  }}
-                  className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            )}
+              {/* Update and Cancel buttons when editing existing document */}
+              {editingDocument === document.id && (
+                <>
+                  <button
+                    onClick={handleDocumentSave}
+                    className="text-white font-medium transition-colors hover:opacity-90"
+                    style={{
+                      width: '120px',
+                      height: '44px',
+                      borderRadius: '30px',
+                      padding: '10px',
+                      gap: '10px',
+                      background: '#C2A46D',
+                      cursor: 'pointer',
+                      border: 'none',
+                      boxShadow: 'none',
+                    }}
+                  >
+                    Update
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleDocumentCancel();
+                      setShowDocumentMenu(null);
+                    }}
+                    className="text-white font-medium transition-colors hover:opacity-90"
+                    style={{
+                      width: '120px',
+                      height: '44px',
+                      borderRadius: '30px',
+                      padding: '10px',
+                      gap: '10px',
+                      background: '#84B5F3',
+                      cursor: 'pointer',
+                      border: 'none',
+                      boxShadow: 'none',
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </>
+              )}
 
             {/* Three-dot menu */}
-            {editingDocument !== document.id && (
-              <div className="relative">
-                <button
-                  onClick={() => setShowDocumentMenu(showDocumentMenu === document.id ? null : document.id)}
-                  className="p-2 text-gray-400 hover:text-gray-600"
-                >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                  </svg>
-                </button>
+              {editingDocument !== document.id && (
+                <div className="relative" ref={showDocumentMenu === document.id ? documentMenuRef : null}>
+              <button
+                onClick={() => setShowDocumentMenu(showDocumentMenu === document.id ? null : document.id)}
+                    className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                </svg>
+              </button>
 
-                {showDocumentMenu === document.id && (
-                  <div className="absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg z-10 border border-gray-200">
-                    <div className="py-1">
-                      <button
-                        onClick={() => {
-                          handleDocumentEdit(document.id, document.name);
-                          setShowDocumentMenu(null);
-                        }}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => {
-                          handleDocumentDelete(document.id);
-                          setShowDocumentMenu(null);
-                        }}
-                        className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                      >
-                        Delete
-                      </button>
-                    </div>
+              {showDocumentMenu === document.id && (
+                    <div className="absolute right-0 mt-2 w-36 bg-white rounded-lg shadow-xl z-50 border border-gray-200">
+                      <div className="py-2">
+                    <button
+                      onClick={() => {
+                            handleDocumentEdit(document.id, document.name);
+                        setShowDocumentMenu(null);
+                      }}
+                          className="block w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      Edit
+                    </button>
+                         <button
+                           onClick={() => handleDocumentDeleteClick(document.id)}
+                           className="block w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                         >
+                           Delete
+                         </button>
                   </div>
-                )}
+                </div>
+              )}
               </div>
             )}
           </div>
-        ))
+          ))
         )}
 
         {/* Upload Document Button */}
@@ -541,38 +787,39 @@ const AgendaPage: React.FC = () => {
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
             </svg>
-            <input
-              type="file"
-              onChange={handleFileUpload}
+          <input
+            type="file"
+            onChange={handleFileUpload}
               disabled={isSaving}
-              className="hidden"
-              accept=".pdf,.doc,.docx,.txt"
-            />
+            className="hidden"
+            accept=".pdf,.doc,.docx,.txt"
+          />
           </label>
         </div>
         <button
           onClick={handleUploadDocument}
           className={`text-white font-medium transition-colors ${isSaving ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'
-            }`}
-          style={{
+              }`}
+            style={{
             width: 'auto',
-            height: '44px',
-            borderRadius: '30px',
+              height: '44px',
+              borderRadius: '30px',
             paddingLeft: '10px',
             paddingRight: '10px',
-            gap: '10px',
-            opacity: isSaving ? 0.5 : 1,
-            background: isSaving ? '#bdbdbd' : '#C2A46D',
-            cursor: isSaving ? 'not-allowed' : 'pointer',
-            border: 'none',
-            boxShadow: 'none',
-          }}
+              gap: '10px',
+              opacity: isSaving ? 0.5 : 1,
+              background: isSaving ? '#bdbdbd' : '#C2A46D',
+              cursor: isSaving ? 'not-allowed' : 'pointer',
+              border: 'none',
+              boxShadow: 'none',
+            }}
           disabled={isSaving}
-        >
-          Upload Document
+          >
+            Upload Document
         </button>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 
