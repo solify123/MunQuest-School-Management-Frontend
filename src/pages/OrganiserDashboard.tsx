@@ -63,17 +63,6 @@ const OrganiserDashboard: React.FC = () => {
   // Leadership Roles state
 
 
-  // Agenda state
-  const [activeAgendaCommitteeType, setActiveAgendaCommitteeType] = useState('country');
-  const [activeAgendaCommittee, setActiveAgendaCommittee] = useState('UNGA');
-  const [agendas, setAgendas] = useState([
-    { id: 1, title: 'Climate Change in Africa' }
-  ]);
-  const [documents, setDocuments] = useState([
-    { id: 1, name: 'Climate Change Background Guide.pdf' }
-  ]);
-  const [editingAgenda, setEditingAgenda] = useState<number | null>(null);
-  const [editingDocument, setEditingDocument] = useState<number | null>(null);
 
   useEffect(() => {
     const getCurrentEvents = async () => {
@@ -271,95 +260,6 @@ const OrganiserDashboard: React.FC = () => {
 
 
 
-  // Agenda handlers
-  const handleAgendaCommitteeTypeChange = (type: string) => {
-    setActiveAgendaCommitteeType(type);
-  };
-
-  const handleAgendaCommitteeChange = (committee: string) => {
-    setActiveAgendaCommittee(committee);
-  };
-
-  const handleAgendaEdit = (agendaId: number, currentValue: string) => {
-    setEditingAgenda(agendaId);
-    setTempValue(currentValue);
-  };
-
-  const handleAgendaChange = (value: string) => {
-    setTempValue(value);
-  };
-
-  const handleAgendaSave = () => {
-    if (editingAgenda) {
-      setAgendas(prev => prev.map(agenda =>
-        agenda.id === editingAgenda
-          ? { ...agenda, title: tempValue }
-          : agenda
-      ));
-    }
-    setEditingAgenda(null);
-    setTempValue('');
-  };
-
-  const handleAgendaCancel = () => {
-    setEditingAgenda(null);
-    setTempValue('');
-  };
-
-  const handleAgendaDelete = (agendaId: number) => {
-    setAgendas(prev => prev.filter(agenda => agenda.id !== agendaId));
-  };
-
-  const handleAddAgenda = () => {
-    const newAgenda = {
-      id: Math.max(...agendas.map(a => a.id)) + 1,
-      title: ''
-    };
-    setAgendas([...agendas, newAgenda]);
-    setEditingAgenda(newAgenda.id);
-    setTempValue('');
-  };
-
-  // Document handlers
-  const handleDocumentEdit = (documentId: number, currentValue: string) => {
-    setEditingDocument(documentId);
-    setTempValue(currentValue);
-  };
-
-  const handleDocumentChange = (value: string) => {
-    setTempValue(value);
-  };
-
-  const handleDocumentSave = () => {
-    if (editingDocument) {
-      setDocuments(prev => prev.map(document =>
-        document.id === editingDocument
-          ? { ...document, name: tempValue }
-          : document
-      ));
-    }
-    setEditingDocument(null);
-    setTempValue('');
-  };
-
-  const handleDocumentCancel = () => {
-    setEditingDocument(null);
-    setTempValue('');
-  };
-
-  const handleDocumentDelete = (documentId: number) => {
-    setDocuments(prev => prev.filter(document => document.id !== documentId));
-  };
-
-  const handleDocumentUpload = (file: File) => {
-    const newDocument = {
-      id: Math.max(...documents.map(d => d.id)) + 1,
-      name: file.name,
-      file: file
-    };
-    setDocuments([...documents, newDocument]);
-    toast.success('Document uploaded successfully');
-  };
 
   const calculateTotalRevenue = (seats: string, fees: string) => {
     const seatsNum = Number(seats);
@@ -464,32 +364,7 @@ const OrganiserDashboard: React.FC = () => {
 
   // Agenda component
   const renderAgenda = () => {
-    return (
-      <AgendaPage
-        activeCommitteeType={activeAgendaCommitteeType}
-        activeCommittee={activeAgendaCommittee}
-        agendas={agendas}
-        documents={documents}
-        editingAgenda={editingAgenda}
-        editingDocument={editingDocument}
-        tempValue={tempValue}
-        isSaving={isSaving}
-        onCommitteeTypeChange={handleAgendaCommitteeTypeChange}
-        onCommitteeChange={handleAgendaCommitteeChange}
-        onAgendaEdit={handleAgendaEdit}
-        onAgendaChange={handleAgendaChange}
-        onAgendaSave={handleAgendaSave}
-        onAgendaCancel={handleAgendaCancel}
-        onAgendaDelete={handleAgendaDelete}
-        onAddAgenda={handleAddAgenda}
-        onDocumentEdit={handleDocumentEdit}
-        onDocumentChange={handleDocumentChange}
-        onDocumentSave={handleDocumentSave}
-        onDocumentCancel={handleDocumentCancel}
-        onDocumentDelete={handleDocumentDelete}
-        onDocumentUpload={handleDocumentUpload}
-      />
-    );
+    return <AgendaPage />;
   };
 
   const renderDashboard = () => {
