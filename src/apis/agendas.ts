@@ -77,3 +77,72 @@ export const deleteEventCommitteesAgendaByIdApi = async (id: string) => {
         throw new Error(error.response?.data?.message || 'Failed to delete event committees agenda by id');
     }
 };
+
+
+
+export const saveEventCommitteeDocumentApi = async (eventId: string, committeeId: string, doc_type: string, title: string, file_url: string) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.post(`${backendUrl}/api/v1/event-committees-agendas/save-event-committee-document`, {
+            eventId,
+            committeeId,
+            doc_type,
+            title,
+            file_url
+        }, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response?.data?.message || 'Failed to save event committee document');
+    }
+};
+
+export const uploadAgendaDocumentApi = async (eventId: string, committeeId: string, file: File) => {
+    try {
+        const token = localStorage.getItem('token');
+        const formData = new FormData();
+        formData.append('eventId', eventId);
+        formData.append('committeeId', committeeId);
+        formData.append('file', file);
+        const response = await axios.post(`${backendUrl}/api/v1/event-committees-agendas/upload-agenda-document`, formData, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+};
+
+export const getAgendaDocumentsApi = async (eventId: string, committeeId: string) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${backendUrl}/api/v1/event-committees-agendas/get-agenda-documents-by-event/${eventId}/${committeeId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response?.data?.message || 'Failed to fetch agenda documents');
+    }
+};
+
+export const deleteEventCommitteeDocumentApi = async (documentId: string) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.delete(`${backendUrl}/api/v1/event-committees-agendas/delete-event-committee-document/${documentId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response?.data?.message || 'Failed to delete event committee document');
+    }
+};

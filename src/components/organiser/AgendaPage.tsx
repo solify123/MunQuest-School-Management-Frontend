@@ -2,7 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { getAllEventCommitteesApi } from '../../apis/Event_committes';
 import { toast } from 'sonner';
-import { saveEventCommitteesByEventIdAgendaApi, getEventCommitteesByEventIdAgendaApi, updateEventCommitteesAgendaByIdApi, deleteEventCommitteesAgendaByIdApi } from '../../apis/agendas';
+import {
+  saveEventCommitteesByEventIdAgendaApi, getEventCommitteesByEventIdAgendaApi, updateEventCommitteesAgendaByIdApi,
+  deleteEventCommitteesAgendaByIdApi, uploadAgendaDocumentApi, getAgendaDocumentsApi, saveEventCommitteeDocumentApi, deleteEventCommitteeDocumentApi
+} from '../../apis/agendas';
 import ConfirmationModal from '../ui/ConfirmationModal';
 
 interface AgendaItem {
@@ -12,8 +15,7 @@ interface AgendaItem {
 
 interface DocumentItem {
   id: number;
-  name: string;
-  file?: File;
+  title: string;
 }
 
 const AgendaPage: React.FC = () => {
@@ -36,7 +38,9 @@ const AgendaPage: React.FC = () => {
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
-
+  const [isUploadingDocument, setIsUploadingDocument] = useState<boolean>(false);
+  const [documentUrl, setDocumentUrl] = useState<string>('');
+  const [documentName, setDocumentName] = useState<string>('');
   // Refs for detecting clicks outside menus
   const agendaMenuRef = useRef<HTMLDivElement>(null);
   const documentMenuRef = useRef<HTMLDivElement>(null);
@@ -119,6 +123,10 @@ const AgendaPage: React.FC = () => {
     fetchEventCommittees();
   }, [eventId]);
 
+  useEffect(() => {
+
+  }, []);
+
   // Fetch all agendas data once on initial load
   useEffect(() => {
     const fetchAgendas = async () => {
@@ -136,8 +144,55 @@ const AgendaPage: React.FC = () => {
       }
     };
 
+    const fetchDocuments = async () => {
+      if (!eventId || !activeCommittee) {
+        setDocuments([]);
+        setSubTabLoading(false);
+        return;
+      }
+      
+      const currentCommittee = filteredCommittees.find(committee => committee.abbr === activeCommittee);
+      const committeeId = currentCommittee?.id;
+      if (!committeeId) {
+        setSubTabLoading(false);
+        return;
+      }
+      
+      try {
+        const response = await getAgendaDocumentsApi(eventId, committeeId);
+        if (response.success) {
+          const documentsData = response.data?.data || [];
+          if (Array.isArray(documentsData)) {
+            const filteredDocuments = documentsData
+              .filter((doc: any) => doc.doc_type === activeCommittee)
+              .map((doc: any) => ({
+                id: doc.id,
+                title: doc.title
+              }));
+
+            console.log('filteredDocuments', filteredDocuments);
+
+            setDocuments(filteredDocuments);
+          } else {
+            console.warn('Documents data is not an array:', documentsData);
+            setDocuments([]);
+          }
+        } else {
+          console.error('Failed to fetch documents:', response.error);
+          setDocuments([]);
+        }
+      } catch (error: any) {
+        console.error('Error fetching documents:', error);
+        setDocuments([]);
+      } finally {
+        // Always set loading to false after fetch completes
+        setSubTabLoading(false);
+      }
+    };
+
     fetchAgendas();
-  }, [eventId]);
+    fetchDocuments();
+  }, [eventId, activeCommittee]);
 
   // Filter committees based on active category
   useEffect(() => {
@@ -181,27 +236,46 @@ const AgendaPage: React.FC = () => {
 
   const handleSubTabChange = async (abbr: string) => {
     setSubTabLoading(true);
+    // Clear documents immediately to show loading state
+    setDocuments([]);
     setActiveCommittee(abbr);
-
-    // Add a small delay to show loading state
-    setTimeout(() => {
-      setSubTabLoading(false);
-    }, 300);
+    // Loading state will be set to false in fetchDocuments after data is loaded
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      // Use timestamp for unique temporary ID
-      const tempId = -Date.now();
-      const newDocument = {
-        id: tempId,
-        name: file.name,
-        file: file
-      };
-      setDocuments([...documents, newDocument]);
-      toast.success('Document uploaded successfully');
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      const file = event.target.files?.[0];
+      if (file) {
+        const currentCommittee = filteredCommittees.find(committee => committee.abbr === activeCommittee);
+        const committeeId = currentCommittee?.id;
+        const response = await uploadAgendaDocumentApi(eventId || '', committeeId || '', file);
+        if (response.success) {
+          toast.success('Document uploaded successfully');
+          setDocumentUrl(response.documentUrl);
+          setDocumentName(file.name);
+          // Refresh documents from API
+          const documentsResponse = await getAgendaDocumentsApi(eventId || '', committeeId || '');
+          if (documentsResponse.success) {
+            const documentsData = documentsResponse.data?.data || [];
+            const filteredDocuments = documentsData
+              .filter((doc: any) => doc.doc_type === activeCommittee)
+              .map((doc: any) => ({
+                id: doc.id,
+                title: doc.title,
+              }));
+            setDocuments(filteredDocuments);
+          }
+          setSubTabLoading(false);
+        } else {
+          toast.error(response.message);
+          setSubTabLoading(false);
+        }
+      }
+    } catch (error: any) {
+      toast.error(error.message);
     }
+    // Reset the file input
+    event.target.value = '';
   };
 
   // Agenda handlers
@@ -227,7 +301,7 @@ const AgendaPage: React.FC = () => {
         const response = await updateEventCommitteesAgendaByIdApi(agendaId.toString(), newTitle);
         if (response.success) {
           toast.success('Agenda updated successfully');
-          
+
           // Refresh all agendas from API
           const agendasResponse = await getEventCommitteesByEventIdAgendaApi(eventId || '');
           if (agendasResponse.success) {
@@ -312,7 +386,7 @@ const AgendaPage: React.FC = () => {
       const response = await deleteEventCommitteesAgendaByIdApi(agendaToDelete.toString());
       if (response.success) {
         toast.success('Agenda deleted successfully');
-        
+
         // Refresh all agendas from API
         const agendasResponse = await getEventCommitteesByEventIdAgendaApi(eventId || '');
         if (agendasResponse.success) {
@@ -338,8 +412,6 @@ const AgendaPage: React.FC = () => {
   };
 
   const handleAddAgenda = () => {
-    // Generate unique temporary ID using timestamp to avoid NaN and duplicates
-    // Use negative numbers for temporary items to avoid conflicts with database IDs
     const tempId = -Date.now();
 
     const newAgenda = {
@@ -349,11 +421,6 @@ const AgendaPage: React.FC = () => {
     setFilteredAgendas([...filteredAgendas, newAgenda]);
     setEditingAgenda(tempId);
     setTempValue('New Agenda Item');
-  };
-  // Document handlers
-  const handleDocumentEdit = (documentId: number, currentValue: string) => {
-    setEditingDocument(documentId);
-    setTempValue(currentValue);
   };
 
   const handleDocumentChange = (value: string) => {
@@ -377,23 +444,107 @@ const AgendaPage: React.FC = () => {
     setTempValue('');
   };
 
-  const handleDocumentDeleteClick = (documentId: number) => {
-    setDocumentToDelete(documentId);
-    setShowDeleteConfirm(true);
-    setShowDocumentMenu(null);
-  };
 
-  const handleDocumentDelete = () => {
+  const handleDocumentDelete = async () => {
     if (documentToDelete === null) return;
 
-    setDocuments(prev => prev.filter(document => document.id !== documentToDelete));
-    toast.success('Document deleted successfully');
-    setShowDeleteConfirm(false);
-    setDocumentToDelete(null);
+    try {
+      const response = await deleteEventCommitteeDocumentApi(documentToDelete.toString());
+      if (response.success) {
+        toast.success('Document deleted successfully');
+        // Refresh documents from API
+        const currentCommittee = filteredCommittees.find(committee => committee.abbr === activeCommittee);
+        const committeeId = currentCommittee?.id;
+        if (committeeId) {
+          const documentsResponse = await getAgendaDocumentsApi(eventId || '', committeeId);
+          if (documentsResponse.success) {
+            const documentsData = documentsResponse.data?.data || [];
+            const filteredDocuments = documentsData
+              .filter((doc: any) => doc.doc_type === activeCommittee)
+              .map((doc: any) => ({
+                id: doc.id,
+                title: doc.title,
+              }));
+            setDocuments(filteredDocuments);
+          }
+        }
+        setSubTabLoading(false);
+      } else {
+        toast.error(response.message || 'Failed to delete document');
+        setSubTabLoading(false);
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete document');
+      setSubTabLoading(false);
+    } finally {
+      setShowDeleteConfirm(false);
+      setDocumentToDelete(null);
+    }
   };
 
-  const handleUploadDocument = () => {
-    toast.error('Please upload a document');
+  const handleUploadDocument = async () => {
+    if (isUploadingDocument) return; // Prevent double clicks
+
+    // Validate all required data before uploading
+    if (!eventId) {
+      toast.error('Event ID is missing. Please refresh the page and try again.');
+      return;
+    }
+
+    if (!activeCommittee) {
+      toast.error('Please select a committee first.');
+      return;
+    }
+
+    if (!documentName || documentName.trim() === '') {
+      toast.error('Please enter a document name.');
+      return;
+    }
+
+    if (!documentUrl || documentUrl.trim() === '') {
+      toast.error('Please select a file to upload.');
+      return;
+    }
+
+    const currentCommittee = filteredCommittees.find(committee => committee.abbr === activeCommittee);
+    const committeeId = currentCommittee?.id;
+
+    if (!committeeId) {
+      toast.error('Committee ID not found. Please select a valid committee.');
+      return;
+    }
+
+    try {
+      setIsUploadingDocument(true);
+      const response = await saveEventCommitteeDocumentApi(eventId, committeeId, activeCommittee, documentName.trim(), documentUrl.trim());
+      if (response.success) {
+        toast.success('Document uploaded successfully');
+        // Refresh documents from API
+        const documentsResponse = await getAgendaDocumentsApi(eventId, committeeId);
+        if (documentsResponse.success) {
+          const documentsData = documentsResponse.data?.data || [];
+          const filteredDocuments = documentsData
+            .filter((doc: any) => doc.doc_type === activeCommittee)
+            .map((doc: any) => ({
+              id: doc.id,
+              title: doc.title,
+            }));
+          setDocuments(filteredDocuments);
+        }
+        setSubTabLoading(false);
+        setShowDocumentMenu(null);
+        setEditingDocument(null);
+        setTempValue('');
+        // Clear the form after successful upload
+        setDocumentName('');
+        setDocumentUrl('');
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to upload document. Please try again.');
+      setSubTabLoading(false);
+    } finally {
+      setIsUploadingDocument(false);
+    }
   };
 
 
@@ -425,191 +576,148 @@ const AgendaPage: React.FC = () => {
 
       <div className="space-y-6">
         {/* Committee Type Filters */}
-      <div className="flex space-x-2">
-        {committeeTypes.map((type) => (
-          <button
-            key={type.id}
-            onClick={() => handleAgendaCommitteeTypeChange(type.id)}
-            className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm font-medium rounded-[20px] transition-colors duration-200 ${activeCommitteeType === type.id
+        <div className="flex space-x-2">
+          {committeeTypes.map((type) => (
+            <button
+              key={type.id}
+              onClick={() => handleAgendaCommitteeTypeChange(type.id)}
+              className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm font-medium rounded-[20px] transition-colors duration-200 ${activeCommitteeType === type.id
                 ? 'bg-[#607DA3] text-white'
                 : 'bg-white text-black border border-gray-800'
-              }`}
-          >
-            {type.name}
-          </button>
-        ))}
-      </div>
-
-      {/* Committee Sub-tabs based on abbreviations */}
-      {committeeAbbreviations.length > 0 && (
-        <div className="flex space-x-2">
-          {committeeAbbreviations.map((abbr) => (
-            <button
-              key={abbr}
-              onClick={() => handleSubTabChange(abbr)}
-              disabled={subTabLoading}
-              className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm font-medium rounded-[20px] transition-colors duration-200 ${activeCommittee === abbr
-                  ? 'bg-[#84B5F3] text-white'
-                  : 'bg-white text-black border border-gray-800'
-                } ${subTabLoading ? 'opacity-60 cursor-not-allowed' : ''}`}
+                }`}
             >
-              {abbr}
+              {type.name}
             </button>
           ))}
         </div>
-      )}
 
-      {/* Show message if no committees */}
-      {filteredCommittees.length === 0 && !isLoading && (
-        <div className="text-center py-8">
-          <div className="text-gray-400 mb-4">
-            <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No committees available</h3>
-          <p className="text-gray-500 mb-4">No committees found for the selected category.</p>
-        </div>
-      )}
-
-      {/* Committee Agendas Section */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-bold text-gray-900">Committee Agendas</h2>
-
-        {/* Existing Agendas */}
-        {filteredAgendas.length === 0 ? (
-          <div className="text-red-500 font-medium text-sm">None</div>
-        ) : (
-          filteredAgendas.map((agenda) => (
-            <div key={agenda.id} className="w-[400px] flex items-center space-x-2">
-              <div className="flex-1">
-              {editingAgenda === agenda.id ? (
-                <input
-                  type="text"
-                  value={tempValue}
-                    onChange={(e) => handleAgendaChange(e.target.value)}
-                  className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
-                  placeholder="Enter agenda title"
-                  autoFocus
-                />
-              ) : (
-                <input
-                  type="text"
-                  value={agenda.title}
-                  readOnly
-                  className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg text-sm bg-gray-50"
-                />
-              )}
-            </div>
-
-
-              {/* Three-dot menu - hide when editing */}
-              {editingAgenda !== agenda.id && (
-                <div className="relative" ref={showAgendaMenu === agenda.id ? agendaMenuRef : null}>
+        {/* Committee Sub-tabs based on abbreviations */}
+        {committeeAbbreviations.length > 0 && (
+          <div className="flex space-x-2">
+            {committeeAbbreviations.map((abbr) => (
               <button
-                onClick={() => setShowAgendaMenu(showAgendaMenu === agenda.id ? null : agenda.id)}
-                    className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                key={abbr}
+                onClick={() => handleSubTabChange(abbr)}
+                disabled={subTabLoading}
+                className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm font-medium rounded-[20px] transition-colors duration-200 ${activeCommittee === abbr
+                  ? 'bg-[#84B5F3] text-white'
+                  : 'bg-white text-black border border-gray-800'
+                  } ${subTabLoading ? 'opacity-60 cursor-not-allowed' : ''}`}
               >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                </svg>
+                {abbr}
               </button>
-
-              {showAgendaMenu === agenda.id && (
-                    <div className="absolute right-0 mt-2 w-36 bg-white rounded-lg shadow-xl z-50 border border-gray-200">
-                      <div className="py-2">
-                    <button
-                      onClick={() => {
-                            handleAgendaEdit(agenda.id, agenda.title);
-                        setShowAgendaMenu(null);
-                      }}
-                          className="block w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      Edit
-                    </button>
-                    <button
-                           onClick={() => handleAgendaDeleteClick(agenda.id)}
-                           className="block w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-              )}
-            </div>
-          ))
+            ))}
+          </div>
         )}
 
-        {/* Add Agenda Button OR Save/Cancel Buttons OR Update/Cancel Buttons*/}
-              <div className="flex space-x-2">
-          {editingAgenda !== null && filteredAgendas.find(agenda => agenda.id === editingAgenda)?.title === 'New Agenda Item' ? (
-            <>
-               {/* Save Button - replaces Add button when editing new agenda */}
-               <button
-                 onClick={handleAgendaSave}
-                 disabled={isSaving}
-                 className="text-white font-medium transition-colors hover:opacity-90"
-                 style={{
-                   width: '120px',
-                   height: '44px',
-                   borderRadius: '30px',
-                   padding: '10px',
-                   gap: '10px',
-                   background: isSaving ? '#bdbdbd' : '#C2A46D',
-                   cursor: isSaving ? 'not-allowed' : 'pointer',
-                   border: 'none',
-                   boxShadow: 'none',
-                   opacity: isSaving ? 0.6 : 1,
-                 }}
-               >
-                 {isSaving ? 'Saving...' : 'Save'}
-               </button>
-              {/* Cancel Button - next to Save button */}
-              <button
-                onClick={() => {
-                  handleAgendaCancel();
-                  setShowAgendaMenu(null);
-                }}
-                className="text-white font-medium transition-colors hover:opacity-90"
-                style={{
-                  width: '120px',
-                  height: '44px',
-                  borderRadius: '30px',
-                  padding: '10px',
-                  gap: '10px',
-                  background: '#84B5F3',
-                  cursor: 'pointer',
-                  border: 'none',
-                  boxShadow: 'none',
-                }}
-              >
-                Cancel
-              </button>
-            </>
-          ) :
-            editingAgenda !== null && filteredAgendas.find(a => a.id === editingAgenda)?.title !== 'New Agenda Item' ? (
+        {/* Show message if no committees */}
+        {filteredCommittees.length === 0 && !isLoading && (
+          <div className="text-center py-8">
+            <div className="text-gray-400 mb-4">
+              <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No committees available</h3>
+            <p className="text-gray-500 mb-4">No committees found for the selected category.</p>
+          </div>
+        )}
+
+        {/* Committee Agendas Section */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold text-gray-900">Committee Agendas</h2>
+
+          {/* Existing Agendas */}
+          {filteredAgendas.length === 0 ? (
+            <div className="text-red-500 font-medium text-sm">None</div>
+          ) : (
+            filteredAgendas.map((agenda) => (
+              <div key={agenda.id} className="w-[400px] flex items-center space-x-2">
+                <div className="flex-1">
+                  {editingAgenda === agenda.id ? (
+                    <input
+                      type="text"
+                      value={tempValue}
+                      onChange={(e) => handleAgendaChange(e.target.value)}
+                      className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
+                      placeholder="Enter agenda title"
+                      autoFocus
+                    />
+                  ) : (
+                    <input
+                      type="text"
+                      value={agenda.title}
+                      readOnly
+                      className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg text-sm bg-gray-50"
+                    />
+                  )}
+                </div>
+
+
+                {/* Three-dot menu - hide when editing */}
+                {editingAgenda !== agenda.id && (
+                  <div className="relative" ref={showAgendaMenu === agenda.id ? agendaMenuRef : null}>
+                    <button
+                      onClick={() => setShowAgendaMenu(showAgendaMenu === agenda.id ? null : agenda.id)}
+                      className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                      </svg>
+                    </button>
+
+                    {showAgendaMenu === agenda.id && (
+                      <div className="absolute right-0 mt-2 w-36 bg-white rounded-lg shadow-xl z-50 border border-gray-200">
+                        <div className="py-2">
+                          <button
+                            onClick={() => {
+                              handleAgendaEdit(agenda.id, agenda.title);
+                              setShowAgendaMenu(null);
+                            }}
+                            className="block w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleAgendaDeleteClick(agenda.id)}
+                            className="block w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+
+          {/* Add Agenda Button OR Save/Cancel Buttons OR Update/Cancel Buttons*/}
+          <div className="flex space-x-2">
+            {editingAgenda !== null && filteredAgendas.find(agenda => agenda.id === editingAgenda)?.title === 'New Agenda Item' ? (
               <>
-                 <button
-                   onClick={() => handleAgendaUpdate(editingAgenda, tempValue)}
-                   disabled={isUpdating}
-                   className="text-white font-medium transition-colors hover:opacity-90"
-                   style={{
-                     width: '120px',
-                     height: '44px',
-                     borderRadius: '30px',
-                     padding: '10px',
-                     gap: '10px',
-                     background: isUpdating ? '#bdbdbd' : '#C2A46D',
-                     cursor: isUpdating ? 'not-allowed' : 'pointer',
-                     border: 'none',
-                     boxShadow: 'none',
-                     opacity: isUpdating ? 0.6 : 1,
-                   }}
-                 >
-                   {isUpdating ? 'Updating...' : 'Update'}
-                 </button>
+                {/* Save Button - replaces Add button when editing new agenda */}
+                <button
+                  onClick={handleAgendaSave}
+                  disabled={isSaving}
+                  className="text-white font-medium transition-colors hover:opacity-90"
+                  style={{
+                    width: '120px',
+                    height: '44px',
+                    borderRadius: '30px',
+                    padding: '10px',
+                    gap: '10px',
+                    background: isSaving ? '#bdbdbd' : '#C2A46D',
+                    cursor: isSaving ? 'not-allowed' : 'pointer',
+                    border: 'none',
+                    boxShadow: 'none',
+                    opacity: isSaving ? 0.6 : 1,
+                  }}
+                >
+                  {isSaving ? 'Saving...' : 'Save'}
+                </button>
+                {/* Cancel Button - next to Save button */}
                 <button
                   onClick={() => {
                     handleAgendaCancel();
@@ -631,68 +739,12 @@ const AgendaPage: React.FC = () => {
                   Cancel
                 </button>
               </>
-            ) : (
-              <>
-        <button
-                  onClick={handleAddAgenda}
-          className={`text-white font-medium transition-colors ${isSaving ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'
-            }`}
-          style={{
-            width: '140px',
-            height: '44px',
-            borderRadius: '30px',
-            padding: '10px',
-            gap: '10px',
-            opacity: isSaving ? 0.5 : 1,
-            background: isSaving ? '#bdbdbd' : '#C2A46D',
-            cursor: isSaving ? 'not-allowed' : 'pointer',
-            border: 'none',
-            boxShadow: 'none',
-          }}
-          disabled={isSaving}
-        >
-          Add Agenda
-        </button>
-              </>
-            )}
-        </div>
-      </div>
-
-      {/* Committee Documents Section */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-bold text-gray-900">Committee Documents</h2>
-
-        {/* Existing Documents */}
-        {documents.length === 0 ? (
-          <div className="text-red-500 font-medium text-sm">None</div>
-        ) : (
-          documents.map((document) => (
-            <div key={document.id} className="w-[400px] flex items-center space-x-2">
-              <div className="flex-1">
-              {editingDocument === document.id ? (
-                <input
-                  type="text"
-                  value={tempValue}
-                    onChange={(e) => handleDocumentChange(e.target.value)}
-                  className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
-                  placeholder="Enter document name"
-                  autoFocus
-                />
-              ) : (
-                <input
-                  type="text"
-                  value={document.name}
-                  readOnly
-                  className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg text-sm bg-gray-50"
-                />
-              )}
-            </div>
-
-              {/* Update and Cancel buttons when editing existing document */}
-              {editingDocument === document.id && (
+            ) :
+              editingAgenda !== null && filteredAgendas.find(a => a.id === editingAgenda)?.title !== 'New Agenda Item' ? (
                 <>
                   <button
-                    onClick={handleDocumentSave}
+                    onClick={() => handleAgendaUpdate(editingAgenda, tempValue)}
+                    disabled={isUpdating}
                     className="text-white font-medium transition-colors hover:opacity-90"
                     style={{
                       width: '120px',
@@ -700,18 +752,19 @@ const AgendaPage: React.FC = () => {
                       borderRadius: '30px',
                       padding: '10px',
                       gap: '10px',
-                      background: '#C2A46D',
-                      cursor: 'pointer',
+                      background: isUpdating ? '#bdbdbd' : '#C2A46D',
+                      cursor: isUpdating ? 'not-allowed' : 'pointer',
                       border: 'none',
                       boxShadow: 'none',
+                      opacity: isUpdating ? 0.6 : 1,
                     }}
                   >
-                    Update
+                    {isUpdating ? 'Updating...' : 'Update'}
                   </button>
                   <button
                     onClick={() => {
-                      handleDocumentCancel();
-                      setShowDocumentMenu(null);
+                      handleAgendaCancel();
+                      setShowAgendaMenu(null);
                     }}
                     className="text-white font-medium transition-colors hover:opacity-90"
                     style={{
@@ -729,95 +782,199 @@ const AgendaPage: React.FC = () => {
                     Cancel
                   </button>
                 </>
+              ) : (
+                <>
+                  <button
+                    onClick={handleAddAgenda}
+                    className={`text-white font-medium transition-colors ${isSaving ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'
+                      }`}
+                    style={{
+                      width: '140px',
+                      height: '44px',
+                      borderRadius: '30px',
+                      padding: '10px',
+                      gap: '10px',
+                      opacity: isSaving ? 0.5 : 1,
+                      background: isSaving ? '#bdbdbd' : '#C2A46D',
+                      cursor: isSaving ? 'not-allowed' : 'pointer',
+                      border: 'none',
+                      boxShadow: 'none',
+                    }}
+                    disabled={isSaving}
+                  >
+                    Add Agenda
+                  </button>
+                </>
               )}
+          </div>
+        </div>
 
-            {/* Three-dot menu */}
-              {editingDocument !== document.id && (
-                <div className="relative" ref={showDocumentMenu === document.id ? documentMenuRef : null}>
-              <button
-                onClick={() => setShowDocumentMenu(showDocumentMenu === document.id ? null : document.id)}
-                    className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                </svg>
-              </button>
+        {/* Committee Documents Section */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold text-gray-900">Committee Documents</h2>
 
-              {showDocumentMenu === document.id && (
-                    <div className="absolute right-0 mt-2 w-36 bg-white rounded-lg shadow-xl z-50 border border-gray-200">
-                      <div className="py-2">
+          {/* Existing Documents */}
+          {subTabLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1E395D]"></div>
+              <span className="ml-2 text-gray-600">Loading documents...</span>
+            </div>
+          ) : !Array.isArray(documents) || documents.length === 0 ? (
+            <div className="text-red-500 font-medium text-sm">None</div>
+          ) : (
+            documents.map((document) => (
+              <div key={document.id} className="w-[400px] flex items-center space-x-2">
+                <div className="flex-1">
+                  {editingDocument === document.id ? (
+                    <input
+                      type="text"
+                      value={tempValue}
+                      onChange={(e) => handleDocumentChange(e.target.value)}
+                      className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
+                      placeholder="Enter document name"
+                      autoFocus
+                    />
+                  ) : (
+                    <input
+                      type="text"
+                      value={document.title}
+                      readOnly
+                      className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg text-sm bg-gray-50"
+                    />
+                  )}
+                </div>
+
+                {/* Update and Cancel buttons when editing existing document */}
+                {editingDocument === document.id && (
+                  <>
+                    <button
+                      onClick={handleDocumentSave}
+                      className="text-white font-medium transition-colors hover:opacity-90"
+                      style={{
+                        width: '120px',
+                        height: '44px',
+                        borderRadius: '30px',
+                        padding: '10px',
+                        gap: '10px',
+                        background: '#C2A46D',
+                        cursor: 'pointer',
+                        border: 'none',
+                        boxShadow: 'none',
+                      }}
+                    >
+                      Update
+                    </button>
                     <button
                       onClick={() => {
-                            handleDocumentEdit(document.id, document.name);
+                        handleDocumentCancel();
                         setShowDocumentMenu(null);
                       }}
-                          className="block w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      className="text-white font-medium transition-colors hover:opacity-90"
+                      style={{
+                        width: '120px',
+                        height: '44px',
+                        borderRadius: '30px',
+                        padding: '10px',
+                        gap: '10px',
+                        background: '#84B5F3',
+                        cursor: 'pointer',
+                        border: 'none',
+                        boxShadow: 'none',
+                      }}
                     >
-                      Edit
+                      Cancel
                     </button>
-                         <button
-                           onClick={() => handleDocumentDeleteClick(document.id)}
-                           className="block w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                         >
-                           Delete
-                         </button>
-                  </div>
-                </div>
-              )}
-              </div>
-            )}
-          </div>
-          ))
-        )}
+                  </>
+                )}
 
-        {/* Upload Document Button */}
-        <div className="flex items-center">
-          <input
-            type="text"
-            placeholder="Upload a document"
-            className="w-[350px] px-4 py-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
-            readOnly
-          />
-          <label className={`px-4 py-3 rounded-r-lg transition-colors duration-200 ${isSaving
-            ? 'bg-gray-400 cursor-not-allowed'
-            : 'bg-[#C2A46D] text-white cursor-pointer hover:opacity-90'
-            }`}
-            style={{ height: "50px", display: "flex", alignItems: "center", justifyContent: "center" }}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-            </svg>
-          <input
-            type="file"
-            onChange={handleFileUpload}
-              disabled={isSaving}
-            className="hidden"
-            accept=".pdf,.doc,.docx,.txt"
-          />
-          </label>
-        </div>
-        <button
-          onClick={handleUploadDocument}
-          className={`text-white font-medium transition-colors ${isSaving ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'
+                {/* Three-dot menu */}
+                {editingDocument !== document.id && (
+                  <div className="relative" ref={showDocumentMenu === document.id ? documentMenuRef : null}>
+                    <button
+                      onClick={() => setShowDocumentMenu(showDocumentMenu === document.id ? null : document.id)}
+                      className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                      </svg>
+                    </button>
+
+                    {showDocumentMenu === document.id && (
+                      <div className="absolute right-0 mt-2 w-36 bg-white rounded-lg shadow-xl z-50 border border-gray-200">
+                        <div className="py-2">
+                          <button
+                            onClick={() => {
+                              setDocumentToDelete(document.id);
+                              setShowDeleteConfirm(true);
+                              setShowDocumentMenu(null);
+                            }}
+                            className="block w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+
+          {/* Upload Document Button */}
+          <div className="flex items-center">
+            <input
+              type="text"
+              placeholder={documentName}
+              className="w-[350px] px-4 py-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
+              readOnly
+            />
+            <label className={`px-4 py-3 rounded-r-lg transition-colors duration-200 ${isUploadingDocument
+              ? 'bg-gray-400 cursor-not-allowed'
+              : 'bg-[#C2A46D] text-white cursor-pointer hover:opacity-90'
+              }`}
+              style={{ height: "50px", display: "flex", alignItems: "center", justifyContent: "center" }}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+              <input
+                type="file"
+                onChange={handleFileUpload}
+                disabled={isUploadingDocument}
+                className="hidden"
+                accept=".pdf,.doc,.docx,.txt"
+              />
+            </label>
+          </div>
+          <button
+            onClick={handleUploadDocument}
+            className={`text-white font-medium transition-colors ${isUploadingDocument ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'
               }`}
             style={{
-            width: 'auto',
+              width: 'auto',
               height: '44px',
               borderRadius: '30px',
-            paddingLeft: '10px',
-            paddingRight: '10px',
+              paddingLeft: '10px',
+              paddingRight: '10px',
               gap: '10px',
-              opacity: isSaving ? 0.5 : 1,
-              background: isSaving ? '#bdbdbd' : '#C2A46D',
-              cursor: isSaving ? 'not-allowed' : 'pointer',
+              opacity: isUploadingDocument ? 0.5 : 1,
+              background: isUploadingDocument ? '#bdbdbd' : '#C2A46D',
+              cursor: isUploadingDocument ? 'not-allowed' : 'pointer',
               border: 'none',
               boxShadow: 'none',
             }}
-          disabled={isSaving}
+            disabled={isUploadingDocument}
           >
-            Upload Document
-        </button>
-      </div>
+            {isUploadingDocument ? (
+              <>
+                Uploading...
+              </>
+            ) : (
+              'Upload Document'
+            )}
+          </button>
+        </div>
       </div>
     </>
   );
