@@ -243,14 +243,19 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
   const refreshRegistrationsData = useCallback(async (eventId: string) => {
     try {
-      if (!eventId) return;
+      if (!eventId) {
+        console.log('No eventId provided to refreshRegistrationsData');
+        return;
+      }
       const response = await getAllRegistrationsByEventIdApi(eventId);
       if (response.success) {
         setAllRegistrations(response.data || []);
       } else {
+        console.error('API response not successful:', response.message);
         toast.error(response.message);
       }
     } catch (error) {
+      console.error('Error in refreshRegistrationsData:', error);
       if (loginStatus) {
         toast.error('JWT token is expired. Please login again.');
       }

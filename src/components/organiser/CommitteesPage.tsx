@@ -44,8 +44,8 @@ const CommitteesPage: React.FC = () => {
   const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [contextMenuCommitteeId, setContextMenuCommitteeId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
-  // Limit initial spinner visibility to at most 1 second
-  const [showInitialSpinner, setShowInitialSpinner] = useState<boolean>(true);
+  // Initial loading state to track data fetching
+  const [isInitialLoading, setIsInitialLoading] = useState<boolean>(true);
   // Loading state for tab switching
   const [isTabLoading, setIsTabLoading] = useState<boolean>(false);
   // Keep a ref in sync with hasUnsavedChanges to avoid stale closures in async effects
@@ -80,18 +80,6 @@ const CommitteesPage: React.FC = () => {
     refreshCommitteesData();
   }, []);
 
-  // Cap initial spinner to 1 second and hide sooner if loading completes
-  useEffect(() => {
-    const timerId = setTimeout(() => setShowInitialSpinner(false), 1000);
-    return () => clearTimeout(timerId);
-  }, []);
-
-  useEffect(() => {
-    if (!isLoading) {
-      setShowInitialSpinner(false);
-    }
-  }, [isLoading]);
-
   // Load registrations for this event
   useEffect(() => {
     if (eventId) {
@@ -120,6 +108,7 @@ const CommitteesPage: React.FC = () => {
   useEffect(() => {
     const fetchEventCommittees = async () => {
       try {
+        setIsInitialLoading(true);
         const response = await getAllEventCommitteesApi(eventId as string);
         // Only update if we don't have unsaved changes at response time
         if (!hasUnsavedChanges) {
@@ -153,6 +142,8 @@ const CommitteesPage: React.FC = () => {
       } catch (error: any) {
         console.error('Error fetching event committees:', error);
         toast.error(error.message || 'Failed to fetch event committees');
+      } finally {
+        setIsInitialLoading(false);
       }
     };
 
@@ -693,8 +684,8 @@ const CommitteesPage: React.FC = () => {
     }
   };
 
-  // Show loading state
-  if (isLoading || showInitialSpinner || isTabLoading) {
+  // Show loading state while fetching data
+  if (isInitialLoading || isTabLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>

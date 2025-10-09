@@ -1,11 +1,11 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Header } from '../../components/ui';
 import PageLoader from '../../components/PageLoader';
 
 const StudentRegistrationSuccess: React.FC = () => {
   const navigate = useNavigate();
-
+  const { eventId } = useParams();
 
   return (
     <PageLoader loadingText="Loading Success Page...">
@@ -61,7 +61,7 @@ const StudentRegistrationSuccess: React.FC = () => {
 
           {/* Event Button */}
           <button
-            onClick={() => navigate('/event-create')}
+            onClick={() => navigate(`/student-delegate-page/${eventId}`)}
             style={{
               display: 'flex',
               alignItems: 'center',

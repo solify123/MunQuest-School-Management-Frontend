@@ -1,10 +1,10 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Header } from '../../components/ui';
 
 const TeacherRegistrationSuccess: React.FC = () => {
   const navigate = useNavigate();
-
+  const { eventId } = useParams();
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#F8F8F8' }}>
@@ -59,7 +59,7 @@ const TeacherRegistrationSuccess: React.FC = () => {
 
           {/* Event Button */}
           <button
-            onClick={() => navigate('/event-create')}
+            onClick={() => navigate(`/teacher-delegate-page/${eventId}`)}
             style={{
               display: 'flex',
               alignItems: 'center',

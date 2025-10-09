@@ -76,13 +76,15 @@ const AgendaPage: React.FC = () => {
     };
   }, []);
 
-  // Fetch event committees data
+  // Fetch event committees data and initial agendas
   useEffect(() => {
-    const fetchEventCommittees = async () => {
+    const fetchInitialData = async () => {
       if (!eventId) return;
 
       try {
         setIsLoading(true);
+        
+        // Fetch committees
         const response = await getAllEventCommitteesApi(eventId);
         const raw = response.data || [];
 
@@ -112,38 +114,26 @@ const AgendaPage: React.FC = () => {
         });
 
         setAllCommitteesData(Array.isArray(normalized) ? normalized : []);
+
+        // Fetch agendas
+        const agendasResponse = await getEventCommitteesByEventIdAgendaApi(eventId);
+        if (agendasResponse.success) {
+          const agendasData = agendasResponse.data || [];
+          setAllAgendas(agendasData);
+        }
       } catch (error: any) {
-        console.error('Error fetching event committees:', error);
-        toast.error(error.message || 'Failed to fetch event committees');
+        console.error('Error fetching initial data:', error);
+        toast.error(error.message || 'Failed to fetch data');
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchEventCommittees();
+    fetchInitialData();
   }, [eventId]);
 
+  // Fetch documents when active committee changes
   useEffect(() => {
-
-  }, []);
-
-  // Fetch all agendas data once on initial load
-  useEffect(() => {
-    const fetchAgendas = async () => {
-      if (!eventId) return;
-
-      try {
-        const response = await getEventCommitteesByEventIdAgendaApi(eventId);
-        if (response.success) {
-          const agendasData = response.data || [];
-          setAllAgendas(agendasData);
-        }
-      } catch (error: any) {
-        console.error('Error fetching agendas:', error);
-        setAllAgendas([]);
-      }
-    };
-
     const fetchDocuments = async () => {
       if (!eventId || !activeCommittee) {
         setDocuments([]);
@@ -170,8 +160,6 @@ const AgendaPage: React.FC = () => {
                 title: doc.title
               }));
 
-            console.log('filteredDocuments', filteredDocuments);
-
             setDocuments(filteredDocuments);
           } else {
             console.warn('Documents data is not an array:', documentsData);
@@ -190,9 +178,8 @@ const AgendaPage: React.FC = () => {
       }
     };
 
-    fetchAgendas();
     fetchDocuments();
-  }, [eventId, activeCommittee]);
+  }, [eventId, activeCommittee, filteredCommittees]);
 
   // Filter committees based on active category
   useEffect(() => {
@@ -553,7 +540,7 @@ const AgendaPage: React.FC = () => {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-3 text-gray-600">Loading committee data...</span>
+        <span className="ml-3 text-gray-600">Loading data...</span>
       </div>
     );
   }

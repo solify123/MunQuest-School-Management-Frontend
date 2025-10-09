@@ -10,6 +10,8 @@ import {
   LeadershipRolesPage,
   CommitteesPage,
   AgendaPage,
+  DelegatesPage,
+  GeneralDocumentsPage,
   OrganiserNavigation
 } from '../components/organiser';
 
@@ -427,9 +429,9 @@ const OrganiserDashboard: React.FC = () => {
       case 'agendas':
         return renderAgenda();
       case 'delegates':
-        return <div className="text-center py-12"><h2 className="text-2xl font-bold text-gray-900">Delegates</h2><p className="text-gray-500 mt-2">Delegates management coming soon...</p></div>;
+        return <DelegatesPage />;
       case 'general-documents':
-        return <div className="text-center py-12"><h2 className="text-2xl font-bold text-gray-900">General Documents</h2><p className="text-gray-500 mt-2">General documents management coming soon...</p></div>;
+        return <GeneralDocumentsPage />;
       default:
         return renderDashboard();
     }
