@@ -21,8 +21,6 @@ const StudentDelegatePage: React.FC = () => {
   const [instagram, setInstagram] = useState('');
   const [coverImage, setCoverImage] = useState('');
 
-  const [participationInfoCommitte, setParticipationInfoCommitte] = useState("");
-  const [participationInfoCountry, setParticipationInfoCountry] = useState("");
   const [participationInfoGeneralDocuments, setParticipationInfoGeneralDocuments] = useState<any[]>([]);
   const [participationInfoCommitteDocuments, setParticipationInfoCommitteDocuments] = useState<any[]>([]);
 
@@ -301,7 +299,7 @@ const StudentDelegatePage: React.FC = () => {
           <h3 className="text-lg font-bold text-gray-900 mb-3">Committee</h3>
           <input
             type="text"
-            value={participationInfoCommitte || ''}
+            value={''}
             readOnly
             className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-700"
           />
@@ -314,7 +312,7 @@ const StudentDelegatePage: React.FC = () => {
           <h3 className="text-lg font-bold text-gray-900 mb-3">Country</h3>
           <input
             type="text"
-            value={participationInfoCountry || ''}
+            value={''}
             readOnly
             className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-700"
           />
