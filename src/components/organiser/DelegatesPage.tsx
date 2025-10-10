@@ -3,6 +3,9 @@ import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import ConfirmationModal from '../ui/ConfirmationModal';
 import { useApp } from '../../contexts/AppContext';
+import DelegatesContactInfoPage from './Delegates-ContactInfoPage';
+import DelegatesFoodInfoPage from './Delegates-FoodInfoPage';
+import DelegatesAllocationPage from './Delegates-AllocationPage';
 
 interface DelegateItem {
     id: number;
@@ -73,7 +76,11 @@ const DelegatesPage: React.FC = () => {
                     academicLevel: registration.user.grade || 'N/A',
                     school: registration.user.school.name || '',
                     munExperience: registration.mun_experience || 0,
-                    preferredCommittees: registration.preferredCommittees || [],
+					preferredCommittees: [
+						registration.pref_committee_1?.abbr,
+						registration.pref_committee_2?.abbr,
+						registration.pref_committee_3?.abbr
+					].filter(Boolean) as string[],
                     assignedCommittees: registration.assignedCommittees || [],
                     assignedCountry: registration.assignedCountry || '',
                     isLocked: registration.isLocked || false
@@ -110,6 +117,7 @@ const DelegatesPage: React.FC = () => {
     const handleUploadDelegates = () => {
         toast.success('Upload Delegates feature coming soon');
     };
+    
 
     const handleAssign = (_delegateId: number) => {
         setShowDelegateMenu(null);
@@ -203,48 +211,57 @@ const DelegatesPage: React.FC = () => {
                 ))}
             </div>
 
-            {/* Search and Action Bar */}
-            <div className="flex items-center justify-between p-4 rounded-lg shadow-sm">
-                <div className="flex items-center space-x-4">
-                    <div className="relative">
-                        <input
-                            type="text"
-                            placeholder="Search"
-                            value={searchTerm}
-                            onChange={(e) => handleSearch(e.target.value)}
-                            className="pl-10 pr-4 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
-                        />
-                        <svg className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                    </div>
-                </div>
+			{/* Conditional content for sub-tabs */}
+			{activeSubTab === 'contact-info' ? (
+				<DelegatesContactInfoPage />
+			) : activeSubTab === 'food-info' ? (
+				<DelegatesFoodInfoPage />
+			) : activeSubTab === 'allocation' ? (
+				<DelegatesAllocationPage />
+			) : (
+				<>
+					{/* Search and Action Bar */}
+					<div className="flex items-center justify-between p-4 rounded-lg shadow-sm">
+						<div className="flex items-center space-x-4">
+							<div className="relative">
+								<input
+									type="text"
+									placeholder="Search"
+									value={searchTerm}
+									onChange={(e) => handleSearch(e.target.value)}
+									className="pl-10 pr-4 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
+								/>
+								<svg className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+								</svg>
+							</div>
+						</div>
 
-                <div className="flex items-center space-x-3">
-                    <button
-                        onClick={handleGlobalAllocation}
-                        className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-[20px] hover:bg-green-700 transition-colors duration-200"
-                    >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                        </svg>
-                        <span>Global Allocation</span>
-                    </button>
+						<div className="flex items-center space-x-3">
+							<button
+								onClick={handleGlobalAllocation}
+								className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-[20px] hover:bg-green-700 transition-colors duration-200"
+							>
+								<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+								</svg>
+								<span>Global Allocation</span>
+							</button>
 
-                    <button
-                        onClick={handleUploadDelegates}
-                        className="flex items-center space-x-2 bg-[#C2A46D] text-white px-4 py-2 rounded-[20px] hover:opacity-90 transition-colors duration-200"
-                    >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                        </svg>
-                        <span>Upload Delegates</span>
-                    </button>
-                </div>
-            </div>
+							<button
+								onClick={handleUploadDelegates}
+								className="flex items-center space-x-2 bg-[#C2A46D] text-white px-4 py-2 rounded-[20px] hover:opacity-90 transition-colors duration-200"
+							>
+								<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+								</svg>
+								<span>Upload Delegates</span>
+							</button>
+						</div>
+					</div>
 
-            {/* Delegates Table */}
-            <div>
+					{/* Delegates Table */}
+					<div>
                 {/* Header Row */}
                 <div className="grid gap-2 mb-2" style={{ gridTemplateColumns: '80px 80px 120px 100px 140px 80px 160px 140px 140px 80px' }}>
                     {['Unique ID', 'Registration ID', 'Name', 'Academic Level', 'School', 'MUN Experience', 'Preferred Committees', 'Assigned Committees', 'Assigned Country', ' '].map((header, index) => (
@@ -445,8 +462,11 @@ const DelegatesPage: React.FC = () => {
                 cancelText="Cancel"
                 confirmButtonColor="text-red-600"
             />
-        </div>
-    );
+
+			</>
+		)}
+		</div>
+	);
 };
 
 export default DelegatesPage;

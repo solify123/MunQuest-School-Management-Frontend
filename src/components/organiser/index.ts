@@ -4,5 +4,8 @@ export { default as LeadershipRolesPage } from './LeadershipRolesPage';
 export { default as CommitteesPage } from './CommitteesPage';
 export { default as AgendaPage } from './AgendaPage';
 export { default as DelegatesPage } from './DelegatesPage';
+export { default as DelegatesContactInfoPage } from './Delegates-ContactInfoPage';
+export { default as DelegatesFoodInfoPage } from './Delegates-FoodInfoPage';
+export { default as DelegatesAllocationPage } from './Delegates-AllocationPage';
 export { default as GeneralDocumentsPage } from './GeneralDocumentsPage';
 export { default as OrganiserNavigation } from './OrganiserNavigation';
