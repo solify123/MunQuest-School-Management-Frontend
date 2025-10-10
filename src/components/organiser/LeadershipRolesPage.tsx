@@ -413,6 +413,21 @@ const LeadershipRolesPage: React.FC = () => {
     }
   };
 
+  const handleCancelAdd = () => {
+    setIsAddingNew(false);
+    setNewRoleData({
+      abbr: '',
+      role: '',
+      username: '',
+      name: '',
+      selectedUserId: ''
+    });
+    setShowRoleDropdown(false);
+    setShowUsernameDropdown(false);
+    setFilteredRoles([]);
+    setFilteredUsernames([]);
+  };
+
   const handleSaveEdit = async () => {
     if (isSavingEdit) return; // Prevent double-clicking
     
@@ -928,29 +943,9 @@ const LeadershipRolesPage: React.FC = () => {
         ) : (
           // Normal mode buttons
           <>
-            <button
-              onClick={handleAddNew}
-              disabled={isAddingNew}
-              className={`text-white font-medium transition-colors`}
-              style={{
-                width: '105px',
-                height: '44px',
-                borderRadius: '30px',
-                padding: '10px',
-                gap: '10px',
-                opacity: 1,
-                background: isAddingNew ? '#bdbdbd' : '#C2A46D',
-                cursor: isAddingNew ? 'not-allowed' : 'pointer',
-                border: 'none',
-                boxShadow: 'none',
-              }}
-            >
-              Add Role
-            </button>
-            {isAddingNew && (
+            {!isAddingNew ? (
               <button
-                onClick={handleSaveNew}
-                disabled={isSavingNew}
+                onClick={handleAddNew}
                 className={`text-white font-medium transition-colors`}
                 style={{
                   width: '105px',
@@ -958,15 +953,58 @@ const LeadershipRolesPage: React.FC = () => {
                   borderRadius: '30px',
                   padding: '10px',
                   gap: '10px',
-                  opacity: isSavingNew ? 0.6 : 1,
-                  background: isSavingNew ? '#bdbdbd' : '#C2A46D',
-                  cursor: isSavingNew ? 'not-allowed' : 'pointer',
+                  opacity: 1,
+                  background: '#C2A46D',
+                  cursor: 'pointer',
                   border: 'none',
                   boxShadow: 'none',
                 }}
               >
-                {isSavingNew ? 'Saving...' : 'Save'}
+                Add Role
               </button>
+            ) : (
+              <button
+                onClick={handleCancelAdd}
+                className={`text-white font-medium transition-colors`}
+                style={{
+                  width: '105px',
+                  height: '44px',
+                  borderRadius: '30px',
+                  padding: '10px',
+                  gap: '10px',
+                  opacity: 1,
+                  background: '#C2A46D',
+                  cursor: 'pointer',
+                  border: 'none',
+                  boxShadow: 'none',
+                }}
+              >
+                Close
+              </button>
+            )}
+            {isAddingNew && (
+              <>
+              
+                <button
+                  onClick={handleSaveNew}
+                  disabled={isSavingNew}
+                  className={`text-white font-medium transition-colors`}
+                  style={{
+                    width: '105px',
+                    height: '44px',
+                    borderRadius: '30px',
+                    padding: '10px',
+                    gap: '10px',
+                    opacity: isSavingNew ? 0.6 : 1,
+                    background: isSavingNew ? '#bdbdbd' : '#C2A46D',
+                    cursor: isSavingNew ? 'not-allowed' : 'pointer',
+                    border: 'none',
+                    boxShadow: 'none',
+                  }}
+                >
+                  {isSavingNew ? 'Saving...' : 'Save'}
+                </button>
+              </>
             )}
           </>
         )}

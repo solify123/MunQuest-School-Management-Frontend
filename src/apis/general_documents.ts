@@ -65,3 +65,18 @@ export const deleteGeneralDocumentApi = async (documentId: string) => {
         throw new Error(error.response?.data?.message || 'Failed to delete general document');
     }
 };
+
+
+export const getDocumentsByEventId = async (eventId: string) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${backendUrl}/api/v1/general-documents/get-all-documents-by-event-Id/${eventId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response?.data?.message || 'Failed to fetch general documents');
+    }
+}

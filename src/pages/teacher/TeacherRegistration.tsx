@@ -396,7 +396,12 @@ const TeacherRegistration: React.FC = () => {
       const response = await eventRegistratTeacherApi(eventId as string, foodPreference, foodAllergies);
       if (response.success) {
         toast.success('Registration completed successfully!');
-        navigate('/teacher-registration-success');
+        const userRole = await localStorage.getItem('userRole');
+        if (userRole === 'teacher') {
+          navigate(`/teacher-registration-success/${eventId}`);
+        } else {
+          navigate(`/student-registration-success/${eventId}`);
+        }
       } else {
         toast.error('Failed to register for event: ' + response.message);
       }

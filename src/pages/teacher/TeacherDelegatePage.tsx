@@ -5,10 +5,8 @@ import { getEventByIdApi } from '../../apis/Events';
 import { toast } from 'sonner';
 import DownloadIcon from '../../assets/download_icon.svg';
 import PageLoader from '../../components/PageLoader';
-import { getLeadershipRolesByEventIdApi } from '../../apis/Event_leaders';
-import { getDocumentsByEventId } from '../../apis/general_documents';
 
-const StudentDelegatePage: React.FC = () => {
+const TeacherDelegatePage: React.FC = () => {
   const { eventId } = useParams();
   const [currentStep, setCurrentStep] = useState('Event Info');
   const [name, setName] = useState('');
@@ -20,11 +18,20 @@ const StudentDelegatePage: React.FC = () => {
   const [website, setWebsite] = useState('');
   const [instagram, setInstagram] = useState('');
   const [coverImage, setCoverImage] = useState('');
+  const [participationInfo, setParticipationInfo] = useState({
+    committee: '',
+    country: '',
+    generalDocuments: [] as Array<{ name: string; url: string }>,
+    committeeDocuments: [] as Array<{ name: string; url: string }>
+  });
 
-  const [participationInfoCommitte, setParticipationInfoCommitte] = useState("");
-  const [participationInfoCountry, setParticipationInfoCountry] = useState("");
-  const [participationInfoGeneralDocuments, setParticipationInfoGeneralDocuments] = useState<any[]>([]);
-  const [participationInfoCommitteDocuments, setParticipationInfoCommitteDocuments] = useState<any[]>([]);
+  const [supportContactName, setSupportContactName] = useState('');
+  const [supportContactRole, setSupportContactRole] = useState('');
+  const [supportContactUsername, setSupportContactUsername] = useState('');
+  const [supportContactMobile, setSupportContactMobile] = useState('');
+  const [supportContactEmail, setSupportContactEmail] = useState('');
+  const [supportContactAbbr, setSupportContactAbbr] = useState('');
+
 
   const [registrationInfo, setRegistrationInfo] = useState({
     registrationNo: '',
@@ -34,7 +41,7 @@ const StudentDelegatePage: React.FC = () => {
     gender: '',
     schoolName: '',
     localityOfSchool: '',
-    grade: '',
+    yearOfWorkingExperience: '',
     email: '',
     mobileNumber: '',
     munExperience: '',
@@ -47,7 +54,6 @@ const StudentDelegatePage: React.FC = () => {
     emergencyMobileNumber: ''
   });
   const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const [leadershipRoles, setLeadershipRoles] = useState<any[]>([]);
 
   const tabs = ['Event Info', 'Support Contact', 'Participation Info', 'Registration Info'];
 
@@ -55,6 +61,7 @@ const StudentDelegatePage: React.FC = () => {
     const getEventById = async () => {
       try {
         const response = await getEventByIdApi(eventId || '');
+        console.log("getEventByIdApi", response.data);
         if (response.success) {
           setName(response.data[0].name);
           setDescription(response.data[0].description);
@@ -66,6 +73,12 @@ const StudentDelegatePage: React.FC = () => {
           setInstagram(response.data[0].instagram);
           setCoverImage(response.data[0].cover_image);
 
+          setSupportContactName(response.data[0].organiser.user.name);
+          setSupportContactRole(response.data[0].organiser.user.role);
+          setSupportContactUsername(response.data[0].organiser.user.username);
+          setSupportContactMobile(response.data[0].organiser.user.phone_e164);
+          setSupportContactEmail(response.data[0].organiser.user.email);
+          setSupportContactAbbr(response.data[0].organiser.user.abbr);
         } else {
           toast.error('Failed to get event by id: ' + response.message);
         }
@@ -73,40 +86,35 @@ const StudentDelegatePage: React.FC = () => {
         toast.error('Failed to get event by id: ' + error.message);
       }
     };
+    getEventById();
+  }, [eventId]);
 
-    const getEvnetLeaderShipRoles = async () => {
+  useEffect(() => {
+    const getParticipationInfo = async () => {
       try {
-        const response = await getLeadershipRolesByEventIdApi(eventId || '');
-        if (response.success) {
-          setLeadershipRoles(response.data);
-        }
+        setParticipationInfo({
+          committee: '',
+          country: '',
+          generalDocuments: [],
+          committeeDocuments: []
+        });
       } catch (error: any) {
-        toast.error('Failed to get event leader ship roles: ' + error.message);
+        console.log('Participation info API not available, using placeholder data');
+        // Fallback to placeholder data
+        setParticipationInfo({
+          committee: 'UNGA - United Nations General Assembly',
+          country: 'Australia',
+          generalDocuments: [
+            { name: 'MUN Handbook', url: '#' }
+          ],
+          committeeDocuments: [
+            { name: 'UNGA_Agenda', url: '#' },
+            { name: 'UNGA_Resolutions', url: '#' }
+          ]
+        });
       }
     };
-
-    const getDocumentsById = async () => {
-      try {
-        const response = await getDocumentsByEventId(eventId as string);
-        console.log("getDocumentsById", response.data)
-        if (response.success) {
-          const generalDocuments = response.data.filter((doc: any) => doc.doc_type === "general");
-          const committeeDocuments = response.data.filter((doc: any) => doc.doc_type !== "general");
-          setParticipationInfoGeneralDocuments(generalDocuments);
-          setParticipationInfoCommitteDocuments(committeeDocuments);
-        }
-        else {
-          toast.error('Failed to get documents by id: ' + response.message);
-        }
-      }
-      catch (error: any) {
-        toast.error('Failed to get documents by id: ' + error.message);
-      }
-    }
-
-    getEvnetLeaderShipRoles();
-    getEventById();
-    getDocumentsById();
+    getParticipationInfo();
   }, [eventId]);
 
   useEffect(() => {
@@ -120,7 +128,7 @@ const StudentDelegatePage: React.FC = () => {
           gender: '',
           schoolName: '',
           localityOfSchool: '',
-          grade: '',
+          yearOfWorkingExperience: '',
           email: '',
           mobileNumber: '',
           munExperience: '',
@@ -133,7 +141,27 @@ const StudentDelegatePage: React.FC = () => {
           emergencyMobileNumber: ''
         });
       } catch (error: any) {
-        console.log('Registration info API not available, using placeholder data');
+        // Fallback to placeholder data
+        setRegistrationInfo({
+          registrationNo: '223344',
+          username: '@sommt234',
+          name: 'Sam Morgen Lee',
+          dateOfBirth: '5 Oct 2008',
+          gender: 'Male',
+          schoolName: 'Oasis World School',
+          localityOfSchool: 'Dubai',
+          yearOfWorkingExperience: 'IB DP 2',
+          email: 'somlee@gmail.com',
+          mobileNumber: '+971 50 6382040',
+          munExperience: '5',
+          preferredCommittee1: 'UNSC - United Nations Security Council',
+          preferredCommittee2: 'UNGA - United Nations General Assembly',
+          preferredCommittee3: 'WHO - World Health Organization',
+          foodPreference: 'vegetarian',
+          foodAllergies: 'Peanut',
+          emergencyContactName: 'Jim Morgan',
+          emergencyMobileNumber: '+971 655 3131'
+        });
       }
     };
     getRegistrationInfo();
@@ -142,13 +170,11 @@ const StudentDelegatePage: React.FC = () => {
   const renderEventInfo = () => (
     <div className="space-y-6">
       <div className="w-[400px]">
-        {coverImage && (
-          <img
-            src={coverImage}
-            alt="Event"
-            className="w-[400px] h-64 object-cover rounded-lg"
-          />
-        )}
+        <img
+          src={coverImage}
+          alt="Event"
+          className="w-[400px] h-64 object-cover rounded-lg"
+        />
       </div>
 
       <div className="space-y-6">
@@ -249,46 +275,44 @@ const StudentDelegatePage: React.FC = () => {
           <div className="bg-[#E3F2FD] rounded-lg text-center border border-gray-800" style={{ width: '80px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <span className="text-sm font-medium text-[#1976D2]">ABBR</span>
           </div>
-          <div className="bg-[#E3F2FD] rounded-lg text-center border border-gray-800" style={{ width: '150px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="bg-[#E3F2FD] rounded-lg text-center border border-gray-800" style={{ width: '200px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <span className="text-sm font-medium text-[#1976D2]">Role</span>
           </div>
-          <div className="bg-[#E3F2FD] rounded-lg text-center border border-gray-800" style={{ width: '100px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="bg-[#E3F2FD] rounded-lg text-center border border-gray-800" style={{ width: '140px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <span className="text-sm font-medium text-[#1976D2]">Username</span>
           </div>
           <div className="bg-[#E3F2FD] rounded-lg text-center border border-gray-800" style={{ width: '200px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <span className="text-sm font-medium text-[#1976D2]">Name</span>
           </div>
-          <div className="bg-[#E3F2FD] rounded-lg text-center border border-gray-800" style={{ width: '170px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="bg-[#E3F2FD] rounded-lg text-center border border-gray-800" style={{ width: '120px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <span className="text-sm font-medium text-[#1976D2]">Mobile</span>
           </div>
-          <div className="bg-[#E3F2FD] rounded-lg text-center border border-gray-800" style={{ width: '260px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="bg-[#E3F2FD] rounded-lg text-center border border-gray-800" style={{ width: '220px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <span className="text-sm font-medium text-[#1976D2]">Email</span>
           </div>
         </div>
 
         {/* Contact Data Rows */}
-        {leadershipRoles.map((role, index) => (
-          <div className="flex gap-4 mb-3" key={index}>
-            <div className="bg-white border border-gray-200 flex justify-center items-center rounded-lg text-center" style={{ width: '80px', height: '60px' }}>
-              <span className="text-sm text-gray-900">{role.leadership_roles.abbr}</span>
-            </div>
-            <div className="bg-white border border-gray-200 flex justify-center items-center rounded-lg text-center" style={{ width: '150px', height: '60px' }}>
-              <span className="text-sm text-gray-900">{role.leadership_roles.leadership_role}</span>
-            </div>
-            <div className="bg-white border border-gray-200 flex justify-center items-center rounded-lg text-center" style={{ width: '100px', height: '60px' }}>
-              <span className="text-sm text-gray-900">{role.users.username}</span>
-            </div>
-            <div className="bg-white border border-gray-200 flex justify-center items-center rounded-lg text-center" style={{ width: '200px', height: '60px' }}>
-              <span className="text-sm text-gray-900">{role.users.fullname}</span>
-            </div>
-            <div className="bg-white border border-gray-200 flex justify-center items-center rounded-lg text-center" style={{ width: '170px', height: '60px' }}>
-              <span className="text-sm text-gray-900">{role.users.phone_e164}</span>
-            </div>
-            <div className="bg-white border border-gray-200 flex justify-center items-center rounded-lg text-center" style={{ width: '260px', height: '60px' }}>
-              <span className="text-sm text-gray-900">{role.users.email}</span>
-            </div>
+        <div className="flex gap-4 mb-3">
+          <div className="bg-white border border-gray-200 flex justify-center items-center rounded-lg text-center" style={{ width: '80px', height: '60px' }}>
+            <span className="text-sm text-gray-900">{supportContactAbbr}</span>
           </div>
-        ))}
+          <div className="bg-white border border-gray-200 flex justify-center items-center rounded-lg text-center" style={{ width: '200px', height: '60px' }}>
+            <span className="text-sm text-gray-900">{supportContactRole}</span>
+          </div>
+          <div className="bg-white border border-gray-200 flex justify-center items-center rounded-lg text-center" style={{ width: '140px', height: '60px' }}>
+            <span className="text-sm text-gray-900">{supportContactUsername}</span>
+          </div>
+          <div className="bg-white border border-gray-200 flex justify-center items-center rounded-lg text-center" style={{ width: '200px', height: '60px' }}>
+            <span className="text-sm text-gray-900">{supportContactName}</span>
+          </div>
+          <div className="bg-white border border-gray-200 flex justify-center items-center rounded-lg text-center" style={{ width: '120px', height: '60px' }}>
+            <span className="text-sm text-gray-900">{supportContactMobile}</span>
+          </div>
+          <div className="bg-white border border-gray-200 flex justify-center items-center rounded-lg text-center" style={{ width: '220px', height: '60px' }}>
+            <span className="text-sm text-gray-900">{supportContactEmail}</span>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -301,7 +325,7 @@ const StudentDelegatePage: React.FC = () => {
           <h3 className="text-lg font-bold text-gray-900 mb-3">Committee</h3>
           <input
             type="text"
-            value={participationInfoCommitte || ''}
+            value={participationInfo.committee}
             readOnly
             className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-700"
           />
@@ -314,7 +338,7 @@ const StudentDelegatePage: React.FC = () => {
           <h3 className="text-lg font-bold text-gray-900 mb-3">Country</h3>
           <input
             type="text"
-            value={participationInfoCountry || ''}
+            value={participationInfo.country}
             readOnly
             className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-700"
           />
@@ -330,23 +354,17 @@ const StudentDelegatePage: React.FC = () => {
           <div className="flex-1">
             <h4 className="text-base font-semibold text-gray-800 mb-3">General</h4>
             <div className="space-y-3">
-              {participationInfoGeneralDocuments && participationInfoGeneralDocuments.length > 0 ? (
-                participationInfoGeneralDocuments.map((doc, index) => (
-                  <div key={index} className="w-[400px] flex items-center justify-between bg-white border border-gray-300 rounded-lg px-4 py-3">
-                    <span className="text-sm text-gray-900">{doc.title}</span>
-                    <button
-                      onClick={() => window.open(doc.file_url, '_blank')}
-                      className="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors"
-                    >
-                      <img src={DownloadIcon} alt="Download" className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))
-              ) : (
-                <div className="w-[400px] flex items-center justify-center bg-gray-50 border border-gray-300 rounded-lg px-4 py-3">
-                  <span className="text-sm text-gray-500">No general documents available</span>
+              {participationInfo.generalDocuments.map((doc, index) => (
+                <div key={index} className="w-[400px] w-[400px] flex items-center justify-between bg-white border border-gray-300 rounded-lg px-4 py-3">
+                  <span className="text-sm text-gray-900">{doc.name}</span>
+                  <button
+                    onClick={() => window.open(doc.url, '_blank')}
+                    className="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors"
+                  >
+                    <img src={DownloadIcon} alt="Download" className="w-4 h-4" />
+                  </button>
                 </div>
-              )}
+              ))}
             </div>
           </div>
         </div>
@@ -356,23 +374,17 @@ const StudentDelegatePage: React.FC = () => {
           <div className="flex-1">
             <h4 className="text-base font-semibold text-gray-800 mb-3">Committee Related</h4>
             <div className="space-y-3">
-              {participationInfoCommitteDocuments && participationInfoCommitteDocuments.length > 0 ? (
-                participationInfoCommitteDocuments.map((doc, index) => (
-                  <div key={index} className="w-[400px] flex items-center justify-between bg-white border border-gray-300 rounded-lg px-4 py-3">
-                    <span className="text-sm text-gray-900">{doc.title}</span>
-                    <button
-                      onClick={() => window.open(doc.file_url, '_blank')}
-                      className="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors"
-                    >
-                      <img src={DownloadIcon} alt="Download" className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))
-              ) : (
-                <div className="w-[400px] flex items-center justify-center bg-gray-50 border border-gray-300 rounded-lg px-4 py-3">
-                  <span className="text-sm text-gray-500">No committee documents available</span>
+              {participationInfo.committeeDocuments.map((doc, index) => (
+                <div key={index} className="w-[400px] flex items-center justify-between bg-white border border-gray-300 rounded-lg px-4 py-3">
+                  <span className="text-sm text-gray-900">{doc.name}</span>
+                  <button
+                    onClick={() => window.open(doc.url, '_blank')}
+                    className="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors"
+                  >
+                    <img src={DownloadIcon} alt="Download" className="w-4 h-4" />
+                  </button>
                 </div>
-              )}
+              ))}
             </div>
           </div>
         </div>
@@ -473,12 +485,12 @@ const StudentDelegatePage: React.FC = () => {
             />
           </div>
 
-          {/* Grade or Year */}
+          {/* Year of Working Experience */}
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">Grade or Year</label>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Year of Working Experience</label>
             <input
               type="text"
-              value={registrationInfo.grade}
+              value={registrationInfo.yearOfWorkingExperience}
               readOnly
               className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-700"
             />
@@ -698,4 +710,4 @@ const StudentDelegatePage: React.FC = () => {
   );
 };
 
-export default StudentDelegatePage;
+export default TeacherDelegatePage;

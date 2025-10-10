@@ -597,11 +597,11 @@ const CommitteesPage: React.FC = () => {
         toast.error('Please select a committee from the dropdown before saving');
         return;
       }
-      console.log('[CommitteesPage] Saving committee with identifier:', committeeIdentifier, 'target:', target);
       const response = await saveEventCommitteesByEventIdApi(
         committeeIdentifier.toString(),
         eventId as string,
         activeCommitteeType,
+        target.abbr,
         target.seatsTotal,
         target.chairUsername,
         target.chairName,

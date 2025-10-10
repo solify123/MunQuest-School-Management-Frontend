@@ -15,7 +15,7 @@ export const getAllEventCommitteesApi = async (eventId: string) => {
     }
 };
 
-export const saveEventCommitteesByEventIdApi = async (committeeId: string, eventId: string, category: string, seats: string,
+export const saveEventCommitteesByEventIdApi = async (committeeId: string, eventId: string, category: string, abbr: string, seats: string,
     chair_username: string, chair_fullname: string, deputy_chair1_username: string, deputy_chair1_fullname: string,
     deputy_chair2_username: string, deputy_chair2_fullname: string) => {
     try {
@@ -24,6 +24,7 @@ export const saveEventCommitteesByEventIdApi = async (committeeId: string, event
             committeeId,
             eventId,
             category,
+            abbr,
             seats,
             chair_username,
             chair_fullname,

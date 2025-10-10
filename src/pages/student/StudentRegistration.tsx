@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Header, Avatar } from '../../components/ui';
 import { toast } from 'sonner';
 import { getUserByIdApi } from '../../apis/Users';
 import PageLoader from '../../components/PageLoader';
 import { eventRegistratStudentApi } from '../../apis/Registerations.ts';
 import { useApp } from '../../contexts/AppContext';
-
+import { getAllEventCommitteesApi } from '../../apis/Event_committes';
 type Step = 'personal' | 'mun' | 'food' | 'emergency';
 
 const StudentRegistration: React.FC = () => {
@@ -15,7 +15,7 @@ const StudentRegistration: React.FC = () => {
   const { allLocalities } = useApp();
   // Current step state
   const [currentStep, setCurrentStep] = useState<Step>('personal');
-
+  const { eventId } = useParams();
   // Form data states
   const [username, setUsername] = useState<string>('');
   const [name, setName] = useState<string>('');
@@ -43,6 +43,9 @@ const StudentRegistration: React.FC = () => {
   const [emergencyCountryCode, setEmergencyCountryCode] = useState<string>('UAE');
   const [emergencyMobileNumber, setEmergencyMobileNumber] = useState<string>('');
   const [showEmergencyCountryDropdown, setShowEmergencyCountryDropdown] = useState(false);
+
+  const [eventCommitteesInfo, setEventCommitteesInfo] = useState<any>(null);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   // Country codes for emergency contact
   const countryCodes = [
@@ -95,7 +98,15 @@ const StudentRegistration: React.FC = () => {
         toast.error('Failed to get user by id: ' + error.message);
       }
     };
+
+    const getEventInfoById = async () => {
+      const response = await getAllEventCommitteesApi(eventId as string);
+      if (response.success) {
+        setEventCommitteesInfo(response.data);
+      }
+    };
     getUserById();
+    getEventInfoById();
   }, []);
 
   useEffect(() => {
@@ -137,7 +148,7 @@ const StudentRegistration: React.FC = () => {
   ];
 
   // Handle continue button
-  const handleContinue = () => {
+  const handleContinue = async () => {
     switch (currentStep) {
       case 'personal':
         setCurrentStep('mun');
@@ -150,7 +161,13 @@ const StudentRegistration: React.FC = () => {
         break;
       case 'emergency':
         // Handle final submission
-        handleEventRegistration();
+        if (isSubmitting) return;
+        setIsSubmitting(true);
+        try {
+          await handleEventRegistration();
+        } finally {
+          setIsSubmitting(false);
+        }
         break;
       default:
         break;
@@ -236,11 +253,11 @@ const StudentRegistration: React.FC = () => {
               className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent appearance-none bg-white pr-10"
             >
               <option value="">Select</option>
-              <option value="UNSC">UN Security Council</option>
-              <option value="UNGA">UN General Assembly</option>
-              <option value="ECOSOC">Economic and Social Council</option>
-              <option value="UNHRC">UN Human Rights Council</option>
-              <option value="UNEP">UN Environment Programme</option>
+              {Array.isArray(eventCommitteesInfo) && eventCommitteesInfo.map((committee: any) => (
+                <option key={committee.abbr} value={committee.id}>
+                  {committee.abbr}  ({committee.committee.committee})
+                </option>
+              ))}
             </select>
             <div className="absolute" style={{ right: "17.75rem", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
               <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -265,11 +282,11 @@ const StudentRegistration: React.FC = () => {
               className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent appearance-none bg-white pr-10"
             >
               <option value="">Select</option>
-              <option value="UNSC">UN Security Council</option>
-              <option value="UNGA">UN General Assembly</option>
-              <option value="ECOSOC">Economic and Social Council</option>
-              <option value="UNHRC">UN Human Rights Council</option>
-              <option value="UNEP">UN Environment Programme</option>
+              {Array.isArray(eventCommitteesInfo) && eventCommitteesInfo.map((committee: any) => (
+                <option key={committee.abbr} value={committee.id}>
+                  {committee.abbr}  ({committee.committee.committee})
+                </option>
+              ))}
             </select>
             <div className="absolute" style={{ right: "17.75rem", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
               <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -293,11 +310,11 @@ const StudentRegistration: React.FC = () => {
               className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent appearance-none bg-white pr-10"
             >
               <option value="">Select</option>
-              <option value="UNSC">UN Security Council</option>
-              <option value="UNGA">UN General Assembly</option>
-              <option value="ECOSOC">Economic and Social Council</option>
-              <option value="UNHRC">UN Human Rights Council</option>
-              <option value="UNEP">UN Environment Programme</option>
+              {Array.isArray(eventCommitteesInfo) && eventCommitteesInfo.map((committee: any) => (
+                <option key={committee.abbr} value={committee.id}>
+                  {committee.abbr}  ({committee.committee.committee})
+                </option>
+              ))}
             </select>
             <div className="absolute" style={{ right: "17.75rem", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
               <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -622,10 +639,15 @@ const StudentRegistration: React.FC = () => {
 
   const handleEventRegistration = async () => {
     try {
-      const response = await eventRegistratStudentApi(munExperience, preferredCommittee1, foodPreference, foodAllergies, emergencyContactName, emergencyMobileNumber);
+      const response = await eventRegistratStudentApi(eventId as string, munExperience, preferredCommittee1, preferredCommittee2, preferredCommittee3, foodPreference, foodAllergies, emergencyContactName, emergencyMobileNumber);
       if (response.success) {
         toast.success('Registration completed successfully!');
-        navigate('/teacher-registration-success');
+        const userRole = await localStorage.getItem('userRole');
+        if (userRole === 'teacher') {
+          navigate(`/teacher-registration-success/${eventId}`);
+        } else {
+          navigate(`/student-registration-success/${eventId}`);
+        }
       } else {
         toast.error('Failed to register for event: ' + response.message);
       }
@@ -672,7 +694,8 @@ const StudentRegistration: React.FC = () => {
           <div className="flex justify-left mt-8">
             <button
               onClick={handleContinue}
-              className="font-medium text-white transition-all hover:opacity-90"
+              disabled={currentStep === 'emergency' && isSubmitting}
+              className={`font-medium text-white transition-all hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed`}
               style={{
                 backgroundColor: '#C2A46D',
                 borderRadius: '30px',
@@ -686,7 +709,7 @@ const StudentRegistration: React.FC = () => {
                 fontSize: '16px'
               }}
             >
-              Continue
+              {currentStep === 'emergency' ? (isSubmitting ? 'Registering...' : 'Register') : 'Continue'}
             </button>
           </div>
         </div>

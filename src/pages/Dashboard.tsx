@@ -3,27 +3,26 @@ import { useNavigate } from 'react-router-dom';
 import { LoadingSpinner, Header } from '../components/ui';
 import { getCurrentEventsApi } from '../apis/Events';
 import PageLoader from '../components/PageLoader';
+import { useApp } from '../contexts/AppContext';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('Upcoming');
   const [isLoading, setIsLoading] = useState(true);
   const [allEvents, setAllEvents] = useState<any[]>([]);
+  const { allRegistrations } = useApp();
   useEffect(() => {
     const checkEvents = async () => {
       try {
         const response = await getCurrentEventsApi();
         if (response.success && response.data && response.data.length > 0) {
-          // Store all events
           setAllEvents(response.data);
         } else {
-          // If no events, redirect to home page
           navigate('/home');
           return;
         }
-      } catch (error) {
+      } catch (error) { 
         console.error('Error checking events:', error);
-        // On error, redirect to home page
         navigate('/home');
         return;
       } finally {
@@ -50,29 +49,36 @@ const Dashboard: React.FC = () => {
 
   // Filter events based on active tab
   const getFilteredEvents = () => {
-    const currentDate = new Date();
-    
+    const today = new Date();
+    const userId = localStorage.getItem('userId');
+
+    const isRegisteredFor = (eventId: string | number) => {
+      if (!userId || !Array.isArray(allRegistrations)) return false;
+      const eventIdStr = String(eventId);
+      return allRegistrations.some((reg: any) => String(reg.event_id) === eventIdStr && String(reg.user_id) === String(userId));
+    };
+
+    const toDate = (value: any) => (value ? new Date(value) : null);
+
     switch (activeTab) {
-      case 'Upcoming':
-        return allEvents.filter(event => {
-          const eventDate = new Date(event.start_date);
-          return eventDate > currentDate && event.status !== 'cancelled';
+      case 'Upcoming': {
+        return allEvents.filter((event: any) => {
+          const endDate = toDate(event.end_date) || toDate(event.start_date);
+          return endDate && endDate >= today && event.status !== 'cancelled';
         });
-      
-      case 'Registered':
-        // This would need to be filtered based on user's actual registrations
-        // For now, return empty array as we don't have registration data
-        return [];
-      
-      case 'Past':
-        return allEvents.filter(event => {
-          const eventDate = new Date(event.start_date);
-          return eventDate < currentDate && event.status !== 'cancelled';
+      }
+      case 'Registered': {
+        return allEvents.filter((event: any) => isRegisteredFor(event.id) && event.status !== 'cancelled');
+      }
+      case 'Past': {
+        return allEvents.filter((event: any) => {
+          const endDate = toDate(event.end_date) || toDate(event.start_date);
+          return endDate && endDate < today && event.status !== 'cancelled';
         });
-      
-      case 'Cancelled':
-        return allEvents.filter(event => event.status === 'cancelled');
-      
+      }
+      case 'Cancelled': {
+        return allEvents.filter((event: any) => event.status === 'cancelled');
+      }
       default:
         return allEvents;
     }

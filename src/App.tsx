@@ -27,49 +27,51 @@ import TeacherRegistrationSuccess from './pages/teacher/TeacherRegistrationSucce
 import ProfilePage from './pages/ProfilePage';
 import OrganiserDashboard from './pages/OrganiserDashboard';
 import SuperUser from './pages/SuperUser';
+import TeacherDelegatePage from './pages/teacher/TeacherDelegatePage';
 
 function App() {
   return (
     <SupabaseAuthProvider>
       <AppProvider>
         <Router>
-        <div className="App">
-          <Routes>
-          {/* Public Routes - No authentication required */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/email-verification" element={<EmailVerification />} />
+          <div className="App">
+            <Routes>
+              {/* Public Routes - No authentication required */}
+              <Route path="/" element={<Navigate to="/login" replace />} />
+              <Route path="/signup" element={<SignUp />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/email-verification" element={<EmailVerification />} />
+              <Route path="/profile-page" element={<PrivateRoute><ProfilePage userType="student" /></PrivateRoute>} />
 
-          {/* Protected Routes - Authentication required */}
-          <Route path="/home" element={<PrivateRoute><HomePage /></PrivateRoute>} />
-          <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-          <Route path="/request-approval" element={<PrivateRoute><RequestApproval /></PrivateRoute>} />
-          <Route path="/request-under-verification" element={<PrivateRoute><RequestUnderVerification /></PrivateRoute>} />
-          <Route path="/event-create" element={<PrivateRoute><EventCreate /></PrivateRoute>} />
-          <Route path="/event-create-success" element={<PrivateRoute><EventCreateSuccess /></PrivateRoute>} />
-          <Route path="/organiser" element={<PrivateRoute><Organiser /></PrivateRoute>} />
-          <Route path="/event-dashboard/:eventId" element={<PrivateRoute><OrganiserDashboard /></PrivateRoute>} />
-          <Route path="/super-user" element={<PrivateRoute><SuperUser /></PrivateRoute>} />
+              {/* Protected Routes - Authentication required */}
+              <Route path="/home" element={<PrivateRoute><HomePage /></PrivateRoute>} />
+              <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+              <Route path="/request-approval" element={<PrivateRoute><RequestApproval /></PrivateRoute>} />
+              <Route path="/request-under-verification" element={<PrivateRoute><RequestUnderVerification /></PrivateRoute>} />
+              <Route path="/event-create" element={<PrivateRoute><EventCreate /></PrivateRoute>} />
+              <Route path="/event-create-success" element={<PrivateRoute><EventCreateSuccess /></PrivateRoute>} />
+              <Route path="/organiser" element={<PrivateRoute><Organiser /></PrivateRoute>} />
+              <Route path="/event-dashboard/:eventId" element={<PrivateRoute><OrganiserDashboard /></PrivateRoute>} />
+              <Route path="/super-user" element={<PrivateRoute><SuperUser /></PrivateRoute>} />
 
-          {/* Student Routes */}
-          <Route path="/student-profile" element={<PrivateRoute><StudentProfile /></PrivateRoute>} />
-          <Route path="/student-profile-page" element={<PrivateRoute><StudentProfilePage /></PrivateRoute>} />
-          <Route path="/student-home" element={<PrivateRoute><StudentHome /></PrivateRoute>} />
-          <Route path="/student-registration/:eventId" element={<PrivateRoute><StudentRegistration /> </PrivateRoute>} />
-          <Route path="/student-registration-success" element={<PrivateRoute><StudentRegistrationSuccess /></PrivateRoute>} />
-          <Route path="/student-delegate-page/:eventId" element={<PrivateRoute><StudentDelegatePage /></PrivateRoute>} />
+              {/* Student Routes */}
+              <Route path="/student-profile" element={<PrivateRoute><StudentProfile /></PrivateRoute>} />
+              <Route path="/student-profile-page" element={<PrivateRoute><StudentProfilePage /></PrivateRoute>} />
+              <Route path="/student-home" element={<PrivateRoute><StudentHome /></PrivateRoute>} />
+              <Route path="/student-registration/:eventId" element={<PrivateRoute><StudentRegistration /> </PrivateRoute>} />
+              <Route path="/student-registration-success/:eventId" element={<PrivateRoute><StudentRegistrationSuccess /></PrivateRoute>} />
+              <Route path="/student-delegate-page/:eventId" element={<PrivateRoute><StudentDelegatePage /></PrivateRoute>} />
 
-          {/* Teacher Routes */}
-          <Route path="/teacher-profile" element={<PrivateRoute><TeacherProfile /></PrivateRoute>} />
-          <Route path="/teacher-profile-page" element={<PrivateRoute><TeacherProfilePage /></PrivateRoute>} />
-          <Route path="/teacher-home" element={<PrivateRoute><TeacherHome /></PrivateRoute>} />
-          <Route path="/teacher-registration/:eventId" element={<PrivateRoute><TeacherRegistration /></PrivateRoute>} />
-          <Route path="/teacher-registration-success" element={<PrivateRoute><TeacherRegistrationSuccess /></PrivateRoute>} />
-          <Route path="/profile-page" element={<PrivateRoute><ProfilePage userType="student" /></PrivateRoute>} />
-          </Routes>
-          <Toaster position="bottom-right" richColors />
-        </div>
+              {/* Teacher Routes */}
+              <Route path="/teacher-profile" element={<PrivateRoute><TeacherProfile /></PrivateRoute>} />
+              <Route path="/teacher-profile-page" element={<PrivateRoute><TeacherProfilePage /></PrivateRoute>} />
+              <Route path="/teacher-home" element={<PrivateRoute><TeacherHome /></PrivateRoute>} />
+              <Route path="/teacher-registration/:eventId" element={<PrivateRoute><TeacherRegistration /></PrivateRoute>} />
+              <Route path="/teacher-registration-success/:eventId" element={<PrivateRoute><TeacherRegistrationSuccess /></PrivateRoute>} />
+              <Route path="/teacher-delegate-page/:eventId" element={<PrivateRoute><TeacherDelegatePage /></PrivateRoute>} />
+            </Routes>
+            <Toaster position="bottom-right" richColors />
+          </div>
         </Router>
       </AppProvider>
     </SupabaseAuthProvider>

@@ -35,17 +35,20 @@ export const eventRegistratTeacherApi = async (eventId: string, foodPreference: 
     }
 }
 
-export const eventRegistratStudentApi = async (munExperience: string, preferredCommittee1: string, foodPreference: string, foodAllergies: string, emergencyContactName: string, emergencyMobileNumber: string) => {
+export const eventRegistratStudentApi = async (eventId: string, mun_experience: string, pref_committee_1_id: string, pref_committee_2_id: string, pref_committee_3_id: string, food_pref: string, food_allergies: string, emergency_name: string, emergency_phone: string) => {
     try {
         const token = localStorage.getItem('token');
         const userId = localStorage.getItem('userId');
         const response = await axios.post(`${backendUrl}/api/v1/registerations/event-registration-student/${userId}`, {
-            munExperience,
-            preferredCommittee1,
-            foodPreference,
-            foodAllergies,
-            emergencyContactName,
-            emergencyMobileNumber,
+            eventId,
+            mun_experience,
+            pref_committee_1_id,
+            pref_committee_2_id,
+            pref_committee_3_id,
+            food_pref,
+            food_allergies,
+            emergency_name,
+            emergency_phone
         }, {
             headers: {
                 'Content-Type': 'application/json',
