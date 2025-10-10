@@ -60,3 +60,35 @@ export const eventRegistratStudentApi = async (eventId: string, mun_experience: 
         throw new Error(error.response.data.message);
     }
 }
+
+export const getRegistrationInfoByEventIdAndUserIdApi = async (eventId: string) => {
+    try {
+        const token = localStorage.getItem('token');
+        const userId = localStorage.getItem('userId');
+        const response = await axios.get(`${backendUrl}/api/v1/registerations/get-registration-info-by-eventId-and-userId/${eventId}/${userId}`,
+            {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+}
+
+// Cancel current user's registration for the given event
+export const deleteRegistrationByEventIdAndUserIdApi = async (registrationId: string) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.delete(`${backendUrl}/api/v1/registerations/delete-registration-by-registrationId/${registrationId}`,
+            {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response?.data?.message || 'Failed to cancel registration');
+    }
+}

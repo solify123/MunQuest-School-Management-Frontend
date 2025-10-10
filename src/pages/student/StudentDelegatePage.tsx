@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Header, Avatar } from '../../components/ui';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { getEventByIdApi } from '../../apis/Events';
 import { toast } from 'sonner';
 import DownloadIcon from '../../assets/download_icon.svg';
 import PageLoader from '../../components/PageLoader';
 import { getLeadershipRolesByEventIdApi } from '../../apis/Event_leaders';
 import { getDocumentsByEventId } from '../../apis/general_documents';
+import { getRegistrationInfoByEventIdAndUserIdApi, deleteRegistrationByEventIdAndUserIdApi } from '../../apis/Registerations';
 
 const StudentDelegatePage: React.FC = () => {
   const { eventId } = useParams();
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState('Event Info');
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -24,26 +26,27 @@ const StudentDelegatePage: React.FC = () => {
   const [participationInfoGeneralDocuments, setParticipationInfoGeneralDocuments] = useState<any[]>([]);
   const [participationInfoCommitteDocuments, setParticipationInfoCommitteDocuments] = useState<any[]>([]);
 
-  const [registrationInfo, setRegistrationInfo] = useState({
-    registrationNo: '',
-    username: '',
-    name: '',
-    dateOfBirth: '',
-    gender: '',
-    schoolName: '',
-    localityOfSchool: '',
-    grade: '',
-    email: '',
-    mobileNumber: '',
-    munExperience: '',
-    preferredCommittee1: '',
-    preferredCommittee2: '',
-    preferredCommittee3: '',
-    foodPreference: 'vegetarian',
-    foodAllergies: '',
-    emergencyContactName: '',
-    emergencyMobileNumber: ''
-  });
+
+  const [registrationInfoId, setRegistrationInfoId] = useState<any>('');
+  const [registrationInfoRegistrationNo, setRegistrationInfoRegistrationNo] = useState<any>('');
+  const [registrationInfoUsername, setRegistrationInfoUsername] = useState<any>('');
+  const [registrationInfoName, setRegistrationInfoName] = useState<any>('');
+  const [registrationInfoDateOfBirth, setRegistrationInfoDateOfBirth] = useState<any>('');
+  const [registrationInfoGender, setRegistrationInfoGender] = useState<any>('');
+  const [registrationInfoSchoolName, setRegistrationInfoSchoolName] = useState<any>('');
+  const [registrationInfoLocalityOfSchool, setRegistrationInfoLocalityOfSchool] = useState<any>('');
+  const [registrationInfoGrade, setRegistrationInfoGrade] = useState<any>('');
+  const [registrationInfoEmail, setRegistrationInfoEmail] = useState<any>('');
+  const [registrationInfoMobileNumber, setRegistrationInfoMobileNumber] = useState<any>('');
+  const [registrationInfoMunExperience, setRegistrationInfoMunExperience] = useState<any>('');
+  const [registrationInfoPreferredCommittee1, setRegistrationInfoPreferredCommittee1] = useState<any>('');
+  const [registrationInfoPreferredCommittee2, setRegistrationInfoPreferredCommittee2] = useState<any>('');
+  const [registrationInfoPreferredCommittee3, setRegistrationInfoPreferredCommittee3] = useState<any>('');
+  const [registrationInfoFoodPreference, setRegistrationInfoFoodPreference] = useState<any>('');
+  const [registrationInfoFoodAllergies, setRegistrationInfoFoodAllergies] = useState<any>('');
+  const [registrationInfoEmergencyContactName, setRegistrationInfoEmergencyContactName] = useState<any>('');
+  const [registrationInfoEmergencyMobileNumber, setRegistrationInfoEmergencyMobileNumber] = useState<any>('');
+
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [leadershipRoles, setLeadershipRoles] = useState<any[]>([]);
 
@@ -58,7 +61,7 @@ const StudentDelegatePage: React.FC = () => {
           setDescription(response.data[0].description);
           setStartDate(response.data[0].start_date);
           setEndDate(response.data[0].end_date);
-          setLocality(response.data[0].locality);
+          setLocality(response.data[0].locality.name);
           setFeesPerDelegate(response.data[0].fees_per_delegate);
           setWebsite(response.data[0].website);
           setInstagram(response.data[0].instagram);
@@ -86,7 +89,6 @@ const StudentDelegatePage: React.FC = () => {
     const getDocumentsById = async () => {
       try {
         const response = await getDocumentsByEventId(eventId as string);
-        console.log("getDocumentsById", response.data)
         if (response.success) {
           const generalDocuments = response.data.filter((doc: any) => doc.doc_type === "general");
           const committeeDocuments = response.data.filter((doc: any) => doc.doc_type !== "general");
@@ -102,38 +104,47 @@ const StudentDelegatePage: React.FC = () => {
       }
     }
 
+
+    const getRegistrationInfo = async () => {
+      try {
+        const response = await getRegistrationInfoByEventIdAndUserIdApi(eventId as string);
+        // Some backends return an array; normalize to a single object
+        const payload = Array.isArray(response?.data) ? response.data[0] : response?.data;
+
+        if (response?.success && payload) {
+          const user = payload.user || payload.users || {};
+          const school = user.school || {};
+          const schoolLocality = school.locality || {};
+
+          setRegistrationInfoId(user.id ?? '');
+          setRegistrationInfoRegistrationNo(payload.registration_no ?? '');
+          setRegistrationInfoUsername(user.username ?? '');
+          setRegistrationInfoName(user.fullname ?? user.name ?? '');
+          setRegistrationInfoDateOfBirth(user.birthday ?? '');
+          setRegistrationInfoGender(user.gender ?? '');
+          setRegistrationInfoSchoolName(school.name ?? '');
+          setRegistrationInfoLocalityOfSchool(schoolLocality.name ?? '');
+          setRegistrationInfoGrade(user.grade ?? '');
+          setRegistrationInfoEmail(user.email ?? '');
+          setRegistrationInfoMobileNumber(user.phone_e164 ?? user.phone_number ?? '');
+          setRegistrationInfoMunExperience(payload.mun_experience ?? '');
+          setRegistrationInfoPreferredCommittee1(payload.pref_committee_1.abbr ?? '');
+          setRegistrationInfoPreferredCommittee2(payload.pref_committee_2.abbr ?? '');
+          setRegistrationInfoPreferredCommittee3(payload.pref_committee_3.abbr ?? '');
+          setRegistrationInfoFoodPreference(payload.food_pref ?? '');
+          setRegistrationInfoFoodAllergies(payload.food_allergies ?? '');
+          setRegistrationInfoEmergencyContactName(payload.emergency_name ?? '');
+          setRegistrationInfoEmergencyMobileNumber(payload.emergency_phone ?? '');
+        } else {
+          toast.error('No registration info found for this event');
+        }
+      } catch (error: any) {
+        toast.error('Failed to get registration info: ' + error.message);
+      }
+    }
     getEvnetLeaderShipRoles();
     getEventById();
     getDocumentsById();
-  }, [eventId]);
-
-  useEffect(() => {
-    const getRegistrationInfo = async () => {
-      try {
-        setRegistrationInfo({
-          registrationNo: '',
-          username: '',
-          name: '',
-          dateOfBirth: '',
-          gender: '',
-          schoolName: '',
-          localityOfSchool: '',
-          grade: '',
-          email: '',
-          mobileNumber: '',
-          munExperience: '',
-          preferredCommittee1: '',
-          preferredCommittee2: '',
-          preferredCommittee3: '',
-          foodPreference: 'vegetarian',
-          foodAllergies: '',
-          emergencyContactName: '',
-          emergencyMobileNumber: ''
-        });
-      } catch (error: any) {
-        console.log('Registration info API not available, using placeholder data');
-      }
-    };
     getRegistrationInfo();
   }, [eventId]);
 
@@ -399,7 +410,7 @@ const StudentDelegatePage: React.FC = () => {
             <label className="block text-sm font-bold text-gray-700 mb-2">Registration No.</label>
             <input
               type="text"
-              value={registrationInfo.registrationNo}
+              value={registrationInfoRegistrationNo}
               readOnly
               className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-700"
             />
@@ -410,7 +421,7 @@ const StudentDelegatePage: React.FC = () => {
             <label className="block text-sm font-bold text-gray-700 mb-2">Username</label>
             <input
               type="text"
-              value={registrationInfo.username}
+              value={registrationInfoUsername}
               readOnly
               className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-700"
             />
@@ -421,7 +432,7 @@ const StudentDelegatePage: React.FC = () => {
             <label className="block text-sm font-bold text-gray-700 mb-2">Name</label>
             <input
               type="text"
-              value={registrationInfo.name}
+              value={registrationInfoName}
               readOnly
               className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-700"
             />
@@ -432,7 +443,7 @@ const StudentDelegatePage: React.FC = () => {
             <label className="block text-sm font-bold text-gray-700 mb-2">Date of Birth</label>
             <input
               type="text"
-              value={registrationInfo.dateOfBirth}
+              value={registrationInfoDateOfBirth}
               readOnly
               className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-700"
             />
@@ -443,7 +454,7 @@ const StudentDelegatePage: React.FC = () => {
             <label className="block text-sm font-bold text-gray-700 mb-2">Gender</label>
             <input
               type="text"
-              value={registrationInfo.gender}
+              value={registrationInfoGender}
               readOnly
               className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-700"
             />
@@ -454,7 +465,7 @@ const StudentDelegatePage: React.FC = () => {
             <label className="block text-sm font-bold text-gray-700 mb-2">School Name</label>
             <input
               type="text"
-              value={registrationInfo.schoolName}
+              value={registrationInfoSchoolName}
               readOnly
               className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-700"
             />
@@ -465,7 +476,7 @@ const StudentDelegatePage: React.FC = () => {
             <label className="block text-sm font-bold text-gray-700 mb-2">Locality of School</label>
             <input
               type="text"
-              value={registrationInfo.localityOfSchool}
+              value={registrationInfoLocalityOfSchool}
               readOnly
               className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-700"
             />
@@ -476,7 +487,7 @@ const StudentDelegatePage: React.FC = () => {
             <label className="block text-sm font-bold text-gray-700 mb-2">Grade or Year</label>
             <input
               type="text"
-              value={registrationInfo.grade}
+              value={registrationInfoGrade}
               readOnly
               className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-700"
             />
@@ -487,7 +498,7 @@ const StudentDelegatePage: React.FC = () => {
             <label className="block text-sm font-bold text-gray-700 mb-2">Email</label>
             <input
               type="text"
-              value={registrationInfo.email}
+              value={registrationInfoEmail}
               readOnly
               className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-700"
             />
@@ -498,7 +509,7 @@ const StudentDelegatePage: React.FC = () => {
             <label className="block text-sm font-bold text-gray-700 mb-2">Mobile Number</label>
             <input
               type="text"
-              value={registrationInfo.mobileNumber}
+              value={registrationInfoMobileNumber}
               readOnly
               className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-700"
             />
@@ -509,7 +520,7 @@ const StudentDelegatePage: React.FC = () => {
             <label className="block text-sm font-bold text-gray-700 mb-2">MUN Experience in Years</label>
             <input
               type="text"
-              value={registrationInfo.munExperience}
+              value={registrationInfoMunExperience}
               readOnly
               className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-700"
             />
@@ -520,7 +531,7 @@ const StudentDelegatePage: React.FC = () => {
             <label className="block text-sm font-bold text-gray-700 mb-2">Preferred Committee - Choice 1</label>
             <input
               type="text"
-              value={registrationInfo.preferredCommittee1}
+              value={registrationInfoPreferredCommittee1}
               readOnly
               className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-700"
             />
@@ -531,7 +542,7 @@ const StudentDelegatePage: React.FC = () => {
             <label className="block text-sm font-bold text-gray-700 mb-2">Preferred Committee - Choice 2</label>
             <input
               type="text"
-              value={registrationInfo.preferredCommittee2}
+              value={registrationInfoPreferredCommittee2}
               readOnly
               className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-700"
             />
@@ -542,7 +553,7 @@ const StudentDelegatePage: React.FC = () => {
             <label className="block text-sm font-bold text-gray-700 mb-2">Preferred Committee - Choice 3</label>
             <input
               type="text"
-              value={registrationInfo.preferredCommittee3}
+              value={registrationInfoPreferredCommittee3}
               readOnly
               className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-700"
             />
@@ -553,7 +564,7 @@ const StudentDelegatePage: React.FC = () => {
             <label className="block text-sm font-bold text-gray-700 mb-2">Food Preference</label>
             <div className="flex gap-3">
               <button
-                className={`px-6 py-3 rounded-full text-sm font-medium transition-colors ${registrationInfo.foodPreference === 'vegetarian'
+                className={`px-6 py-3 rounded-full text-sm font-medium transition-colors ${registrationInfoFoodPreference === 'Vegetarian'
                   ? 'bg-[#D9C7A1] text-gray-900'
                   : 'bg-white text-gray-600 border border-gray-300'
                   }`}
@@ -561,7 +572,7 @@ const StudentDelegatePage: React.FC = () => {
                 Vegetarian
               </button>
               <button
-                className={`px-6 py-3 rounded-full text-sm font-medium transition-colors ${registrationInfo.foodPreference === 'non-vegetarian'
+                className={`px-6 py-3 rounded-full text-sm font-medium transition-colors ${registrationInfoFoodPreference === 'Non-Vegetarian'
                   ? 'bg-[#D9C7A1] text-gray-900'
                   : 'bg-white text-gray-600 border border-gray-300'
                   }`}
@@ -576,7 +587,7 @@ const StudentDelegatePage: React.FC = () => {
             <label className="block text-sm font-bold text-gray-700 mb-2">Food Allergies</label>
             <input
               type="text"
-              value={registrationInfo.foodAllergies}
+              value={registrationInfoFoodAllergies}
               readOnly
               className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-700"
             />
@@ -587,7 +598,7 @@ const StudentDelegatePage: React.FC = () => {
             <label className="block text-sm font-bold text-gray-700 mb-2">Emergency Contact Name</label>
             <input
               type="text"
-              value={registrationInfo.emergencyContactName}
+              value={registrationInfoEmergencyContactName}
               readOnly
               className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-700"
             />
@@ -598,7 +609,7 @@ const StudentDelegatePage: React.FC = () => {
             <label className="block text-sm font-bold text-gray-700 mb-2">Emergency Mobile Number</label>
             <input
               type="text"
-              value={registrationInfo.emergencyMobileNumber}
+              value={registrationInfoEmergencyMobileNumber}
               readOnly
               className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-700"
             />
@@ -606,40 +617,13 @@ const StudentDelegatePage: React.FC = () => {
         </div>
 
         {/* Cancel Registration Button */}
-        <div className="mt-8 relative">
+        <div className="mt-8">
           <button
             onClick={() => setShowCancelDialog(!showCancelDialog)}
             className="bg-[#D9C7A1] text-gray-900 px-6 py-3 rounded-full font-medium hover:bg-[#C5B595] transition-colors"
           >
             Cancel Registration
           </button>
-
-          {/* Cancel Confirmation Dialog */}
-          {showCancelDialog && (
-            <div className="absolute top-12 left-0 bg-white border border-gray-800 rounded-lg p-4 shadow-lg z-50">
-              <div className="mb-3">
-                <h4 className="font-medium text-gray-900">Confirm Cancel</h4>
-              </div>
-              <div className="flex gap-4">
-                <button
-                  onClick={() => {
-                    setShowCancelDialog(false);
-                    // Handle cancel registration logic here
-                    toast.success('Registration cancelled successfully');
-                  }}
-                  className="text-red-600 font-medium hover:text-red-800 transition-colors"
-                >
-                  Yes
-                </button>
-                <button
-                  onClick={() => setShowCancelDialog(false)}
-                  className="text-gray-900 font-medium hover:text-gray-700 transition-colors"
-                >
-                  No
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>
@@ -691,6 +675,46 @@ const StudentDelegatePage: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Centered confirmation modal */}
+        {showCancelDialog && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/40" onClick={() => setShowCancelDialog(false)}></div>
+            <div className="relative bg-white border border-gray-800 rounded-lg p-6 shadow-xl w-[320px]">
+              <div className="mb-4">
+                <h4 className="font-semibold text-gray-900">Confirm Cancel</h4>
+              </div>
+              <div className="flex items-center justify-end gap-4">
+                <button
+                  onClick={async () => {
+                    try {
+                      const resp = await deleteRegistrationByEventIdAndUserIdApi(registrationInfoId);
+                      if (resp?.success) {
+                        toast.success('Registration cancelled successfully');
+                        navigate('/home');
+                      } else {
+                        toast.error(resp?.message || 'Failed to cancel registration');
+                      }
+                    } catch (err: any) {
+                      toast.error(err?.message || 'Failed to cancel registration');
+                    } finally {
+                      setShowCancelDialog(false);
+                    }
+                  }}
+                  className="text-red-600 font-medium hover:text-red-800 transition-colors"
+                >
+                  Yes
+                </button>
+                <button
+                  onClick={() => setShowCancelDialog(false)}
+                  className="text-gray-900 font-medium hover:text-gray-700 transition-colors"
+                >
+                  No
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </PageLoader>
   );
