@@ -36,6 +36,8 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
   const [showInviteForm, setShowInviteForm] = useState<boolean>(false);
   const [inviteName, setInviteName] = useState<string>('');
   const [inviteEmail, setInviteEmail] = useState<string>('');
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const { refreshUserData, allOrganisers } = useApp();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -186,11 +188,13 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
         }
       }
       onAction(action, username, email);
+      setIsLoading(false);
     } catch (error) {
       console.error('Error updating user:', error);
       toast.error('Failed to update user');
     } finally {
       setUpdatingUserId(null);
+      setIsLoading(false);
     }
   };
 
@@ -210,12 +214,14 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
           toast.error(response.message);
         }
       }
+      setIsLoading(false);
       setActiveDropdown(null);
     } catch (error) {
       console.error('Error updating user:', error);
       toast.error('Failed to update user');
     } finally {
       setUpdatingUserId(null);
+      setIsLoading(false);
     }
   };
 
@@ -359,6 +365,13 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
             )}
 
             {/* Actions */}
+            {loadingId === user?.id && isLoading ? (
+              <div className="col-span-1 px-3 py-2 text-sm font-medium relative">
+                <div className="relative flex items-center justify-left">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
+                </div>
+              </div>
+            ) : (
             <div className="col-span-1 px-3 py-2 text-sm font-medium relative" >
               <div className="relative flex items-center justify-left">
                 {isUserOrganiser(user?.id) && (
@@ -405,6 +418,8 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
                           <button
                             onClick={async () => {
                               setActiveDropdown(null);
+                              setIsLoading(true);
+                              setLoadingId(user?.id);
                               const response = await assignOrganiserToSchoolApi(user?.id);
                               if (response.success) {
                                 toast.success(response.message);
@@ -429,6 +444,8 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
                             <button
                               onClick={() => {
                                 setActiveDropdown(null);
+                                setIsLoading(true);
+                                setLoadingId(user?.id);
                                 handleUserSectionAction('active', user?.id, user?.email);
                               }}
                               disabled={updatingUserId === user?.id}
@@ -446,6 +463,8 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
                             <button
                               onClick={() => {
                                 setActiveDropdown(null);
+                                setIsLoading(true);
+                                setLoadingId(user?.id);
                                 handleUserSectionAction('flagged', user?.id, user?.email);
                               }}
                               disabled={updatingUserId === user?.id}
@@ -463,6 +482,8 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
                             <button
                               onClick={() => {
                                 setActiveDropdown(null);
+                                setIsLoading(true);
+                                setLoadingId(user?.id);
                                 handleUserSectionAction('blocked', user?.id, user?.email);
                               }}
                               disabled={updatingUserId === user?.id}
@@ -492,6 +513,8 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
                           <button
                             onClick={() => {
                               setActiveDropdown(null);
+                              setIsLoading(true);
+                              setLoadingId(user?.id);
                               handleUserSectionAction('invite', user?.id, user?.email);
                               console.log('Invite non-user:', user?.id);
                             }}
@@ -510,6 +533,7 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
                 )}
               </div>
             </div>
+            )}
           </div>
         ))
       ) : null}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { updateEventStatusApi, deleteEventApi } from '../../apis/Events';
 import { toast } from 'sonner';
 import { useApp } from '../../contexts/AppContext';
@@ -24,6 +24,7 @@ interface EventsTableProps {
 const EventsTable: React.FC<EventsTableProps> = ({ events, onAction }) => {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [updatingEventId, setUpdatingEventId] = useState<string | null>(null);
+  const dropdownRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const { refreshEventsData } = useApp();
 
   const handleDropdownToggle = (eventId: string) => {
@@ -77,6 +78,25 @@ const EventsTable: React.FC<EventsTableProps> = ({ events, onAction }) => {
         return 'text-gray-600';
     }
   };
+
+   // Close dropdown when clicking outside
+   useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Check if click is outside any dropdown menu
+      const clickedOutsideAllDropdowns = Object.values(dropdownRefs.current).every(ref =>
+        !ref || !ref.contains(event.target as Node)
+      );
+
+      if (clickedOutsideAllDropdowns) {
+        setActiveDropdown(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   return (
     <div>
@@ -153,7 +173,7 @@ const EventsTable: React.FC<EventsTableProps> = ({ events, onAction }) => {
             </div>
 
             {/* Actions */}
-            <div className="px-3 py-2 text-sm font-medium relative">
+            <div ref={(el) => { dropdownRefs.current[event.id] = el; }} className="px-3 py-2 text-sm font-medium relative">
               <div className="relative">
                 <button
                   onClick={() => handleDropdownToggle(event?.id || '')}

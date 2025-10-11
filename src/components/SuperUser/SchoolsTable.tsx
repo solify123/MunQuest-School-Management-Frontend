@@ -445,7 +445,7 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
                 />
             </div>
 
-            <div className="flex gap-2 mb-2">
+            <div className={`flex gap-2 mb-2 w-[${filteredSchools.length > 7 ? '98.5%' : '100%'}]`}>
                 <div className="w-24 px-3 py-2 text-xs font-medium text-gray-900 uppercase tracking-wider rounded-md bg-[#F0F7FF] border border-[#4A5F7A] flex items-center justify-between">
                     <span>School ID</span>
                     <svg className="w-3 h-3 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -496,316 +496,317 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
                     </div>
                 )}
             </div>
+            <div className="w-full max-h-[320px] overflow-auto">
+                {/* Data Rows */}
+                {filteredSchools.length > 0 ? (
+                    filteredSchools.map((school: any) => {
+                        const isEditing = editingSchoolId === school?.id;
 
-            {/* Data Rows */}
-            {filteredSchools.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                    {searchTerm ? 'No schools found matching your search' : 'No schools found'}
-                </div>
-            ) : filteredSchools.length > 0 ? (
-                filteredSchools.map((school: any) => {
-                    const isEditing = editingSchoolId === school?.id;
-
-                    return (
-                        <div key={school?.id || Math.random()} className={`flex gap-2 mb-2 ${isEditing ? 'edit-row-container' : ''}`}>
-                            {/* School ID */}
-                            <div className="w-24 bg-white px-3 py-2 text-sm font-medium text-gray-900 rounded-md border border-gray-200">
-                                {school?.id ? String(school.id).split('-')[0] : 'N/A'}
-                            </div>
-
-                            {/* School Code */}
-                            <div className="w-32 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-                                {isEditing ? (
-                                    <div>
-                                        <input
-                                            type="text"
-                                            value={editingRowData?.code || ''}
-                                            className="w-full text-sm text-gray-500 focus:outline-none border-0 p-0 bg-transparent cursor-not-allowed"
-                                            placeholder="Auto-generated"
-                                            readOnly
-                                            disabled
-                                        />
-                                    </div>
-                                ) : (
-                                    school?.code || 'N/A'
-                                )}
-                            </div>
-
-                            {/* School Name */}
-                            <div className="flex-1 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-                                {isEditing ? (
-                                    <div>
-                                        <input
-                                            type="text"
-                                            value={editingRowData?.name || ''}
-                                            onChange={(e) => setEditingRowData({ ...editingRowData, name: e.target.value })}
-                                            className={`w-full text-sm text-gray-900 focus:outline-none border-0 p-0 ${editValidationErrors.name ? 'border-red-500' : ''}`}
-                                            placeholder="Enter school name"
-                                        />
-                                        {editValidationErrors.name && (
-                                            <div className="text-xs text-red-500 mt-1">{editValidationErrors.name}</div>
-                                        )}
-                                    </div>
-                                ) : (
-                                    school?.name || 'N/A'
-                                )}
-                            </div>
-
-                            {/* Locality */}
-                            <div className="w-28 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-                                {isEditing ? (
-                                    <div>
-                                        <select
-                                            value={editingRowData?.locality_id || ''}
-                                            onChange={(e) => {
-                                                const selectedLocality = allLocalities.find(loc => loc.id === e.target.value);
-                                                setEditingRowData({
-                                                    ...editingRowData,
-                                                    locality_id: e.target.value,
-                                                    locality: selectedLocality?.locality?.name || selectedLocality?.name || '',
-                                                    area_id: '', // Reset area when locality changes
-                                                    area: '' // Reset area name when locality changes
-                                                });
-                                                // Filter areas for edit mode based on selected locality
-                                                filterAreasForEditByLocality(e.target.value);
-                                            }}
-                                            className={`w-full text-sm text-gray-900 focus:outline-none border-0 p-0 ${editValidationErrors.locality_id ? 'border-red-500' : ''}`}
-                                        >
-                                            <option value="">Select locality</option>
-                                            {allLocalities.map((locality) => (
-                                                <option key={locality.id} value={locality.id}>
-                                                    {locality.locality?.name}
-                                                </option>
-                                            ))}
-                                        </select>
-                                        {editValidationErrors.locality_id && (
-                                            <div className="text-xs text-red-500 mt-1">{editValidationErrors.locality_id}</div>
-                                        )}
-                                    </div>
-                                ) : (
-                                    school?.locality?.name || 'N/A'
-                                )}
-                            </div>
-
-                            {/* Area */}
-                            <div className="w-28 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-                                {isEditing ? (
-                                    <div>
-                                        <select
-                                            value={editingRowData?.area_id || ''}
-                                            onChange={(e) => {
-                                                const selectedArea = filteredAreasForEdit.find(area => area.id === e.target.value);
-                                                setEditingRowData({ ...editingRowData, area_id: e.target.value, area: selectedArea?.area?.name || selectedArea?.name || '' });
-                                            }}
-                                            className={`w-full text-sm text-gray-900 focus:outline-none border-0 p-0 ${editValidationErrors.area_id ? 'border-red-500' : ''}`}
-                                            disabled={!editingRowData?.locality_id} // Disable if no locality selected
-                                        >
-                                            <option value="">Select area</option>
-                                            {filteredAreasForEdit.map((area) => (
-                                                <option key={area.id} value={area.id}>
-                                                    {area.area?.name || area.name}
-                                                </option>
-                                            ))}
-                                        </select>
-                                        {editValidationErrors.area_id && (
-                                            <div className="text-xs text-red-500 mt-1">{editValidationErrors.area_id}</div>
-                                        )}
-                                    </div>
-                                ) : (
-                                    school?.area?.code || 'N/A'
-                                )}
-                            </div>
-
-                            {/* Status */}
-                            <div className="w-24 bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
-                                {updatingSchoolId === school?.id ? (
-                                    <div className="flex items-center space-x-2">
-                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
-                                        <span className="text-gray-500">Updating</span>
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center justify-between">
-                                        <span className={`font-medium ${getStatusColor(school.status)}`}>
-                                            {school.status}
-                                        </span>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Checkbox column for merge mode */}
-                            {isMergeMode && (
-                                <div className="w-8 px-3 py-2 text-sm font-medium text-gray-900 flex items-center justify-center">
-                                    <div className="flex items-center space-x-1">
-                                        <input
-                                            type="checkbox"
-                                            checked={selectedSchools.includes(school?.id)}
-                                            onChange={() => handleSchoolSelection(school?.id)}
-                                            disabled={lockedRows.includes(school?.id)}
-                                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                                            title={lockedRows.includes(school?.id) ? 'Unlock to merge' : 'Select for merge'}
-                                        />
-                                        {primarySchoolId === school?.id && (
-                                            <svg className="w-3 h-3 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                            </svg>
-                                        )}
-                                    </div>
+                        return (
+                            <div key={school?.id || Math.random()} className={`flex gap-2 mb-2 ${isEditing ? 'edit-row-container' : ''}`}>
+                                {/* School ID */}
+                                <div className="w-24 bg-white px-3 py-2 text-sm font-medium text-gray-900 rounded-md border border-gray-200">
+                                    {school?.id ? String(school.id).split('-')[0] : 'N/A'}
                                 </div>
-                            )}
 
-                            {/* Actions */}
-                            <div className="w-16 px-3 py-2 text-sm font-medium flex items-center justify-left">
-                                <div className="relative flex items-center justify-left">
+                                {/* School Code */}
+                                <div className="w-32 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
                                     {isEditing ? (
-                                        <div className="flex space-x-1 edit-buttons-container">
-                                            <button
-                                                onClick={handleSaveEdit}
-                                                className="text-green-600 hover:text-green-800 focus:outline-none"
-                                                title="Save changes"
-                                            >
-                                                <img src={saveIcon} />
-                                            </button>
-                                            <button
-                                                onClick={handleCancelEdit}
-                                                className="text-red-600 hover:text-red-800 focus:outline-none"
-                                                title="Cancel editing"
-                                            >
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                </svg>
-                                            </button>
+                                        <div>
+                                            <input
+                                                type="text"
+                                                value={editingRowData?.code || ''}
+                                                className="w-full text-sm text-gray-500 focus:outline-none border-0 p-0 bg-transparent cursor-not-allowed"
+                                                placeholder="Auto-generated"
+                                                readOnly
+                                                disabled
+                                            />
                                         </div>
                                     ) : (
-                                        <button
-                                            onClick={() => handleDropdownToggle(school?.id || '')}
-                                            className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                        >
-                                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                                            </svg>
-                                        </button>
+                                        school?.code || 'N/A'
                                     )}
+                                </div>
 
-                                    {activeDropdown === school?.id && !isEditing && (
-                                        <div className="absolute top-full right-0 mt-1 w-48 bg-white rounded-md shadow-lg z-50 border-2">
-                                            <div className="py-1">
-                                                {/* Main management options - always show for all statuses */}
-                                                <button
-                                                    onClick={() => handleEditRow(school)}
-                                                    disabled={updatingSchoolId === school?.id}
-                                                    className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingSchoolId === school?.id
-                                                        ? 'text-gray-400 cursor-not-allowed'
-                                                        : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
-                                                        }`}
-                                                >
-                                                    Edit
-                                                </button>
+                                {/* School Name */}
+                                <div className="flex-1 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+                                    {isEditing ? (
+                                        <div>
+                                            <input
+                                                type="text"
+                                                value={editingRowData?.name || ''}
+                                                onChange={(e) => setEditingRowData({ ...editingRowData, name: e.target.value })}
+                                                className={`w-full text-sm text-gray-900 focus:outline-none border-0 p-0 ${editValidationErrors.name ? 'border-red-500' : ''}`}
+                                                placeholder="Enter school name"
+                                            />
+                                            {editValidationErrors.name && (
+                                                <div className="text-xs text-red-500 mt-1">{editValidationErrors.name}</div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        school?.name || 'N/A'
+                                    )}
+                                </div>
 
-                                                <button
-                                                    onClick={() => {
-                                                        setActiveDropdown(null);
-                                                        handleAddNewRow();
-                                                    }}
-                                                    disabled={updatingSchoolId === school?.id}
-                                                    className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingSchoolId === school?.id
-                                                        ? 'text-gray-400 cursor-not-allowed'
-                                                        : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
-                                                        }`}
-                                                >
-                                                    Add
-                                                </button>
+                                {/* Locality */}
+                                <div className="w-28 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+                                    {isEditing ? (
+                                        <div>
+                                            <select
+                                                value={editingRowData?.locality_id || ''}
+                                                onChange={(e) => {
+                                                    const selectedLocality = allLocalities.find(loc => loc.id === e.target.value);
+                                                    setEditingRowData({
+                                                        ...editingRowData,
+                                                        locality_id: e.target.value,
+                                                        locality: selectedLocality?.locality?.name || selectedLocality?.name || '',
+                                                        area_id: '', // Reset area when locality changes
+                                                        area: '' // Reset area name when locality changes
+                                                    });
+                                                    // Filter areas for edit mode based on selected locality
+                                                    filterAreasForEditByLocality(e.target.value);
+                                                }}
+                                                className={`w-full text-sm text-gray-900 focus:outline-none border-0 p-0 ${editValidationErrors.locality_id ? 'border-red-500' : ''}`}
+                                            >
+                                                <option value="">Select locality</option>
+                                                {allLocalities.map((locality) => (
+                                                    <option key={locality.id} value={locality.id}>
+                                                        {locality.locality?.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            {editValidationErrors.locality_id && (
+                                                <div className="text-xs text-red-500 mt-1">{editValidationErrors.locality_id}</div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        school?.locality?.name || 'N/A'
+                                    )}
+                                </div>
 
-                                                <button
-                                                    disabled={updatingSchoolId === school?.id}
-                                                    className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingSchoolId === school?.id
-                                                        ? 'text-gray-400 cursor-not-allowed'
-                                                        : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
-                                                        }`}
-                                                    onClick={() => { handleAction('active', school?.id || ''); }}
-                                                >
-                                                    List
-                                                </button>
+                                {/* Area */}
+                                <div className="w-28 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+                                    {isEditing ? (
+                                        <div>
+                                            <select
+                                                value={editingRowData?.area_id || ''}
+                                                onChange={(e) => {
+                                                    const selectedArea = filteredAreasForEdit.find(area => area.id === e.target.value);
+                                                    setEditingRowData({ ...editingRowData, area_id: e.target.value, area: selectedArea?.area?.name || selectedArea?.name || '' });
+                                                }}
+                                                className={`w-full text-sm text-gray-900 focus:outline-none border-0 p-0 ${editValidationErrors.area_id ? 'border-red-500' : ''}`}
+                                                disabled={!editingRowData?.locality_id} // Disable if no locality selected
+                                            >
+                                                <option value="">Select area</option>
+                                                {filteredAreasForEdit.map((area) => (
+                                                    <option key={area.id} value={area.id}>
+                                                        {area.area?.name || area.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            {editValidationErrors.area_id && (
+                                                <div className="text-xs text-red-500 mt-1">{editValidationErrors.area_id}</div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        school?.area?.code || 'N/A'
+                                    )}
+                                </div>
 
-                                                <button
-                                                    onClick={() => {
-                                                        setActiveDropdown(null);
-                                                        handleMergeModeToggle();
-                                                    }}
-                                                    disabled={updatingSchoolId === school?.id}
-                                                    className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingSchoolId === school?.id
-                                                        ? 'text-gray-400 cursor-not-allowed'
-                                                        : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
-                                                        }`}
-                                                >
-                                                    {isMergeMode ? 'Cancel Merge' : 'Merge'}
-                                                </button>
-
-                                                {/* Status-specific buttons based on current status */}
-                                                {/* Show Active button when status is not active */}
-                                                {school?.status?.toLowerCase() !== 'active' && (
-                                                    <button
-                                                        onClick={() => handleAction('active', school?.id || '')}
-                                                        disabled={updatingSchoolId === school?.id}
-                                                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingSchoolId === school?.id
-                                                            ? 'text-gray-400 cursor-not-allowed'
-                                                            : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
-                                                            }`}
-                                                    >
-                                                        Active
-                                                    </button>
-                                                )}
-
-                                                {/* Show Flag button when status is not flagged */}
-                                                {school?.status?.toLowerCase() !== 'flagged' && (
-                                                    <button
-                                                        onClick={() => handleAction('flagged', school?.id || '')}
-                                                        disabled={updatingSchoolId === school?.id}
-                                                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingSchoolId === school?.id
-                                                            ? 'text-gray-400 cursor-not-allowed'
-                                                            : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
-                                                            }`}
-                                                    >
-                                                        Flag
-                                                    </button>
-                                                )}
-
-                                                {/* Show Block button when status is not blocked */}
-                                                {school?.status?.toLowerCase() !== 'blocked' && (
-                                                    <button
-                                                        onClick={() => handleAction('blocked', school?.id || '')}
-                                                        disabled={updatingSchoolId === school?.id}
-                                                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingSchoolId === school?.id
-                                                            ? 'text-gray-400 cursor-not-allowed'
-                                                            : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
-                                                            }`}
-                                                    >
-                                                        Block
-                                                    </button>
-                                                )}
-
-                                                {/* Delete button - always show */}
-                                                <button
-                                                    onClick={() => {
-                                                        setSchoolToDelete(school?.id || '');
-                                                        setShowDeleteModal(true);
-                                                    }}
-                                                    disabled={updatingSchoolId === school?.id}
-                                                    className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingSchoolId === school?.id
-                                                        ? 'text-gray-400 cursor-not-allowed'
-                                                        : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
-                                                        }`}
-                                                >
-                                                    Delete
-                                                </button>
-                                            </div>
+                                {/* Status */}
+                                <div className="w-24 bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
+                                    {updatingSchoolId === school?.id ? (
+                                        <div className="flex items-center space-x-2">
+                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
+                                            <span className="text-gray-500">Updating</span>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center justify-between">
+                                            <span className={`font-medium ${getStatusColor(school.status)}`}>
+                                                {school.status}
+                                            </span>
                                         </div>
                                     )}
                                 </div>
+
+                                {/* Checkbox column for merge mode */}
+                                {isMergeMode && (
+                                    <div className="w-8 px-3 py-2 text-sm font-medium text-gray-900 flex items-center justify-center">
+                                        <div className="flex items-center space-x-1">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedSchools.includes(school?.id)}
+                                                onChange={() => handleSchoolSelection(school?.id)}
+                                                disabled={lockedRows.includes(school?.id)}
+                                                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                title={lockedRows.includes(school?.id) ? 'Unlock to merge' : 'Select for merge'}
+                                            />
+                                            {primarySchoolId === school?.id && (
+                                                <svg className="w-3 h-3 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                </svg>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Actions */}
+                                <div className="w-16 px-3 py-2 text-sm font-medium flex items-center justify-left">
+                                    <div className="relative flex items-center justify-left">
+                                        {isEditing ? (
+                                            <div className="flex space-x-1 edit-buttons-container">
+                                                <button
+                                                    onClick={handleSaveEdit}
+                                                    className="text-green-600 hover:text-green-800 focus:outline-none"
+                                                    title="Save changes"
+                                                >
+                                                    <img src={saveIcon} />
+                                                </button>
+                                                <button
+                                                    onClick={handleCancelEdit}
+                                                    className="text-red-600 hover:text-red-800 focus:outline-none"
+                                                    title="Cancel editing"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <button
+                                                onClick={() => handleDropdownToggle(school?.id || '')}
+                                                className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                            >
+                                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                                                </svg>
+                                            </button>
+                                        )}
+
+                                        {activeDropdown === school?.id && !isEditing && (
+                                            <div className="absolute top-full right-0 mt-1 w-48 bg-white rounded-md shadow-lg z-50 border-2">
+                                                <div className="py-1">
+                                                    {/* Main management options - always show for all statuses */}
+                                                    <button
+                                                        onClick={() => handleEditRow(school)}
+                                                        disabled={updatingSchoolId === school?.id}
+                                                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingSchoolId === school?.id
+                                                            ? 'text-gray-400 cursor-not-allowed'
+                                                            : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
+                                                            }`}
+                                                    >
+                                                        Edit
+                                                    </button>
+
+                                                    <button
+                                                        onClick={() => {
+                                                            setActiveDropdown(null);
+                                                            handleAddNewRow();
+                                                        }}
+                                                        disabled={updatingSchoolId === school?.id}
+                                                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingSchoolId === school?.id
+                                                            ? 'text-gray-400 cursor-not-allowed'
+                                                            : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
+                                                            }`}
+                                                    >
+                                                        Add
+                                                    </button>
+
+                                                    <button
+                                                        disabled={updatingSchoolId === school?.id}
+                                                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingSchoolId === school?.id
+                                                            ? 'text-gray-400 cursor-not-allowed'
+                                                            : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
+                                                            }`}
+                                                        onClick={() => { handleAction('active', school?.id || ''); }}
+                                                    >
+                                                        List
+                                                    </button>
+
+                                                    <button
+                                                        onClick={() => {
+                                                            setActiveDropdown(null);
+                                                            handleMergeModeToggle();
+                                                        }}
+                                                        disabled={updatingSchoolId === school?.id}
+                                                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingSchoolId === school?.id
+                                                            ? 'text-gray-400 cursor-not-allowed'
+                                                            : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
+                                                            }`}
+                                                    >
+                                                        {isMergeMode ? 'Cancel Merge' : 'Merge'}
+                                                    </button>
+
+                                                    {/* Status-specific buttons based on current status */}
+                                                    {/* Show Active button when status is not active */}
+                                                    {school?.status?.toLowerCase() !== 'active' && (
+                                                        <button
+                                                            onClick={() => handleAction('active', school?.id || '')}
+                                                            disabled={updatingSchoolId === school?.id}
+                                                            className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingSchoolId === school?.id
+                                                                ? 'text-gray-400 cursor-not-allowed'
+                                                                : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
+                                                                }`}
+                                                        >
+                                                            Active
+                                                        </button>
+                                                    )}
+
+                                                    {/* Show Flag button when status is not flagged */}
+                                                    {school?.status?.toLowerCase() !== 'flagged' && (
+                                                        <button
+                                                            onClick={() => handleAction('flagged', school?.id || '')}
+                                                            disabled={updatingSchoolId === school?.id}
+                                                            className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingSchoolId === school?.id
+                                                                ? 'text-gray-400 cursor-not-allowed'
+                                                                : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
+                                                                }`}
+                                                        >
+                                                            Flag
+                                                        </button>
+                                                    )}
+
+                                                    {/* Show Block button when status is not blocked */}
+                                                    {school?.status?.toLowerCase() !== 'blocked' && (
+                                                        <button
+                                                            onClick={() => handleAction('blocked', school?.id || '')}
+                                                            disabled={updatingSchoolId === school?.id}
+                                                            className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingSchoolId === school?.id
+                                                                ? 'text-gray-400 cursor-not-allowed'
+                                                                : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
+                                                                }`}
+                                                        >
+                                                            Block
+                                                        </button>
+                                                    )}
+
+                                                    {/* Delete button - always show */}
+                                                    <button
+                                                        onClick={() => {
+                                                            setSchoolToDelete(school?.id || '');
+                                                            setShowDeleteModal(true);
+                                                        }}
+                                                        disabled={updatingSchoolId === school?.id}
+                                                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingSchoolId === school?.id
+                                                            ? 'text-gray-400 cursor-not-allowed'
+                                                            : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
+                                                            }`}
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    );
-                })
-            ) : null}
+                        );
+                    })
+                ) : !showNewRow ? (
+                    <div className="text-center py-8 text-gray-500">
+                        {searchTerm ? 'No schools found matching your search' : 'No schools found'}
+                    </div>
+                ) : null}
+            </div>
 
             {/* New Row Input Fields */}
             {showNewRow && (

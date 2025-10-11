@@ -35,6 +35,7 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
       setUser(session?.user ?? null);
       // Store token in localStorage when session is available
       if (session?.access_token) {
+        console.log(session.access_token);
         localStorage.setItem('token', session.access_token);
       } else {
         localStorage.removeItem('token');
@@ -51,6 +52,7 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
       setUser(session?.user ?? null);
      
       if (session?.access_token) {
+        console.log(session.access_token);
         localStorage.setItem('token', session.access_token);
       } else {
         localStorage.removeItem('token');

@@ -176,7 +176,7 @@ const LeadershipRolesTable: React.FC<LeadershipRolesTableProps> = ({ leadershipR
       </div>
 
       {/* Header Row */}
-      <div className="w-[600px] grid grid-cols-[0.5fr_0.5fr_2fr_0.25fr] gap-2 mb-2">
+      <div className="w-[600px] grid grid-cols-[0.5fr_0.5fr_2fr_1fr] gap-2 mb-2">
         {['ID', 'ABBR', 'Leadership Role', ' '].map((header) => (
           header === ' ' ? (
             <div key={header}>
@@ -202,7 +202,7 @@ const LeadershipRolesTable: React.FC<LeadershipRolesTableProps> = ({ leadershipR
         </div>
       ) : filteredRoles.length > 0 ? (
         filteredRoles.map((role) => (
-          <div key={role.id} className="w-[600px] grid grid-cols-[0.5fr_0.5fr_2fr_auto] gap-2 mb-2">
+          <div key={role.id} className="w-[600px] grid grid-cols-[0.5fr_0.5fr_2fr_1fr] gap-2 mb-2">
             {/* ID */}
             <div className="bg-white px-3 py-2 text-sm font-medium text-gray-900 rounded-md border border-gray-200">
               {role.id}
@@ -239,7 +239,7 @@ const LeadershipRolesTable: React.FC<LeadershipRolesTableProps> = ({ leadershipR
             </div>
 
             {/* Actions */}
-            <div className="px-3 py-2 text-sm font-medium relative">
+            <div className="w-full break-words px-3 py-2 text-sm font-medium relative">
               <div className="relative">
                 {editingId === role.id ? (
                   <div className="flex space-x-2">
@@ -315,7 +315,7 @@ const LeadershipRolesTable: React.FC<LeadershipRolesTableProps> = ({ leadershipR
 
       {/* Add New Role Input Row */}
       {isAdding && (
-        <div className="w-[600px] grid grid-cols-[0.5fr_0.5fr_2fr_auto] gap-2 mb-2">
+        <div className="w-[600px] grid grid-cols-[0.5fr_0.5fr_2fr_1fr] gap-2 mb-2">
           {/* ID */}
           <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
             <input
@@ -350,7 +350,7 @@ const LeadershipRolesTable: React.FC<LeadershipRolesTableProps> = ({ leadershipR
           </div>
 
           {/* Actions */}
-          <div className="px-3 py-2 text-sm font-medium relative">
+          <div className="w-full break-words px-3 py-2 text-sm font-medium relative">
             <div className="flex space-x-2">
               <button
                 onClick={handleSaveNewRole}

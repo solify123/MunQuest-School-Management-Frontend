@@ -70,6 +70,7 @@ const Login: React.FC = () => {
       }
       toast.success('Login successful');
       // Store Supabase JWT token in localStorage
+      console.log(loginResponse.data);
       if (loginResponse.data?.session?.access_token) {
         localStorage.setItem('token', loginResponse.data.session.access_token);
       } else {

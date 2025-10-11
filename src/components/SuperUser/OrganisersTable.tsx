@@ -38,13 +38,21 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
   const [organiserToDelete, setOrganiserToDelete] = useState<string | null>(null);
   const usernameDropdownRef = useRef<HTMLDivElement>(null);
+  const dropdownRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const { refreshUserData, allUsers } = useApp();
 
   // Handle click outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      const clickedOutsideAllDropdowns = Object.values(dropdownRefs.current).every(ref =>
+        !ref || !ref.contains(event.target as Node)
+      );
+      if (clickedOutsideAllDropdowns) {
+        setActiveDropdown(null);
+      }
       if (usernameDropdownRef.current && !usernameDropdownRef.current.contains(event.target as Node)) {
         setShowUsernameDropdown(false);
+        setActiveDropdown(null);
       }
     };
 
@@ -364,17 +372,17 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
             </div>
 
             {/* Username */}
-            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+            <div className="w-full break-words bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
               {organiser?.users.username || 'N/A'}
             </div>
 
             {/* Name */}
-            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+            <div className="w-full break-words bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
               {organiser?.users.fullname || 'N/A'}
             </div>
 
             {/* Academic Level/Teaching Experience */}
-            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+            <div className="w-full break-words bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
               {organiserType === 'students'
                 ? (organiser?.users?.grade || 'N/A')
                 : (organiser?.users?.years_of_experience || 'N/A')
@@ -382,17 +390,17 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
             </div>
 
             {/* School */}
-            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+            <div className="w-full break-words bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
               {organiser?.school?.name || organiser?.school || 'N/A'}
             </div>
 
             {/* Role in Event */}
-            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+            <div className="w-full break-words bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
               {organiser?.role || 'N/A'}
             </div>
 
             {/* Evidence */}
-            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+            <div className="w-full break-words bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
               {organiser?.evidence ? (
                 typeof organiser.evidence === 'object' && organiser.evidence.file_url ? (
                   <div className="flex items-center justify-center">
@@ -402,7 +410,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
                       ) : (
                         <button
                           onClick={() => window.open(organiser.evidence.file_url, '_blank')}
-                          className="flex items-center justify-center p-1 rounded hover:bg-gray-100 transition-colors duration-200"
+                          className="flex flex-wrap items-center justify-center p-1 rounded hover:bg-gray-100 transition-colors duration-200"
                           title="Click to open document"
                         >
                           Document
@@ -422,12 +430,12 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
             </div>
 
             {/* Date Received */}
-            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+            <div className="w-full break-words bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
               {organiser?.created_at?.split('T')[0] || 'N/A'}
             </div>
 
             {/* Date Actioned */}
-            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+            <div className="w-full break-words bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
               {organiser?.actioned_at?.split('T')[0] || 'N/A'}
             </div>
 
@@ -446,7 +454,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
             </div>
 
             {/* Actions */}
-            <div className="px-3 py-2 text-sm font-medium relative">
+            <div ref={(el) => { dropdownRefs.current[organiser?.id || ''] = el; }} className="px-3 py-2 text-sm font-medium relative">
               <div className="relative">
                 <button
                   onClick={() => handleDropdownToggle(organiser?.id || '')}

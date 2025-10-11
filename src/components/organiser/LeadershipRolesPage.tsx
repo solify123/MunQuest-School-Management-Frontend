@@ -104,6 +104,7 @@ const LeadershipRolesPage: React.FC = () => {
     fetchData();
   }, [eventId]);
 
+
   const handleMenuAction = (action: string, roleId: number) => {
     if (action === 'edit') {
       const roleToEdit = leadershipRoles.find(role => role.id === roleId);
@@ -544,7 +545,7 @@ const LeadershipRolesPage: React.FC = () => {
     <>
       <div className="space-y-6 " style={{ marginBottom: '16px' }}>
         {/* Grid Container */}
-        <div className="grid grid-cols-[100px_200px_220px_280px_120px] gap-4">
+        <div className="grid grid-cols-[100px_200px_220px_280px_60px] gap-4">
           <div className="bg-[#C6DAF4] text-grey-800 px-4 py-3 rounded-lg text-sm font-medium text-center border border-gray-800">ABBR</div>
           <div className="bg-[#C6DAF4] text-grey-800 px-4 py-3 rounded-lg text-sm font-medium text-center border border-gray-800">Leadership Role</div>
           <div className="bg-[#C6DAF4] text-grey-800 px-4 py-3 rounded-lg text-sm font-medium text-center border border-gray-800">Username</div>
@@ -688,8 +689,8 @@ const LeadershipRolesPage: React.FC = () => {
               )}
 
               {/* Actions Column */}
-              <div className="bg-gray-50 px-3 py-2 text-sm font-medium relative">
-                <div className="relative flex items-center justify-center space-x-3">
+              <div className="bg-gray-50 px-0 py-2 text-sm font-medium relative">
+                <div className="relative flex items-center justify-center space-x-1">
                   
                   <button className="text-yellow-600 hover:text-yellow-800 p-1" title="Editing Mode">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2">

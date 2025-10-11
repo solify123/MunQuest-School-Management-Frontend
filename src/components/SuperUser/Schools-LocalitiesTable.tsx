@@ -408,7 +408,7 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
             </div>
 
             {/* Header Row */}
-            <div className="flex gap-2 mb-2">
+            <div className={`flex gap-2 mb-2 w-[${filteredLocalities.length > 7 ? '98.5%' : '100%'}]`}>
                 {/* Locality Code */}
                 <div className="w-32 px-3 py-2 text-xs font-medium text-gray-900 uppercase tracking-wider rounded-md bg-[#F0F7FF] border border-[#4A5F7A] flex items-center justify-between">
                     <span>Locality Code</span>
@@ -475,252 +475,254 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
                 )}
             </div>
 
-            {/* Data Rows */}
-            {!filteredLocalities || filteredLocalities.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                    {searchTerm ? 'No localities found matching your search' : 'No localities found'}
-                </div>
-            ) : filteredLocalities.length > 0 ? (
-                filteredLocalities.map((locality: any) => {
-                    const isEditing = editingLocalityId === (locality?.area?.id || locality?.id);
-                    return (
-                        <div key={locality?.id || Math.random()} className={`flex gap-2 mb-2 ${isEditing ? 'edit-row-container' : ''}`}>
-                            {/* Locality Code */}
-                            <div className="w-32 bg-white px-3 py-2 text-sm font-medium text-gray-900 rounded-md border border-gray-200">
-                                {locality?.locality?.code || 'N/A'}
-                            </div>
-
-                            {/* Locality Name */}
-                            <div className="w-40 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-                                {isEditing ? (
-                                    <div>
-                                        <input
-                                            type="text"
-                                            value={editingRowData?.localityName || ''}
-                                            className="w-full text-sm text-gray-500 focus:outline-none border-0 p-0 bg-transparent cursor-not-allowed"
-                                            placeholder="Read-only"
-                                            readOnly
-                                            disabled
-                                        />
-                                    </div>
-                                ) : (
-                                    locality?.locality?.name || 'N/A'
-                                )}
-                            </div>
-
-                            {/* Area Code */}
-                            <div className="w-32 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-                                {locality?.area?.code || 'N/A'}
-                            </div>
-
-                            {/* Area Name */}
-                            <div className="w-40 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-                                {isEditing ? (
-                                    <div>
-                                        <input
-                                            type="text"
-                                            value={editingRowData?.areaName || ''}
-                                            onChange={(e) => setEditingRowData({ ...editingRowData, areaName: e.target.value })}
-                                            className={`w-full text-sm text-gray-900 focus:outline-none border-0 p-0 ${editValidationErrors.areaName ? 'border-red-500' : ''}`}
-                                            placeholder="Enter area name"
-                                        />
-                                        {editValidationErrors.areaName && (
-                                            <div className="text-xs text-red-500 mt-1">{editValidationErrors.areaName}</div>
-                                        )}
-                                    </div>
-                                ) : (
-                                    locality?.area?.name || 'N/A'
-                                )}
-                            </div>
-
-                            {/* Linked Schools (Area) */}
-                            <div className="w-36 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-                                {locality?.linkedSchoolsCount || '-'}
-                            </div>
-
-                            {/* Linked Students (Area) */}
-                            <div className="w-36 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-                                {locality?.linkedStudentsCount || '-'}
-                            </div>
-
-                            {/* Status */}
-                            <div className="w-24 bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
-                                {updatingLocalityId === (locality?.area?.id || locality?.id) ? (
-                                    <div className="flex items-center space-x-2">
-                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
-                                        <span className="text-gray-500">Updating</span>
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center justify-between">
-                                        <span className={`font-medium ${getStatusColor(locality.status)}`}>
-                                            {locality.status}
-                                        </span>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Checkbox column for merge mode */}
-                            {isMergeMode && (
-                                <div className="w-8 px-3 py-2 text-sm font-medium text-gray-900 flex items-center justify-center">
-                                    <div className="flex items-center space-x-1">
-                                        <input
-                                            type="checkbox"
-                                            checked={selectedLocalities.includes(locality?.area?.id || locality?.id)}
-                                            onChange={() => handleLocalitySelection(locality?.area?.id || locality?.id)}
-                                            disabled={lockedRows.includes(locality?.area?.id || locality?.id)}
-                                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                                            title={lockedRows.includes(locality?.area?.id || locality?.id) ? 'Unlock to merge' : 'Select for merge'}
-                                        />
-                                        {primaryLocalityId === (locality?.area?.id || locality?.id) && (
-                                            <svg className="w-3 h-3 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                            </svg>
-                                        )}
-                                    </div>
+            <div className="w-full max-h-[320px] overflow-auto">
+                {/* Data Rows */}
+                {!filteredLocalities || filteredLocalities.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                        {searchTerm ? 'No localities found matching your search' : 'No localities found'}
+                    </div>
+                ) : filteredLocalities.length > 0 ? (
+                    filteredLocalities.map((locality: any) => {
+                        const isEditing = editingLocalityId === (locality?.area?.id || locality?.id);
+                        return (
+                            <div key={locality?.id || Math.random()} className={`flex gap-2 mb-2 ${isEditing ? 'edit-row-container' : ''}`}>
+                                {/* Locality Code */}
+                                <div className="w-32 bg-white px-3 py-2 text-sm font-medium text-gray-900 rounded-md border border-gray-200">
+                                    {locality?.locality?.code || 'N/A'}
                                 </div>
-                            )}
 
-                            {/* Actions */}
-                            <div className="w-16 px-3 py-2 text-sm font-medium flex items-center justify-left">
-                                <div className="relative flex items-center justify-left dropdown-container">
+                                {/* Locality Name */}
+                                <div className="w-40 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
                                     {isEditing ? (
-                                        <div className="flex space-x-1 edit-buttons-container">
-                                            <button
-                                                onClick={handleCancelEdit}
-                                                className="text-red-600 hover:text-red-800 focus:outline-none"
-                                                title="Cancel editing"
-                                            >
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                </svg>
-                                            </button>
+                                        <div>
+                                            <input
+                                                type="text"
+                                                value={editingRowData?.localityName || ''}
+                                                className="w-full text-sm text-gray-500 focus:outline-none border-0 p-0 bg-transparent cursor-not-allowed"
+                                                placeholder="Read-only"
+                                                readOnly
+                                                disabled
+                                            />
                                         </div>
                                     ) : (
-                                        <button
-                                            onClick={() => handleDropdownToggle(locality?.area?.id || locality?.id || '')}
-                                            className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                        >
-                                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                                            </svg>
-                                        </button>
+                                        locality?.locality?.name || 'N/A'
                                     )}
+                                </div>
 
-                                    {activeDropdown === (locality?.area?.id || locality?.id) && !isEditing && (
-                                        <div className="absolute top-full right-0 mt-1 w-48 bg-white rounded-md shadow-lg z-[9999] border border-gray-300 dropdown-container">
-                                            <div className="py-1">
-                                                {/* Main management options - always show for all statuses */}
-                                                <button
-                                                    onClick={() => handleEditRow(locality)}
-                                                    disabled={updatingLocalityId === (locality?.area?.id || locality?.id)}
-                                                    className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.area?.id || locality?.id)
-                                                        ? 'text-gray-400 cursor-not-allowed'
-                                                        : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
-                                                        }`}
-                                                >
-                                                    Edit
-                                                </button>
+                                {/* Area Code */}
+                                <div className="w-32 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+                                    {locality?.area?.code || 'N/A'}
+                                </div>
 
-                                                <button
-                                                    disabled={updatingLocalityId === (locality?.area?.id || locality?.id)}
-                                                    className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.area?.id || locality?.id)
-                                                        ? 'text-gray-400 cursor-not-allowed'
-                                                        : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
-                                                        }`}
-                                                >
-                                                    Add
-                                                </button>
+                                {/* Area Name */}
+                                <div className="w-40 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+                                    {isEditing ? (
+                                        <div>
+                                            <input
+                                                type="text"
+                                                value={editingRowData?.areaName || ''}
+                                                onChange={(e) => setEditingRowData({ ...editingRowData, areaName: e.target.value })}
+                                                className={`w-full text-sm text-gray-900 focus:outline-none border-0 p-0 ${editValidationErrors.areaName ? 'border-red-500' : ''}`}
+                                                placeholder="Enter area name"
+                                            />
+                                            {editValidationErrors.areaName && (
+                                                <div className="text-xs text-red-500 mt-1">{editValidationErrors.areaName}</div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        locality?.area?.name || 'N/A'
+                                    )}
+                                </div>
 
-                                                <button
-                                                    disabled={updatingLocalityId === (locality?.area?.id || locality?.id)}
-                                                    className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.area?.id || locality?.id)
-                                                        ? 'text-gray-400 cursor-not-allowed'
-                                                        : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
-                                                        }`}
-                                                >
-                                                    List
-                                                </button>
+                                {/* Linked Schools (Area) */}
+                                <div className="w-36 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+                                    {locality?.linkedSchoolsCount || '-'}
+                                </div>
 
-                                                <button
-                                                    onClick={() => {
-                                                        setActiveDropdown(null);
-                                                        handleMergeModeToggle();
-                                                    }}
-                                                    disabled={updatingLocalityId === (locality?.area?.id || locality?.id)}
-                                                    className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.area?.id || locality?.id)
-                                                        ? 'text-gray-400 cursor-not-allowed'
-                                                        : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
-                                                        }`}
-                                                >
-                                                    {isMergeMode ? 'Cancel Merge' : 'Merge'}
-                                                </button>
+                                {/* Linked Students (Area) */}
+                                <div className="w-36 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+                                    {locality?.linkedStudentsCount || '-'}
+                                </div>
 
-                                                {/* Status-specific buttons based on current status */}
-                                                {/* Show Active button when status is not active */}
-                                                {locality?.status?.toLowerCase() !== 'active' && (
-                                                    <button
-                                                        onClick={() => handleAction('active', locality?.id || '', locality?.area?.id || '')}
-                                                        disabled={updatingLocalityId === (locality?.area?.id || locality?.id)}
-                                                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.area?.id || locality?.id)
-                                                            ? 'text-gray-400 cursor-not-allowed'
-                                                            : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
-                                                            }`}
-                                                    >
-                                                        Active
-                                                    </button>
-                                                )}
-
-                                                {/* Show Flag button when status is not flagged */}
-                                                {locality?.status?.toLowerCase() !== 'flagged' && (
-                                                    <button
-                                                        onClick={() => handleAction('flagged', locality?.id || '', locality?.area?.id || '')}
-                                                        disabled={updatingLocalityId === (locality?.area?.id || locality?.id)}
-                                                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.area?.id || locality?.id)
-                                                            ? 'text-gray-400 cursor-not-allowed'
-                                                            : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
-                                                            }`}
-                                                    >
-                                                        Flag
-                                                    </button>
-                                                )}
-
-                                                {/* Show Block button when status is not blocked */}
-                                                {locality?.status?.toLowerCase() !== 'blocked' && (
-                                                    <button
-                                                        onClick={() => handleAction('blocked', locality?.id || '', locality?.area?.id || '')}
-                                                        disabled={updatingLocalityId === (locality?.area?.id || locality?.id)}
-                                                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.area?.id || locality?.id)
-                                                            ? 'text-gray-400 cursor-not-allowed'
-                                                            : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
-                                                            }`}
-                                                    >
-                                                        Block
-                                                    </button>
-                                                )}
-
-                                                {/* Delete button - always show */}
-                                                <button
-                                                    onClick={() => {
-                                                        setLocalityToDelete(locality?.area?.id || locality?.id || '');
-                                                        setShowDeleteModal(true);
-                                                    }}
-                                                    disabled={updatingLocalityId === (locality?.area?.id || locality?.id)}
-                                                    className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.area?.id || locality?.id)
-                                                        ? 'text-gray-400 cursor-not-allowed'
-                                                        : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
-                                                        }`}
-                                                >
-                                                    Delete
-                                                </button>
-                                            </div>
+                                {/* Status */}
+                                <div className="w-24 bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
+                                    {updatingLocalityId === (locality?.area?.id || locality?.id) ? (
+                                        <div className="flex items-center space-x-2">
+                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
+                                            <span className="text-gray-500">Updating</span>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center justify-between">
+                                            <span className={`font-medium ${getStatusColor(locality.status)}`}>
+                                                {locality.status}
+                                            </span>
                                         </div>
                                     )}
                                 </div>
+
+                                {/* Checkbox column for merge mode */}
+                                {isMergeMode && (
+                                    <div className="w-8 px-3 py-2 text-sm font-medium text-gray-900 flex items-center justify-center">
+                                        <div className="flex items-center space-x-1">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedLocalities.includes(locality?.area?.id || locality?.id)}
+                                                onChange={() => handleLocalitySelection(locality?.area?.id || locality?.id)}
+                                                disabled={lockedRows.includes(locality?.area?.id || locality?.id)}
+                                                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                title={lockedRows.includes(locality?.area?.id || locality?.id) ? 'Unlock to merge' : 'Select for merge'}
+                                            />
+                                            {primaryLocalityId === (locality?.area?.id || locality?.id) && (
+                                                <svg className="w-3 h-3 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                                </svg>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Actions */}
+                                <div className="w-16 px-3 py-2 text-sm font-medium flex items-center justify-left">
+                                    <div className="relative flex items-center justify-left dropdown-container">
+                                        {isEditing ? (
+                                            <div className="flex space-x-1 edit-buttons-container">
+                                                <button
+                                                    onClick={handleCancelEdit}
+                                                    className="text-red-600 hover:text-red-800 focus:outline-none"
+                                                    title="Cancel editing"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <button
+                                                onClick={() => handleDropdownToggle(locality?.area?.id || locality?.id || '')}
+                                                className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                            >
+                                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                                                </svg>
+                                            </button>
+                                        )}
+
+                                        {activeDropdown === (locality?.area?.id || locality?.id) && !isEditing && (
+                                            <div className="absolute top-full right-0 mt-1 w-48 bg-white rounded-md shadow-lg z-[9999] border border-gray-300 dropdown-container">
+                                                <div className="py-1">
+                                                    {/* Main management options - always show for all statuses */}
+                                                    <button
+                                                        onClick={() => handleEditRow(locality)}
+                                                        disabled={updatingLocalityId === (locality?.area?.id || locality?.id)}
+                                                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.area?.id || locality?.id)
+                                                            ? 'text-gray-400 cursor-not-allowed'
+                                                            : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
+                                                            }`}
+                                                    >
+                                                        Edit
+                                                    </button>
+
+                                                    <button
+                                                        disabled={updatingLocalityId === (locality?.area?.id || locality?.id)}
+                                                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.area?.id || locality?.id)
+                                                            ? 'text-gray-400 cursor-not-allowed'
+                                                            : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
+                                                            }`}
+                                                    >
+                                                        Add
+                                                    </button>
+
+                                                    <button
+                                                        disabled={updatingLocalityId === (locality?.area?.id || locality?.id)}
+                                                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.area?.id || locality?.id)
+                                                            ? 'text-gray-400 cursor-not-allowed'
+                                                            : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
+                                                            }`}
+                                                    >
+                                                        List
+                                                    </button>
+
+                                                    <button
+                                                        onClick={() => {
+                                                            setActiveDropdown(null);
+                                                            handleMergeModeToggle();
+                                                        }}
+                                                        disabled={updatingLocalityId === (locality?.area?.id || locality?.id)}
+                                                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.area?.id || locality?.id)
+                                                            ? 'text-gray-400 cursor-not-allowed'
+                                                            : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
+                                                            }`}
+                                                    >
+                                                        {isMergeMode ? 'Cancel Merge' : 'Merge'}
+                                                    </button>
+
+                                                    {/* Status-specific buttons based on current status */}
+                                                    {/* Show Active button when status is not active */}
+                                                    {locality?.status?.toLowerCase() !== 'active' && (
+                                                        <button
+                                                            onClick={() => handleAction('active', locality?.id || '', locality?.area?.id || '')}
+                                                            disabled={updatingLocalityId === (locality?.area?.id || locality?.id)}
+                                                            className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.area?.id || locality?.id)
+                                                                ? 'text-gray-400 cursor-not-allowed'
+                                                                : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
+                                                                }`}
+                                                        >
+                                                            Active
+                                                        </button>
+                                                    )}
+
+                                                    {/* Show Flag button when status is not flagged */}
+                                                    {locality?.status?.toLowerCase() !== 'flagged' && (
+                                                        <button
+                                                            onClick={() => handleAction('flagged', locality?.id || '', locality?.area?.id || '')}
+                                                            disabled={updatingLocalityId === (locality?.area?.id || locality?.id)}
+                                                            className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.area?.id || locality?.id)
+                                                                ? 'text-gray-400 cursor-not-allowed'
+                                                                : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
+                                                                }`}
+                                                        >
+                                                            Flag
+                                                        </button>
+                                                    )}
+
+                                                    {/* Show Block button when status is not blocked */}
+                                                    {locality?.status?.toLowerCase() !== 'blocked' && (
+                                                        <button
+                                                            onClick={() => handleAction('blocked', locality?.id || '', locality?.area?.id || '')}
+                                                            disabled={updatingLocalityId === (locality?.area?.id || locality?.id)}
+                                                            className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.area?.id || locality?.id)
+                                                                ? 'text-gray-400 cursor-not-allowed'
+                                                                : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
+                                                                }`}
+                                                        >
+                                                            Block
+                                                        </button>
+                                                    )}
+
+                                                    {/* Delete button - always show */}
+                                                    <button
+                                                        onClick={() => {
+                                                            setLocalityToDelete(locality?.area?.id || locality?.id || '');
+                                                            setShowDeleteModal(true);
+                                                        }}
+                                                        disabled={updatingLocalityId === (locality?.area?.id || locality?.id)}
+                                                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingLocalityId === (locality?.area?.id || locality?.id)
+                                                            ? 'text-gray-400 cursor-not-allowed'
+                                                            : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
+                                                            }`}
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    );
-                })
-            ) : null}
+                        );
+                    })
+                ) : null}
+            </div>
 
             {/* New Row Input */}
             {showNewRow && (
