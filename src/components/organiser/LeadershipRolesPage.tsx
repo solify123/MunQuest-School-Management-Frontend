@@ -46,13 +46,11 @@ const LeadershipRolesPage: React.FC = () => {
   });
   const dropdownRefs = useRef<{ [key: number]: HTMLDivElement | null }>({});
 
-  // Autocomplete states
   const [showRoleDropdown, setShowRoleDropdown] = useState<boolean>(false);
   const [filteredRoles, setFilteredRoles] = useState<any[]>([]);
   const [allRegistrations, setAllRegistrations] = useState<any[]>([]);
   const roleDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Username autocomplete states
   const [showUsernameDropdown, setShowUsernameDropdown] = useState<boolean>(false);
   const [filteredUsernames, setFilteredUsernames] = useState<any[]>([]);
   const usernameDropdownRef = useRef<HTMLDivElement>(null);
@@ -91,6 +89,7 @@ const LeadershipRolesPage: React.FC = () => {
         }
 
         const allRegistrationsResponse = await getAllRegistrationsByEventIdApi(eventId);
+        console.log("allRegistrationsResponse", allRegistrationsResponse);
         if (allRegistrationsResponse.success) {
           setAllRegistrations(allRegistrationsResponse.data);
         }

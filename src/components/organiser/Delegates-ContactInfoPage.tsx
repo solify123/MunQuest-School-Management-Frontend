@@ -93,7 +93,7 @@ const DelegatesContactInfoPage: React.FC = () => {
             {/* Table */}
             <div>
                 {/* Header Row */}
-                <div className="grid gap-2 mb-2" style={{ gridTemplateColumns: '100px 180px 150px 250px 180px' }}>
+                <div className="grid gap-2 mb-2" style={{ gridTemplateColumns: '100px 180px 150px 300px 170px' }}>
                     {['Unique ID', 'Name', 'Mobile', 'Email', 'Emergency Contact'].map((header) => (
                         header === ' ' ? (
                             <div key={header}></div>
@@ -113,7 +113,7 @@ const DelegatesContactInfoPage: React.FC = () => {
                     <div className="text-center py-8 text-gray-500">{searchTerm ? 'No delegates found matching your search' : 'No delegate contacts found'}</div>
                 ) : (
                     filtered.map((row) => (
-                        <div key={row.id} className="grid gap-2 mb-2" style={{ gridTemplateColumns: '100px 180px 150px 250px 180px' }}>
+                        <div key={row.id} className="grid gap-2 mb-2" style={{ gridTemplateColumns: '100px 180px 150px 300px 170px' }}>
                             <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">{row.uniqueId.slice(0, 8)}</div>
                             <div className="bg-white px-3 py-2 text-sm font-medium text-gray-900 rounded-md border border-gray-200">{row.name}</div>
                             <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">{row.mobile || '-'}</div>

@@ -21,7 +21,7 @@ const Dashboard: React.FC = () => {
           navigate('/home');
           return;
         }
-      } catch (error) { 
+      } catch (error) {
         console.error('Error checking events:', error);
         navigate('/home');
         return;
@@ -53,6 +53,9 @@ const Dashboard: React.FC = () => {
     const userId = localStorage.getItem('userId');
 
     const isRegisteredFor = (eventId: string | number) => {
+      console.log("allRegistrations", allRegistrations);
+      console.log("reg.event_id", eventId);
+      console.log("user_id", userId);
       if (!userId || !Array.isArray(allRegistrations)) return false;
       const eventIdStr = String(eventId);
       return allRegistrations.some((reg: any) => String(reg.event_id) === eventIdStr && String(reg.user_id) === String(userId));

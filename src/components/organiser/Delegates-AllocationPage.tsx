@@ -75,7 +75,7 @@ const DelegatesAllocationPage: React.FC = () => {
         const filtered = allCommitteesData.filter(c => c.category === activeCommitteeType);
         const abbrs = filtered.map(c => c.abbr).filter(Boolean);
         const unique = Array.from(new Set(abbrs));
-        return ['FULL', ...unique];
+        return [...unique, 'FULL LIST'];
     }, [allCommitteesData, activeCommitteeType]);
 
     // Build delegates
@@ -158,7 +158,7 @@ const DelegatesAllocationPage: React.FC = () => {
                         key={type.id}
                         onClick={() => handleCommitteeTypeChange(type.id)}
                         className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm font-medium rounded-[20px] transition-colors duration-200 ${activeCommitteeType === type.id
-                            ? 'bg-[#607DA3] text-white'
+                            ? 'bg-[#84B5F3]'
                             : 'bg-white text-black border border-gray-800'
                             }`}
                     >
@@ -175,19 +175,46 @@ const DelegatesAllocationPage: React.FC = () => {
                             key={abbr}
                             onClick={() => handleSubTabChange(abbr)}
                             disabled={subTabLoading}
-                            className={`w-[120px] h-[48px] px-[5px] py-[5px] text-sm font-medium rounded-[16px] transition-colors duration-200 ${activeCommittee === abbr
-                                ? 'bg-[#84B5F3] text-white'
+                            className={`w-[190px] h-[58px] px-[5px] py-[5px] text-sm font-medium rounded-[20px] transition-colors duration-200 ${activeCommittee === abbr
+                                ? 'bg-[#C6DAF4]'
                                 : 'bg-white text-black border border-gray-800'
                                 } ${subTabLoading ? 'opacity-60 cursor-not-allowed' : ''}`}
+                                style={{fontSize: '14px'}}
                         >
                             {abbr}
+                            <div className="text-black flex items-center justify-center gap-2" style={{ fontSize: '14px', fontWeight: 300 }}>
+                                <span className='flex items-center justify-center gap-2'>
+                                    Total:
+                                    <span style={{ fontSize: '14px', fontWeight: 600 }}>30</span>
+                                </span>
+                                <span className='flex items-center justify-center gap-2'>
+                                    Assigned:
+                                    <span style={{ fontSize: '14px', fontWeight: 600 }}>10</span>
+                                </span>
+                            </div>
                         </button>
                     ))}
                 </div>
             )}
 
             {/* Search + Download */}
-            <div className="flex items-center justify-between p-4 rounded-lg shadow-sm">
+            <div className="flex items-center justify-start p-4 rounded-lg gap-8">
+                <button
+                    onClick={() => toast.success('Download coming soon')}
+                    className="w-[250px] text-white font-medium transition-colors hover:opacity-90"
+                    style={{
+                        height: '44px',
+                        borderRadius: '30px',
+                        paddingLeft: '16px',
+                        paddingRight: '16px',
+                        cursor: 'pointer',
+                        border: 'none',
+                        boxShadow: 'none',
+                        background: '#4CAF50',
+                    }}
+                >
+                    Committee Allocations
+                </button>
                 <div className="flex items-center space-x-4">
                     <div className="relative">
                         <input
@@ -195,11 +222,32 @@ const DelegatesAllocationPage: React.FC = () => {
                             placeholder="Search by name or MUN experience or school and assign"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10 pr-4 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
+                            className="min-w-[415px] pl-10 pr-4 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
                         />
                         <svg className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
+                    </div>
+                </div>
+            </div>
+
+            {/* Search + Download */}
+            <div className="flex items-center justify-between p-4 mt-0 mr-16" style={{ marginTop: '0px' }}>
+                <div className="flex items-center space-x-4">
+                    <div className="relative">
+                        <h1
+                            style={{
+                                fontWeight: 700,
+                                fontStyle: 'normal',
+                                fontSize: '30px',
+                                lineHeight: '150%',
+                                letterSpacing: '0%',
+                                verticalAlign: 'middle',
+                                margin: 0,
+                            }}
+                        >
+                            {activeCommittee}
+                        </h1>
                     </div>
                 </div>
 
@@ -224,7 +272,7 @@ const DelegatesAllocationPage: React.FC = () => {
             {/* Delegates Table */}
             <div>
                 {/* Header Row */}
-                <div className="grid gap-2 mb-2" style={{ gridTemplateColumns: '100px 160px 100px 180px 100px 200px 200px 140px 40px' }}>
+                <div className="grid gap-2 mb-2" style={{ gridTemplateColumns: '100px 120px 100px 140px 100px 170px 120px 100px 40px' }}>
                     {['Unique ID', 'Name', 'Academic Level', 'School', 'MUN Experience', 'Preferred Committees', 'Assigned Committees', 'Assigned Country', ' '].map((header, index) => (
                         header === ' ' ? (
                             <div key={header}></div>
@@ -257,12 +305,12 @@ const DelegatesAllocationPage: React.FC = () => {
                     <div className="text-center py-8 text-gray-500">{searchTerm ? 'No delegates found matching your search' : 'No delegates found'}</div>
                 ) : (
                     filteredDelegates.map((delegate) => (
-                        <div key={delegate.id} className="grid gap-2 mb-2" style={{ gridTemplateColumns: '100px 160px 100px 180px 100px 200px 200px 140px 40px' }}>
-                            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">{delegate.uniqueId}</div>
+                        <div key={delegate.id} className="grid gap-2 mb-2" style={{ gridTemplateColumns: '100px 120px 100px 140px 100px 170px 120px 100px 40px' }}>
+                            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200 text-wrap">{delegate.uniqueId}</div>
                             <div className="bg-white px-3 py-2 text-sm font-medium text-gray-900 rounded-md border border-gray-200">{delegate.name}</div>
-                            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">{delegate.academicLevel}</div>
-                            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">{delegate.school}</div>
-                            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">{delegate.munExperience}</div>
+                            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200 text-wrap">{delegate.academicLevel}</div>
+                            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200 text-wrap">{delegate.school}</div>
+                            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200 text-wrap">{delegate.munExperience}</div>
                             <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">{delegate.preferredCommittees.join(', ')}</div>
                             <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
                                 {delegate.assignedCommittees.length > 0 ? (

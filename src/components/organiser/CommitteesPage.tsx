@@ -421,12 +421,6 @@ const CommitteesPage: React.FC = () => {
     // Keep row in edit mode to continue editing other fields
   };
 
-  // Removed per-cell save function (superseded by unified Save)
-  // const handleCommitteeFieldSave = async () => {};
-
-  // Removed per-cell cancel (use context menu or leave edit mode by Save)
-  // const handleCommitteeFieldCancel = () => {};
-
   const handleContextMenuClick = (event: React.MouseEvent, committeeId: string) => {
     event.preventDefault();
     event.stopPropagation();
@@ -588,6 +582,10 @@ const CommitteesPage: React.FC = () => {
 
       if (!target.committee || target.committee === '') {
         toast.error('Please select a committee before saving');
+        return;
+      }
+      if (!target.seatsTotal || target.seatsTotal === '') {
+        toast.error('Please enter a number of seats before saving');
         return;
       }
 

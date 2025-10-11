@@ -39,13 +39,8 @@ const TeacherDelegatePage: React.FC = () => {
   const [registrationInfoEmail, setRegistrationInfoEmail] = useState<any>('');
   const [registrationInfoMobileNumber, setRegistrationInfoMobileNumber] = useState<any>('');
   const [registrationInfoMunExperience, setRegistrationInfoMunExperience] = useState<any>('');
-  const [registrationInfoPreferredCommittee1, setRegistrationInfoPreferredCommittee1] = useState<any>('');
-  const [registrationInfoPreferredCommittee2, setRegistrationInfoPreferredCommittee2] = useState<any>('');
-  const [registrationInfoPreferredCommittee3, setRegistrationInfoPreferredCommittee3] = useState<any>('');
   const [registrationInfoFoodPreference, setRegistrationInfoFoodPreference] = useState<any>('');
   const [registrationInfoFoodAllergies, setRegistrationInfoFoodAllergies] = useState<any>('');
-  const [registrationInfoEmergencyContactName, setRegistrationInfoEmergencyContactName] = useState<any>('');
-  const [registrationInfoEmergencyMobileNumber, setRegistrationInfoEmergencyMobileNumber] = useState<any>('');
   const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   const tabs = ['Event Info', 'Support Contact', 'Participation Info', 'Registration Info'];
@@ -60,7 +55,6 @@ const TeacherDelegatePage: React.FC = () => {
         const user = payload.user || payload.users || {};
         const school = user.school || {};
         const schoolLocality = school.locality || {};
-
         setRegistrationInfoId(user.id ?? '');
         setRegistrationInfoRegistrationNo(payload.registration_no ?? '');
         setRegistrationInfoUsername(user.username ?? '');
@@ -73,13 +67,8 @@ const TeacherDelegatePage: React.FC = () => {
         setRegistrationInfoEmail(user.email ?? '');
         setRegistrationInfoMobileNumber(user.phone_e164 ?? user.phone_number ?? '');
         setRegistrationInfoMunExperience(payload.mun_experience ?? '');
-        setRegistrationInfoPreferredCommittee1(payload.pref_committee_1.abbr ?? '');
-        setRegistrationInfoPreferredCommittee2(payload.pref_committee_2.abbr ?? '');
-        setRegistrationInfoPreferredCommittee3(payload.pref_committee_3.abbr ?? '');
         setRegistrationInfoFoodPreference(payload.food_pref ?? '');
         setRegistrationInfoFoodAllergies(payload.food_allergies ?? '');
-        setRegistrationInfoEmergencyContactName(payload.emergency_name ?? '');
-        setRegistrationInfoEmergencyMobileNumber(payload.emergency_phone ?? '');
       } catch (error: any) {
         toast.error('Failed to get registration info: ' + error.message);
       }
@@ -509,38 +498,6 @@ const TeacherDelegatePage: React.FC = () => {
             />
           </div>
 
-          {/* Preferred Committee - Choice 1 */}
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">Preferred Committee - Choice 1</label>
-            <input
-              type="text"
-              value={registrationInfoPreferredCommittee1}
-              readOnly
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-700"
-            />
-          </div>
-
-          {/* Preferred Committee - Choice 2 */}
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">Preferred Committee - Choice 2</label>
-            <input
-              type="text"
-              value={registrationInfoPreferredCommittee2}
-              readOnly
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-700"
-            />
-          </div>
-
-          {/* Preferred Committee - Choice 3 */}
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">Preferred Committee - Choice 3</label>
-            <input
-              type="text"
-              value={registrationInfoPreferredCommittee3}
-              readOnly
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-700"
-            />
-          </div>
 
           {/* Food Preference */}
           <div>
@@ -571,28 +528,6 @@ const TeacherDelegatePage: React.FC = () => {
             <input
               type="text"
               value={registrationInfoFoodAllergies}
-              readOnly
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-700"
-            />
-          </div>
-
-          {/* Emergency Contact Name */}
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">Emergency Contact Name</label>
-            <input
-              type="text"
-              value={registrationInfoEmergencyContactName}
-              readOnly
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-700"
-            />
-          </div>
-
-          {/* Emergency Mobile Number */}
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">Emergency Mobile Number</label>
-            <input
-              type="text"
-              value={registrationInfoEmergencyMobileNumber}
               readOnly
               className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-gray-50 text-gray-700"
             />
