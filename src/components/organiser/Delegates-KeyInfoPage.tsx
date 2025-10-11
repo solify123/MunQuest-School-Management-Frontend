@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import ConfirmationModal from '../ui/ConfirmationModal';
 import { useApp } from '../../contexts/AppContext';
@@ -21,7 +21,11 @@ interface DelegateItem {
     isLocked: boolean;
 }
 
-const DelegatesPage: React.FC = () => {
+interface DelegatesPageProps {
+  onSubSectionChange?: (subSection: string) => void;
+}
+
+const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange }) => {
     const [activeSubTab, setActiveSubTab] = useState('key-info');
     const [delegates, setDelegates] = useState<DelegateItem[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -36,6 +40,7 @@ const DelegatesPage: React.FC = () => {
     const [delegateToDelete, setDelegateToDelete] = useState<number | null>(null);
 
     const { eventId } = useParams();
+    const navigate = useNavigate();
     const { allRegistrations, refreshRegistrationsData } = useApp();
 
 
@@ -91,6 +96,14 @@ const DelegatesPage: React.FC = () => {
         }
     }, [allRegistrations]);
 
+    // Notify parent component of sub-section changes
+    useEffect(() => {
+        if (onSubSectionChange) {
+            const subTabName = subTabs.find(tab => tab.id === activeSubTab)?.name || 'Key Info';
+            onSubSectionChange(subTabName);
+        }
+    }, [activeSubTab, onSubSectionChange, subTabs]);
+
     // Handle clicks outside menus
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -115,7 +128,11 @@ const DelegatesPage: React.FC = () => {
     };
 
     const handleUploadDelegates = () => {
-        toast.success('Upload Delegates feature coming soon');
+        if (eventId) {
+            navigate(`/upload-delegates/${eventId}`);
+        } else {
+            toast.error('Event ID not found');
+        }
     };
     
 
@@ -221,7 +238,7 @@ const DelegatesPage: React.FC = () => {
 			) : (
 				<>
 					{/* Search and Action Bar */}
-					<div className="flex items-center justify-between p-4 rounded-lg shadow-sm">
+					<div className="flex items-center justify-between">
 						<div className="flex items-center space-x-4">
 							<div className="relative">
 								<input
@@ -229,7 +246,7 @@ const DelegatesPage: React.FC = () => {
 									placeholder="Search"
 									value={searchTerm}
 									onChange={(e) => handleSearch(e.target.value)}
-									className="pl-10 pr-4 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
+									className="w-[400px] pl-10 pr-4 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
 								/>
 								<svg className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -327,7 +344,7 @@ const DelegatesPage: React.FC = () => {
 
                             {/* Preferred Committees */}
                             <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
-                                {delegate.preferredCommittees.join(', ')}
+                                {delegate.preferredCommittees.join(', ') || "-"}
                             </div>
 
                             {/* Assigned Committees */}
@@ -369,7 +386,7 @@ const DelegatesPage: React.FC = () => {
                             </div>
 
                             {/* Actions */}
-                            <div className="bg-white px-3 py-2 rounded-md border border-gray-200">
+                            <div className="px-3 py-2">
                                 <div className="flex items-center space-x-2">
                                     <button className="p-1 hover:bg-gray-100 rounded">
                                         <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

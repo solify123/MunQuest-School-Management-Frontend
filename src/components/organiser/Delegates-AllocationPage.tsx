@@ -346,7 +346,7 @@ const DelegatesAllocationPage: React.FC = () => {
                                     </div>
                                 )}
                             </div>
-                            <div className="bg-white px-3 py-2 rounded-md border border-gray-200">
+                            <div className="px-2 py-3">
                                 <div className="relative" ref={delegateMenuRef}>
                                     <button
                                         onClick={() => setShowDelegateMenu(showDelegateMenu === delegate.id ? null : delegate.id)}

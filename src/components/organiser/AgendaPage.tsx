@@ -29,8 +29,8 @@ const AgendaPage: React.FC = () => {
   // Internal state management for agendas and documents
   const [activeCommitteeType, setActiveCommitteeType] = useState('country');
   const [activeCommittee, setActiveCommittee] = useState('');
-  const [allAgendas, setAllAgendas] = useState<any[]>([]); // Store all agendas from API
-  const [filteredAgendas, setFilteredAgendas] = useState<AgendaItem[]>([]); // Display filtered agendas
+  const [allAgendas, setAllAgendas] = useState<any[]>([]); 
+  const [filteredAgendas, setFilteredAgendas] = useState<AgendaItem[]>([]); 
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [editingAgenda, setEditingAgenda] = useState<number | null>(null);
   const [editingDocument, setEditingDocument] = useState<number | null>(null);
@@ -610,9 +610,10 @@ const AgendaPage: React.FC = () => {
           </div>
         )}
 
-        {/* Committee Agendas Section */}
-        <div className="space-y-4">
-          <h2 className="text-xl font-bold text-gray-900">Committee Agendas</h2>
+        {/* Committee Agendas Section - Only show when there are committees */}
+        {filteredCommittees.length > 0 && (
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold text-gray-900">Committee Agendas</h2>
 
           {/* Existing Agendas */}
           {filteredAgendas.length === 0 ? (
@@ -794,11 +795,13 @@ const AgendaPage: React.FC = () => {
                 </>
               )}
           </div>
-        </div>
+          </div>
+        )}
 
-        {/* Committee Documents Section */}
-        <div className="space-y-4">
-          <h2 className="text-xl font-bold text-gray-900">Committee Documents</h2>
+        {/* Committee Documents Section - Only show when there are committees */}
+        {filteredCommittees.length > 0 && (
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold text-gray-900">Committee Documents</h2>
 
           {/* Existing Documents */}
           {subTabLoading ? (
@@ -961,7 +964,8 @@ const AgendaPage: React.FC = () => {
               'Upload Document'
             )}
           </button>
-        </div>
+          </div>
+        )}
       </div>
     </>
   );

@@ -19,6 +19,7 @@ const OrganiserDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { eventId } = useParams<{ eventId: string }>();
   const [activeStep, setActiveStep] = useState('dashboard');
+  const [activeSubSection, setActiveSubSection] = useState<string>('');
   const [eventName, setEventName] = useState('');
   const [coverImage, setCoverImage] = useState('');
   const [eventDescription, setEventDescription] = useState('');
@@ -353,6 +354,15 @@ const OrganiserDashboard: React.FC = () => {
     { id: 'general-documents', name: 'General Documents' }
   ];
 
+  // Function to generate page title based on current section and sub-section
+  const getPageTitle = () => {
+    const currentStep = steps.find(step => step.id === activeStep);
+    if (activeStep === 'delegates' && activeSubSection) {
+      return `Organiser > ${currentStep?.name} > ${activeSubSection}`;
+    }
+    return `Organiser > ${currentStep?.name || 'Dashboard'}`;
+  };
+
 
   // Leadership Roles component
   const renderLeadershipRoles = () => {
@@ -429,7 +439,7 @@ const OrganiserDashboard: React.FC = () => {
       case 'agendas':
         return renderAgenda();
       case 'delegates':
-        return <DelegatesPage />;
+        return <DelegatesPage onSubSectionChange={setActiveSubSection} />;
       case 'general-documents':
         return <GeneralDocumentsPage />;
       default:
@@ -449,7 +459,7 @@ const OrganiserDashboard: React.FC = () => {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-4xl font-medium text-[#C2A46D] mb-6">
-                Organiser &gt; {steps.find(step => step.id === activeStep)?.name || 'Dashboard'}
+                {getPageTitle()}
               </h1>
 
               {/* Step Navigation */}

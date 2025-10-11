@@ -14,7 +14,6 @@ const EventsPage: React.FC = () => {
     }
     
     if (!searchTerm.trim()) {
-      console.log("EventsPage: No search term, returning all events");
       return allEvents;
     }
 
@@ -30,8 +29,7 @@ const EventsPage: React.FC = () => {
     });
   }, [allEvents, searchTerm]);
 
-  const handleEventAction = (action: string, eventId: string) => {
-    console.log(`Action: ${action} on Event: ${eventId}`);
+  const handleEventAction = (action: string) => {
     // Implement action logic here
     switch (action) {
       case 'flag':
