@@ -7,6 +7,5 @@ export { default as DelegatesPage } from './Delegates-KeyInfoPage';
 export { default as DelegatesContactInfoPage } from './Delegates-ContactInfoPage';
 export { default as DelegatesFoodInfoPage } from './Delegates-FoodInfoPage';
 export { default as DelegatesAllocationPage } from './Delegates-AllocationPage';
-export { default as UploadDelegatesPage } from './Delegates-UploadDelegatesPage';
 export { default as GeneralDocumentsPage } from './GeneralDocumentsPage';
 export { default as OrganiserNavigation } from './OrganiserNavigation';

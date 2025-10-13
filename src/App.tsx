@@ -28,7 +28,7 @@ import ProfilePage from './pages/ProfilePage';
 import OrganiserDashboard from './pages/OrganiserDashboard';
 import SuperUser from './pages/SuperUser';
 import TeacherDelegatePage from './pages/teacher/TeacherDelegatePage';
-import UploadDelegatesPage from './components/organiser/Delegates-UploadDelegatesPage';
+import UploadDelegatesPage from './pages/UploadDelegatesPage';
 
 function App() {
   return (

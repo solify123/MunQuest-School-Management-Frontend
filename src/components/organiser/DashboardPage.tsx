@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { getAllEventCommitteesApi } from '../../apis/Event_committes';
+import { useParams } from 'react-router-dom';
 
 interface DashboardPageProps {
   eventName: string;
@@ -34,6 +36,34 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
       </div>
     );
   }
+
+  const { eventId } = useParams();
+
+  const [countryCommittees, setCountryCommittees] = useState<any[]>([]);
+  const [roleCommittees, setRoleCommittees] = useState<any[]>([]);
+  const [crisisCommittees, setCrisisCommittees] = useState<any[]>([]);
+  const [openCommittees, setOpenCommittees] = useState<any[]>([]);
+
+  useEffect(() => {
+    try {
+      const getAllEventCommittees = async () => {
+        const response = await getAllEventCommitteesApi(eventId as string);
+        if (response.success) {
+          console.log(response.data);
+          setCountryCommittees(response.data.filter((committee: any) => committee.category === 'country'));
+          setRoleCommittees(response.data.filter((committee: any) => committee.category === 'role'));
+          setCrisisCommittees(response.data.filter((committee: any) => committee.category === 'crisis'));
+          setOpenCommittees(response.data.filter((committee: any) => committee.category === 'open'));
+        }
+        else {
+          console.error('Error fetching event committees:', response.message);
+        }
+      }
+      getAllEventCommittees();
+    } catch (error) {
+      console.error('Error fetching event committees:', error);
+    }
+  }, [eventId]);
 
   return (
     <div className="space-y-8">
@@ -87,32 +117,33 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
             <tbody className="divide-y divide-gray-800">
               <tr>
                 <td className="px-4 py-3 text-center font-medium border border-gray-800">Total</td>
-                <td className="px-4 py-3 text-center border border-gray-800">13</td>
-                <td className="px-4 py-3 text-center border border-gray-800">360</td>
+                <td className="px-4 py-3 text-center border border-gray-800">{countryCommittees.length + roleCommittees.length + crisisCommittees.length + openCommittees.length}</td>
+                <td className="px-4 py-3 text-center border border-gray-800">{countryCommittees.reduce((acc, committee) => acc + parseInt(committee.seats), 0) + crisisCommittees.reduce((acc, committee) => acc + parseInt(committee.seats), 0) +
+                 roleCommittees.reduce((acc, committee) => acc + parseInt(committee.seats), 0) + openCommittees.reduce((acc, committee) => acc + parseInt(committee.seats), 0)}</td>
                 <td className="px-4 py-3 text-center border border-gray-800">202</td>
               </tr>
               <tr>
                 <td className="px-4 py-3  text-center font-medium border border-gray-800">Country Committees</td>
-                <td className="px-4 py-3  text-center border border-gray-800">5</td>
-                <td className="px-4 py-3  text-center border border-gray-800">150</td>
+                <td className="px-4 py-3  text-center border border-gray-800">{countryCommittees.length}</td>
+                <td className="px-4 py-3  text-center border border-gray-800">{countryCommittees.reduce((acc, committee) => acc + parseInt(committee.seats), 0)}</td>
                 <td className="px-4 py-3  text-center border border-gray-800">100</td>
               </tr>
               <tr>
                 <td className="px-4 py-3  text-center font-medium border border-gray-800">Crisis Committees</td>
-                <td className="px-4 py-3  text-center border border-gray-800">4</td>
-                <td className="px-4 py-3  text-center border border-gray-800">120</td>
+                <td className="px-4 py-3  text-center border border-gray-800">{crisisCommittees.length}</td>
+                <td className="px-4 py-3  text-center border border-gray-800">{crisisCommittees.reduce((acc, committee) => acc + parseInt(committee.seats), 0)}</td>
                 <td className="px-4 py-3  text-center border border-gray-800">35</td>
               </tr>
               <tr>
                 <td className="px-4 py-3 text-center font-medium border border-gray-800">Role Committees</td>
-                <td className="px-4 py-3 text-center border border-gray-800">3</td>
-                <td className="px-4 py-3 text-center border border-gray-800">90</td>
+                <td className="px-4 py-3 text-center border border-gray-800">{roleCommittees.length}</td>
+                <td className="px-4 py-3 text-center border border-gray-800">{roleCommittees.reduce((acc, committee) => acc + parseInt(committee.seats), 0)}</td>
                 <td className="px-4 py-3 text-center border border-gray-800">67</td>
               </tr>
               <tr>
                 <td className="px-4 py-3 text-center font-medium border border-gray-800">Open Committees</td>
-                <td className="px-4 py-3 text-center border border-gray-800">0</td>
-                <td className="px-4 py-3 text-center border border-gray-800">0</td>
+                <td className="px-4 py-3 text-center border border-gray-800">{openCommittees.length}</td>
+                <td className="px-4 py-3 text-center border border-gray-800">{openCommittees.reduce((acc, committee) => acc + parseInt(committee.seats), 0)}</td>
                 <td className="px-4 py-3 text-center border border-gray-800">0</td>
               </tr>
             </tbody>
