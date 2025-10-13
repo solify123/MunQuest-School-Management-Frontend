@@ -7,5 +7,6 @@ export { default as LoadingSpinner } from './LoadingSpinner';
 export { default as DateRangePicker } from './DateRangePicker';
 export { default as ConfirmationModal } from './ConfirmationModal';
 export { default as UnsavedChangesModal } from './UnsavedChangesModal';
+export { default as SearchableDropdown } from './SearchableDropdown';
 export { default as Header } from '../Header';
 export * from '../SuperUser';

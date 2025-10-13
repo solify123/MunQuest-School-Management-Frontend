@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { SearchableDropdown } from '../ui';
 import ConfirmationModal from '../ui/ConfirmationModal';
 import { useApp } from '../../contexts/AppContext';
 import DelegatesContactInfoPage from './Delegates-ContactInfoPage';
 import DelegatesFoodInfoPage from './Delegates-FoodInfoPage';
 import DelegatesAllocationPage from './Delegates-AllocationPage';
+import { deleteDelegateApi, assignDelegateApi, unassignDelegateApi, toggleDelegateFlagApi } from '../../apis/Registerations';
 
 interface DelegateItem {
     id: number;
@@ -16,8 +18,9 @@ interface DelegateItem {
     school: string;
     munExperience: number;
     preferredCommittees: string[];
-    assignedCommittees: string[];
-    assignedCountry: string;
+    assignedCommittees: string | null;
+    assignedCountry: string | null;
+    flag: boolean;
     isLocked: boolean;
 }
 
@@ -31,7 +34,6 @@ const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange }) => 
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [showDelegateMenu, setShowDelegateMenu] = useState<number | null>(null);
-
     // Refs for detecting clicks outside menus
     const delegateMenuRef = useRef<HTMLDivElement>(null);
 
@@ -39,9 +41,72 @@ const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange }) => 
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [delegateToDelete, setDelegateToDelete] = useState<number | null>(null);
 
+    // Merge state
+    const [isMergeMode, setIsMergeMode] = useState(false);
+    const [selectedDelegatesForMerge, setSelectedDelegatesForMerge] = useState<number[]>([]);
+
     const { eventId } = useParams();
     const navigate = useNavigate();
-    const { allRegistrations, refreshRegistrationsData } = useApp();
+    const { allRegistrations, refreshRegistrationsData, allCommittees, allCountries } = useApp();
+
+    // Handle committee assignment update
+    const handleCommitteeAssignment = async (delegateId: number, committeeId: string, committeeName: string) => {
+        try {
+            const delegate = delegates.find(d => d.id === delegateId);
+            if (!delegate) return;
+
+            // Update local state immediately for better UX
+            setDelegates(prev => prev.map(d => 
+                d.id === delegateId 
+                    ? { ...d, assignedCommittees: committeeId }
+                    : d
+            ));
+
+            toast.success(`Committee "${committeeName}" assigned successfully`);
+        } catch (error: any) {
+            toast.error(error.message || 'Failed to assign committee');
+        }
+    };
+
+    // Handle country assignment update
+    const handleCountryAssignment = async (delegateId: number, countryId: string, countryName: string) => {
+        try {
+            const delegate = delegates.find(d => d.id === delegateId);
+            if (!delegate) return;
+
+            // Update local state immediately for better UX
+            setDelegates(prev => prev.map(d => 
+                d.id === delegateId 
+                    ? { ...d, assignedCountry: countryId }
+                    : d
+            ));
+
+            toast.success(`Country "${countryName}" assigned successfully`);
+        } catch (error: any) {
+            toast.error(error.message || 'Failed to assign country');
+        }
+    };
+
+    // Handle individual row lock/unlock toggle
+    const handleToggleLock = (delegateId: number) => {
+        setDelegates(prev => prev.map(d => 
+            d.id === delegateId 
+                ? { ...d, isLocked: !d.isLocked }
+                : d
+        ));
+    };
+
+    // Handle lock all delegates
+    const handleLockAll = () => {
+        setDelegates(prev => prev.map(d => ({ ...d, isLocked: true })));
+        toast.success('All delegates locked');
+    };
+
+    // Handle unlock all delegates
+    const handleUnlockAll = () => {
+        setDelegates(prev => prev.map(d => ({ ...d, isLocked: false })));
+        toast.success('All delegates unlocked');
+    };
 
 
     const subTabs = [
@@ -68,7 +133,6 @@ const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange }) => 
             loadDelegates();
         }
     }, [eventId, refreshRegistrationsData]);
-
     // Update delegates when allRegistrations changes
     useEffect(() => {
         if (allRegistrations && allRegistrations.length > 0) {
@@ -86,9 +150,10 @@ const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange }) => 
 						registration.pref_committee_2?.abbr,
 						registration.pref_committee_3?.abbr
 					].filter(Boolean) as string[],
-                    assignedCommittees: registration.assignedCommittees || [],
-                    assignedCountry: registration.assignedCountry || '',
-                    isLocked: registration.isLocked || false
+                    assignedCommittees: registration.assigned_committees || null,
+                    assignedCountry: registration.assigned_country || null,
+                    flag: registration.flag || null,
+                    isLocked: true
                 }));
             setDelegates(mockDelegates);
         } else {
@@ -106,16 +171,16 @@ const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange }) => 
 
     // Handle clicks outside menus
     useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (delegateMenuRef.current && !delegateMenuRef.current.contains(event.target as Node)) {
-                setShowDelegateMenu(null);
-            }
-        };
+            const handleClickOutside = (event: MouseEvent) => {
+                if (delegateMenuRef.current && !delegateMenuRef.current.contains(event.target as Node)) {
+                    setShowDelegateMenu(null);
+                }
+            };
 
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
+            document.addEventListener('mousedown', handleClickOutside);
+            return () => {
+                document.removeEventListener('mousedown', handleClickOutside);
+            };
     }, []);
 
     const handleSearch = (term: string) => {
@@ -136,46 +201,143 @@ const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange }) => 
     };
     
 
-    const handleAssign = (_delegateId: number) => {
-        setShowDelegateMenu(null);
-        toast.success('Assign feature coming soon');
+    const handleAssign = async (delegateId: number) => {
+        try {
+            const delegate = delegates.find(d => d.id === delegateId);
+            if (!delegate) {
+                toast.error('Delegate not found');
+                return;
+            }
+
+            // Use the currently selected committee and country from the delegate state
+            const selectedCommitteeId = delegate.assignedCommittees;
+            const selectedCountryId = delegate.assignedCountry;
+            
+            if (!selectedCommitteeId || !selectedCountryId) {
+                toast.error('Please select both committee and country before assigning');
+                return;
+            }
+
+            await assignDelegateApi(
+                delegateId.toString(), 
+                selectedCommitteeId, 
+                selectedCountryId
+            );
+
+            setShowDelegateMenu(null);
+            toast.success('Delegate assigned successfully');
+        } catch (error: any) {
+            toast.error(error.message || 'Failed to assign delegate');
+        }
     };
 
-    const handleUnassign = (_delegateId: number) => {
-        setShowDelegateMenu(null);
-        toast.success('Unassign feature coming soon');
+    const handleUnassign = async (delegateId: number) => {
+        try {
+            await unassignDelegateApi(delegateId.toString());
+            
+            // Update local state
+            setDelegates(prev => prev.map(d => 
+                d.id === delegateId 
+                    ? { 
+                        ...d, 
+                        assignedCommittees: null,
+                        assignedCountry: null,
+                    }
+                    : d
+            ));
+
+            setShowDelegateMenu(null);
+            toast.success('Delegate unassigned successfully');
+        } catch (error: any) {
+            toast.error(error.message || 'Failed to unassign delegate');
+        }
     };
 
-    const handleRemoveFromEvent = (delegateId: number) => {
+    const handleRemoveFromEvent = async (delegateId: number) => {
+        await deleteDelegateApi(delegateId.toString());
         setDelegateToDelete(delegateId);
         setShowDeleteConfirm(true);
         setShowDelegateMenu(null);
     };
 
-    const handleViewProfile = (_delegateId: number) => {
+    const handleViewProfile = (delegateId: number) => {
         setShowDelegateMenu(null);
-        toast.success('View Profile feature coming soon');
+        navigate(`/view-delegate-profile/${delegateId}`);
     };
 
-    const handleFlag = (_delegateId: number) => {
-        setShowDelegateMenu(null);
-        toast.success('Flag feature coming soon');
+    const handleFlag = async (delegateId: number) => {
+        try {
+            const delegate = delegates.find(d => d.id === delegateId);
+            if (!delegate) {
+                toast.error('Delegate not found');
+                return;
+            }
+            
+            setShowDelegateMenu(null);
+            const newFlagState = !delegate.flag;
+            await toggleDelegateFlagApi(delegateId.toString(), newFlagState);
+            
+            // Update local state immediately for better UX
+            setDelegates(prev => prev.map(d => 
+                d.id === delegateId 
+                    ? { ...d, flag: newFlagState }
+                    : d
+            ));
+
+            // Call API to update database
+            toast.success(newFlagState ? 'Delegate flagged' : 'Delegate unflagged');
+        } catch (error: any) {
+            // Revert local state on error
+            setDelegates(prev => prev.map(d => 
+                d.id === delegateId 
+                    ? { ...d, flag: !d.flag }
+                    : d
+            ));
+            toast.error(error.message || 'Failed to toggle flag');
+        }
     };
 
     const handleMerge = (_delegateId: number) => {
         setShowDelegateMenu(null);
-        toast.success('Merge feature coming soon');
+        setIsMergeMode(true);
+        setSelectedDelegatesForMerge([_delegateId]);
     };
 
-    const handleLockAll = () => {
-        setDelegates(prev => prev.map(delegate => ({ ...delegate, isLocked: true })));
-        toast.success('All delegates locked');
+    const handleDelegateSelectionForMerge = (delegateId: number) => {
+        if (selectedDelegatesForMerge.includes(delegateId)) {
+            setSelectedDelegatesForMerge(prev => prev.filter(id => id !== delegateId));
+        } else {
+            // Only allow selection of exactly 2 delegates
+            if (selectedDelegatesForMerge.length >= 2) {
+                toast.error('You can only merge exactly 2 delegates');
+                return;
+            }
+            setSelectedDelegatesForMerge(prev => [...prev, delegateId]);
+        }
     };
 
-    const handleUnlockAll = () => {
-        setDelegates(prev => prev.map(delegate => ({ ...delegate, isLocked: false })));
-        toast.success('All delegates unlocked');
+    const handleExecuteMerge = async () => {
+        try {
+            if (selectedDelegatesForMerge.length !== 2) {
+                toast.error('Please select exactly 2 delegates to merge');
+                return;
+            }
+            await deleteDelegateApi(selectedDelegatesForMerge[1].toString());
+            setDelegates(prev => prev.filter(delegate => delegate.id !== selectedDelegatesForMerge[1]));
+            setIsMergeMode(false);
+            setDelegateToDelete(selectedDelegatesForMerge[1]);
+            // setSelectedDelegatesForMerge([]);
+            toast.success('Delegates merged successfully');
+        } catch (error: any) {
+            toast.error(error.message || 'Failed to merge delegates');
+        }
     };
+
+    const handleCancelMerge = () => {
+        setIsMergeMode(false);
+        setSelectedDelegatesForMerge([]);
+    };
+
 
     const confirmDelete = async () => {
         if (!delegateToDelete) return;
@@ -280,7 +442,7 @@ const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange }) => 
 					{/* Delegates Table */}
 					<div>
                 {/* Header Row */}
-                <div className="grid gap-2 mb-2" style={{ gridTemplateColumns: '80px 80px 120px 100px 140px 80px 160px 140px 140px 80px' }}>
+                <div className="grid gap-2 mb-2" style={{ gridTemplateColumns: '80px 80px 100px 90px 140px 80px 160px 140px 140px 135px' }}>
                     {['Unique ID', 'Registration ID', 'Name', 'Academic Level', 'School', 'MUN Experience', 'Preferred Committees', 'Assigned Committees', 'Assigned Country', ' '].map((header, index) => (
                         header === ' ' ? (
                             <div key={header}>
@@ -311,90 +473,115 @@ const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange }) => 
                     </div>
                 ) : (
                     filteredDelegates.map((delegate) => (
-                        <div key={delegate.id} className="grid gap-2 mb-2" style={{ gridTemplateColumns: '80px 80px 120px 100px 140px 80px 160px 140px 140px 80px' }}>
+                        <div key={delegate.id} className="grid gap-2 mb-2" style={{ gridTemplateColumns: '80px 80px 100px 90px 140px 80px 160px 140px 140px 135px' }}>
+                            {/* Merge Selection Checkbox */}
+                            
                             {/* Unique ID */}
-                            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+                            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200 break-words">
                                 {delegate.uniqueId}
                             </div>
 
                             {/* Registration ID */}
-                            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+                            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200 break-words">
                                 {delegate.registrationId}
                             </div>
 
                             {/* Name */}
-                            <div className="bg-white px-3 py-2 text-sm font-medium text-gray-900 rounded-md border border-gray-200">
+                            <div className="bg-white px-3 py-2 text-sm font-medium text-gray-900 rounded-md border border-gray-200 break-words">
                                 {delegate.name}
                             </div>
 
                             {/* Academic Level */}
-                            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+                            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200 break-words">
                                 {delegate.academicLevel}
                             </div>
 
                             {/* School */}
-                            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+                            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200 break-words">
                                 {delegate.school}
                             </div>
 
                             {/* MUN Experience */}
-                            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+                            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200 break-words">
                                 {delegate.munExperience}
                             </div>
 
                             {/* Preferred Committees */}
-                            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+                            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200 break-words">
                                 {delegate.preferredCommittees.join(', ') || "-"}
                             </div>
 
-                            {/* Assigned Committees */}
-                            <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
-                                {delegate.assignedCommittees.length > 0 ? (
-                                    <div className="flex items-center space-x-1">
-                                        <span className="text-gray-900">{delegate.assignedCommittees.join(', ')}</span>
-                                        <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                        </svg>
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center space-x-1">
-                                        <span className="text-red-600">Unassigned</span>
-                                        <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                        </svg>
-                                    </div>
-                                )}
-                            </div>
+                             {/* Assigned Committees */}
+                             <SearchableDropdown
+                                 options={allCommittees.map(committee => ({
+                                     id: committee.id,
+                                     name: committee.abbr
+                                 }))}
+                                 value={delegate.assignedCommittees || ''}
+                                 placeholder="Committees"
+                                 onSelect={(id, name) => handleCommitteeAssignment(delegate.id, id, name)}
+                                 disabled={delegate.isLocked}
+                                 className="w-full"
+                             />
 
-                            {/* Assigned Country */}
-                            <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
-                                {delegate.assignedCountry ? (
-                                    <div className="flex items-center space-x-1">
-                                        <span className="text-gray-900">{delegate.assignedCountry}</span>
-                                        <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                        </svg>
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center space-x-1">
-                                        <span className="text-red-600">Unassigned</span>
-                                        <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                        </svg>
-                                    </div>
-                                )}
-                            </div>
+                             {/* Assigned Country */}
+                             <SearchableDropdown
+                                 options={allCountries.map(country => ({
+                                     id: country.id,
+                                     name: country.name
+                                 }))}
+                                 value={delegate.assignedCountry || ''}
+                                 placeholder="Countries"
+                                 onSelect={(id, name) => handleCountryAssignment(delegate.id, id, name)}
+                                 disabled={delegate.isLocked}
+                                 className="w-full"
+                             />
 
                             {/* Actions */}
                             <div className="px-3 py-2">
-                                <div className="flex items-center space-x-2">
-                                    <button className="p-1 hover:bg-gray-100 rounded">
-                                        <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                        </svg>
+                                <div className="flex items-center space-x-2" style={{ marginLeft: 'unset !important' }}>
+                                    <button 
+                                        onClick={() => handleToggleLock(delegate.id)}
+                                        className="p-1 hover:bg-gray-100 rounded transition-colors"
+                                        title={delegate.isLocked ? 'Unlock delegate' : 'Lock delegate'}
+                                    >
+                                        {delegate.isLocked ? (
+                                             <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                         </svg>
+                                        ) : (
+                                            <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                                            </svg>
+                                        )}
                                     </button>
 
-                                    <div className="relative" ref={delegateMenuRef}>
+                                    {isMergeMode && (
+                                        <div className="flex items-center justify-center">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedDelegatesForMerge.includes(delegate.id)}
+                                                onChange={() => handleDelegateSelectionForMerge(delegate.id)}
+                                                className="cursor-pointer w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                                            />
+                                        </div>
+                                    )}
+                                    
+                                    {selectedDelegatesForMerge.includes(delegate.id) && selectedDelegatesForMerge.indexOf(delegate.id) === 0 && (
+                                        <div className="ml-2 text-sm font-medium text-blue-600">
+                                            1
+                                        </div>
+                                    )}
+
+                                    {/* Flag Icon */}
+                                    {delegate.flag && (
+                                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M4 5V20" stroke="#FF1616" strokeWidth="2" strokeLinecap="round"/>
+                                            <path d="M4 5H20V13H4" fill="#FF1616" />
+                                        </svg>
+                                    )}
+
+                                    <div className="relative" style={{ marginLeft: 'unset !important' }}>
                                         <button
                                             onClick={() => setShowDelegateMenu(showDelegateMenu === delegate.id ? null : delegate.id)}
                                             className="p-1 hover:bg-gray-100 rounded"
@@ -453,19 +640,45 @@ const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange }) => 
             </div>
 
             {/* Bottom Action Buttons */}
-            <div className="flex items-center justify-start space-x-4">
-                <button
-                    onClick={handleLockAll}
-                    className="bg-[#C2A46D] text-white px-6 py-2 rounded-[20px] hover:opacity-90 transition-colors duration-200"
-                >
-                    Lock All
-                </button>
-                <button
-                    onClick={handleUnlockAll}
-                    className="bg-[#C2A46D] text-white px-6 py-2 rounded-[20px] hover:opacity-90 transition-colors duration-200"
-                >
-                    Unlock All
-                </button>
+            <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                    <button
+                        onClick={handleLockAll}
+                        className="bg-[#C2A46D] text-white px-6 py-2 rounded-[20px] hover:opacity-90 transition-colors duration-200"
+                    >
+                        Lock All
+                    </button>
+                    <button
+                        onClick={handleUnlockAll}
+                        className="bg-[#C2A46D] text-white px-6 py-2 rounded-[20px] hover:opacity-90 transition-colors duration-200"
+                    >
+                        Unlock All
+                    </button>
+                </div>
+
+                <div className="flex items-center space-x-4">
+                    {isMergeMode && (
+                        <>
+                            <button
+                                onClick={handleCancelMerge}
+                                className="bg-[#C2A46D] text-white px-6 py-2 rounded-[20px] hover:opacity-90 transition-colors duration-200"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleExecuteMerge}
+                                disabled={selectedDelegatesForMerge.length !== 2}
+                                className={`px-6 py-2 rounded-[20px] transition-colors duration-200 ${
+                                    selectedDelegatesForMerge.length === 2
+                                        ? 'bg-[#C2A46D] text-white hover:opacity-90'
+                                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                }`}
+                            >
+                                Merge ({selectedDelegatesForMerge.length})
+                            </button>
+                        </>
+                    )}
+                </div>
             </div>
 
             {/* Confirmation Modal */}
