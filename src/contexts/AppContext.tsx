@@ -11,6 +11,7 @@ import { useSupabaseAuth } from './SupabaseAuthContext';
 import { toast } from 'sonner';
 import { getAllCommitteesApi } from '../apis/Committees.ts';
 import { getAllRegistrationsByEventIdApi } from '../apis/Registerations.ts';
+import { getAllCountriesApi } from '../apis/Countries.ts';
 
 // Define the context type
 interface AppContextType {
@@ -59,6 +60,9 @@ interface AppContextType {
   allRegistrations: any[];
   setAllRegistrations: (regs: any[]) => void;
   refreshRegistrationsData: (eventId: string) => Promise<void>;
+  allCountries: any[];
+  setAllCountries: (countries: any[]) => void;
+  refreshCountriesData: () => Promise<void>;
 }
 
 // Create the context with a default value to prevent undefined errors
@@ -85,6 +89,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [allAreas, setAllAreas] = useState<any[]>([]);
   const [allLeadershipRoles, setAllLeadershipRoles] = useState<any[]>([]);
   const [allCommittees, setAllCommittees] = useState<any[]>([]);
+  const [allCountries, setAllCountries] = useState<any[]>([]);
   const [allRegistrations, setAllRegistrations] = useState<any[]>([]);
   // Dashboard statistics state
   const [dashboardStats, setDashboardStats] = useState({
@@ -270,6 +275,25 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   }, [loginStatus]);
 
+  const refreshCountriesData = useCallback(async () => {
+
+    try {
+      const response = await getAllCountriesApi();
+      if (response.success) {
+        setAllCountries(response.data);
+      }
+      else {
+        toast.error(response.message);
+      }
+    } catch (error) {
+      let token = localStorage.getItem('token');
+      // Only show JWT expiration toast if user was logged in
+      if (loginStatus && token) {
+        toast.error('JWT token is expired. Please login again.');
+      }
+    }
+  }, [loginStatus]);
+
   // Update dashboard statistics
   const updateDashboardStats = (newStats: Partial<AppContextType['dashboardStats']>) => {
     setDashboardStats(prev => ({
@@ -288,6 +312,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       refreshLocalitiesData();
       refreshAreasData();
       refreshCommitteesData();
+      refreshCountriesData();
     }
   }, [supabaseUser, session, authLoading, refreshUserData, refreshEventsData, refreshLeadershipRolesData, refreshSchoolsData, refreshLocalitiesData, refreshAreasData]);
 
@@ -326,6 +351,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     refreshLeadershipRolesData,
     refreshCommitteesData,
     refreshRegistrationsData,
+    allCountries,
+    setAllCountries,
+    refreshCountriesData,
   };
 
 
@@ -385,6 +413,9 @@ export const useApp = (): AppContextType => {
       refreshCommitteesData: async () => { },
       setAllRegistrations: () => { },
       refreshRegistrationsData: async (_eventId: string) => { },
+      allCountries: [],
+      setAllCountries: () => { },
+      refreshCountriesData: async () => { },
     };
   }
   return context;

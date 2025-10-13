@@ -92,3 +92,90 @@ export const deleteRegistrationByEventIdAndUserIdApi = async (registrationId: st
         throw new Error(error.response?.data?.message || 'Failed to cancel registration');
     }
 }
+
+export const deleteDelegateApi = async (delegateId: string) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.delete(`${backendUrl}/api/v1/registerations/delete-delegate/${delegateId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+}
+
+export const assignDelegateApi = async (delegateId: string, committeeId: string, countryId: string) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.post(`${backendUrl}/api/v1/registerations/assign-delegate`, {
+            delegateId,
+            committeeId,
+            countryId
+        }, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response?.data?.message || 'Failed to assign delegate');
+    }
+}
+
+export const unassignDelegateApi = async (delegateId: string) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.post(`${backendUrl}/api/v1/registerations/unassign-delegate`, {
+            delegateId
+        }, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response?.data?.message || 'Failed to unassign delegate');
+    }
+}
+
+// Toggle delegate flag
+export const toggleDelegateFlagApi = async (delegateId: string, flag: boolean) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.post(`${backendUrl}/api/v1/registerations/toggle-delegate-flag`, {
+            delegateId,
+            flag
+        }, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response?.data?.message || 'Failed to toggle delegate flag');
+    }
+}
+
+// Merge delegates
+export const mergeDelegatesApi = async (selectedDelegates: number[]) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.post(`${backendUrl}/api/v1/registerations/merge-delegates`, {
+            selectedDelegates
+        }, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response?.data?.message || 'Failed to merge delegates');
+    }
+}

@@ -1,8 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
+import { SearchableDropdown } from '../ui';
 import { useApp } from '../../contexts/AppContext';
 import { getAllEventCommitteesApi } from '../../apis/Event_committes';
+import { assignDelegateApi, unassignDelegateApi } from '../../apis/Registerations';
 
 interface DelegateItem {
     id: number;
@@ -13,7 +15,9 @@ interface DelegateItem {
     munExperience: number | string;
     preferredCommittees: string[];
     assignedCommittees: string[];
+    assignedCommitteeId: string | null;
     assignedCountry: string;
+    assignedCountryId: string | null;
     isLocked?: boolean;
 }
 
@@ -25,10 +29,142 @@ const DelegatesAllocationPage: React.FC = () => {
     const [allCommitteesData, setAllCommitteesData] = useState<any[]>([]);
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [showDelegateMenu, setShowDelegateMenu] = useState<number | null>(null);
+    const [delegates, setDelegates] = useState<DelegateItem[]>([]);
     const delegateMenuRef = useRef<HTMLDivElement>(null);
-
     const { eventId } = useParams();
-    const { allRegistrations, refreshRegistrationsData } = useApp();
+    const { allRegistrations, refreshRegistrationsData, allCommittees, allCountries } = useApp();
+
+    // Handle committee assignment update
+    const handleCommitteeAssignment = async (delegateId: number, committeeId: string, committeeName: string) => {
+        try {
+            const delegate = filteredDelegates.find(d => d.id === delegateId);
+            if (!delegate) return;
+
+            // Update local state immediately for better UX
+            setDelegates(prev => prev.map(d => 
+                d.id === delegateId 
+                    ? { ...d, assignedCommitteeId: committeeId, assignedCommittees: [committeeName] }
+                    : d
+            ));
+
+            toast.success(`Committee "${committeeName}" assigned successfully`);
+        } catch (error: any) {
+            toast.error(error.message || 'Failed to assign committee');
+        }
+    };
+
+    // Handle country assignment update
+    const handleCountryAssignment = async (delegateId: number, countryId: string, countryName: string) => {
+        try {
+            const delegate = filteredDelegates.find(d => d.id === delegateId);
+            if (!delegate) return;
+
+            // Update local state immediately for better UX
+            setDelegates(prev => prev.map(d => 
+                d.id === delegateId 
+                    ? { ...d, assignedCountryId: countryId, assignedCountry: countryName }
+                    : d
+            ));
+
+            toast.success(`Country "${countryName}" assigned successfully`);
+        } catch (error: any) {
+            toast.error(error.message || 'Failed to assign country');
+        }
+    };
+
+    // Handle individual row lock/unlock toggle
+    const handleToggleLock = (delegateId: number) => {
+        setDelegates(prev => prev.map(d => 
+            d.id === delegateId 
+                ? { ...d, isLocked: !d.isLocked }
+                : d
+        ));
+    };
+
+    // Handle lock all delegates
+    const handleLockAll = () => {
+        setDelegates(prev => prev.map(d => ({ ...d, isLocked: true })));
+        toast.success('All delegates locked');
+    };
+
+    // Handle unlock all delegates
+    const handleUnlockAll = () => {
+        setDelegates(prev => prev.map(d => ({ ...d, isLocked: false })));
+        toast.success('All delegates unlocked');
+    };
+
+    // Handle assign delegate
+    const handleAssign = async (delegateId: number) => {
+        try {
+            const delegate = delegates.find(d => d.id === delegateId);
+            if (!delegate) {
+                toast.error('Delegate not found');
+                return;
+            }
+
+            // For now, we'll assign the first preferred committee and a default country
+            const firstPreferredCommittee = delegate.preferredCommittees[0];
+            const defaultCountry = "Afghanistan"; // You can make this configurable
+            
+            // Find committee ID by abbreviation
+            const selectedCommittee = allCommittees.find(c => c.abbr === firstPreferredCommittee);
+            const selectedCountry = allCountries.find(c => c.name === defaultCountry);
+            
+            if (!selectedCommittee || !selectedCountry) {
+                toast.error('Unable to find committee or country');
+                return;
+            }
+
+            await assignDelegateApi(
+                delegateId.toString(), 
+                selectedCommittee.id, 
+                selectedCountry.id
+            );
+            
+            // Update local state
+            setDelegates(prev => prev.map(d => 
+                d.id === delegateId 
+                    ? { 
+                        ...d, 
+                        assignedCommittees: [selectedCommittee.abbr],
+                        assignedCommitteeId: selectedCommittee.id,
+                        assignedCountry: selectedCountry.name,
+                        assignedCountryId: selectedCountry.id
+                    }
+                    : d
+            ));
+
+            setShowDelegateMenu(null);
+            toast.success('Delegate assigned successfully');
+        } catch (error: any) {
+            toast.error(error.message || 'Failed to assign delegate');
+        }
+    };
+
+    // Handle unassign delegate
+    const handleUnassign = async (delegateId: number) => {
+        try {
+            await unassignDelegateApi(delegateId.toString());
+            
+            // Update local state
+            setDelegates(prev => prev.map(d => 
+                d.id === delegateId 
+                    ? { 
+                        ...d, 
+                        assignedCommittees: [],
+                        assignedCommitteeId: null,
+                        assignedCountry: '',
+                        assignedCountryId: null
+                    }
+                    : d
+            ));
+
+            setShowDelegateMenu(null);
+            toast.success('Delegate unassigned successfully');
+        } catch (error: any) {
+            toast.error(error.message || 'Failed to unassign delegate');
+        }
+    };
 
     // Close menus when clicking outside
     useEffect(() => {
@@ -79,7 +215,7 @@ const DelegatesAllocationPage: React.FC = () => {
     }, [allCommitteesData, activeCommitteeType]);
 
     // Build delegates
-    const delegates: DelegateItem[] = useMemo(() => {
+    const builtDelegates: DelegateItem[] = useMemo(() => {
         if (!Array.isArray(allRegistrations)) return [];
         return allRegistrations.map((registration: any) => {
             const user = registration?.user || {};
@@ -97,11 +233,18 @@ const DelegatesAllocationPage: React.FC = () => {
                 munExperience: registration?.mun_experience ?? 0,
                 preferredCommittees: preferred,
                 assignedCommittees: registration?.assignedCommittees || registration?.assigned_committees || [],
+                assignedCommitteeId: registration?.assigned_committee_id || null,
                 assignedCountry: registration?.assignedCountry || registration?.assigned_country || '',
+                assignedCountryId: registration?.assigned_country_id || null,
                 isLocked: registration?.isLocked || false
             } as DelegateItem;
         });
     }, [allRegistrations]);
+
+    // Update delegates state when builtDelegates changes
+    useEffect(() => {
+        setDelegates(builtDelegates);
+    }, [builtDelegates]);
 
     // Filter by active sub-tab and search term
     const filteredDelegates = useMemo(() => {
@@ -312,60 +455,65 @@ const DelegatesAllocationPage: React.FC = () => {
                             <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200 text-wrap">{delegate.school}</div>
                             <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200 text-wrap">{delegate.munExperience}</div>
                             <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">{delegate.preferredCommittees.join(', ')}</div>
-                            <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
-                                {delegate.assignedCommittees.length > 0 ? (
-                                    <div className="flex items-center space-x-1">
-                                        <span className="text-gray-900">{delegate.assignedCommittees.join(', ')}</span>
-                                        <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                        </svg>
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center space-x-1">
-                                        <span className="text-red-600">Unassigned</span>
-                                        <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                        </svg>
-                                    </div>
-                                )}
-                            </div>
-                            <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
-                                {delegate.assignedCountry ? (
-                                    <div className="flex items-center space-x-1">
-                                        <span className="text-gray-900">{delegate.assignedCountry}</span>
-                                        <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                        </svg>
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center space-x-1">
-                                        <span className="text-red-600">Unassigned</span>
-                                        <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                        </svg>
-                                    </div>
-                                )}
-                            </div>
+                            <SearchableDropdown
+                                options={allCommittees.map(committee => ({
+                                    id: committee.id,
+                                    name: committee.abbr,
+                                }))}
+                                value={delegate.assignedCommitteeId || ''}
+                                placeholder="Committees"
+                                onSelect={(id, name) => handleCommitteeAssignment(delegate.id, id, name)}
+                                disabled={delegate.isLocked}
+                                className="w-full"
+                            />
+                            <SearchableDropdown
+                                options={allCountries.map(country => ({
+                                    id: country.id,
+                                    name: country.name
+                                }))}
+                                value={delegate.assignedCountryId || ''}
+                                placeholder="Countries"
+                                onSelect={(id, name) => handleCountryAssignment(delegate.id, id, name)}
+                                disabled={delegate.isLocked}
+                                className="w-full"
+                            />
                             <div className="px-2 py-3">
-                                <div className="relative" ref={delegateMenuRef}>
-                                    <button
-                                        onClick={() => setShowDelegateMenu(showDelegateMenu === delegate.id ? null : delegate.id)}
-                                        className="p-1 hover:bg-gray-100 rounded"
+                                <div className="flex items-center space-x-2">
+                                    <button 
+                                        onClick={() => handleToggleLock(delegate.id)}
+                                        className="p-1 hover:bg-gray-100 rounded transition-colors"
+                                        title={delegate.isLocked ? 'Unlock delegate' : 'Lock delegate'}
                                     >
-                                        <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                                        </svg>
+                                        {delegate.isLocked ? (
+                                            <svg className="w-4 h-4 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                            </svg>
+                                        ) : (
+                                            <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                                            </svg>
+                                        )}
                                     </button>
-                                    {showDelegateMenu === delegate.id && (
-                                        <div className="absolute right-0 top-full mt-1 w-40 bg-white border border-gray-200 rounded-md shadow-lg z-10">
-                                            <button className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100" onClick={() => setShowDelegateMenu(null)}>
-                                                Assign
-                                            </button>
-                                            <button className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100" onClick={() => setShowDelegateMenu(null)}>
-                                                Unassign
-                                            </button>
-                                        </div>
-                                    )}
+                                    <div className="relative" ref={delegateMenuRef}>
+                                        <button
+                                            onClick={() => setShowDelegateMenu(showDelegateMenu === delegate.id ? null : delegate.id)}
+                                            className="p-1 hover:bg-gray-100 rounded"
+                                        >
+                                            <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                                            </svg>
+                                        </button>
+                                        {showDelegateMenu === delegate.id && (
+                                            <div className="absolute right-0 top-full mt-1 w-40 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                                                <button className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100" onClick={() => handleAssign(delegate.id)}>
+                                                    Assign
+                                                </button>
+                                                <button className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100" onClick={() => handleUnassign(delegate.id)}>
+                                                    Unassign
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -376,13 +524,13 @@ const DelegatesAllocationPage: React.FC = () => {
             {/* Bottom Buttons */}
             <div className="flex items-center justify-start space-x-4">
                 <button
-                    onClick={() => toast.success('All delegates locked')}
+                    onClick={handleLockAll}
                     className="bg-[#C2A46D] text-white px-6 py-2 rounded-[20px] hover:opacity-90 transition-colors duration-200"
                 >
                     Lock All
                 </button>
                 <button
-                    onClick={() => toast.success('All delegates unlocked')}
+                    onClick={handleUnlockAll}
                     className="bg-[#C2A46D] text-white px-6 py-2 rounded-[20px] hover:opacity-90 transition-colors duration-200"
                 >
                     Unlock All
