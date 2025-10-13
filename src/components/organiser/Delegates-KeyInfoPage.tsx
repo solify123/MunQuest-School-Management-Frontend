@@ -172,7 +172,7 @@ const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange }) => 
     // Handle clicks outside menus
     useEffect(() => {
             const handleClickOutside = (event: MouseEvent) => {
-                if (delegateMenuRef.current && !delegateMenuRef.current.contains(event.target as Node)) {
+                if (!(event.target as HTMLElement).closest('.action-menu')) {
                     setShowDelegateMenu(null);
                 }
             };
@@ -203,6 +203,7 @@ const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange }) => 
 
     const handleAssign = async (delegateId: number) => {
         try {
+            setShowDelegateMenu(null);
             const delegate = delegates.find(d => d.id === delegateId);
             if (!delegate) {
                 toast.error('Delegate not found');
@@ -224,7 +225,6 @@ const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange }) => 
                 selectedCountryId
             );
 
-            setShowDelegateMenu(null);
             toast.success('Delegate assigned successfully');
         } catch (error: any) {
             toast.error(error.message || 'Failed to assign delegate');
@@ -233,6 +233,7 @@ const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange }) => 
 
     const handleUnassign = async (delegateId: number) => {
         try {
+            setShowDelegateMenu(null);
             await unassignDelegateApi(delegateId.toString());
             
             // Update local state
@@ -246,7 +247,6 @@ const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange }) => 
                     : d
             ));
 
-            setShowDelegateMenu(null);
             toast.success('Delegate unassigned successfully');
         } catch (error: any) {
             toast.error(error.message || 'Failed to unassign delegate');
@@ -254,10 +254,10 @@ const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange }) => 
     };
 
     const handleRemoveFromEvent = async (delegateId: number) => {
+        setShowDelegateMenu(null);
         await deleteDelegateApi(delegateId.toString());
         setDelegateToDelete(delegateId);
         setShowDeleteConfirm(true);
-        setShowDelegateMenu(null);
     };
 
     const handleViewProfile = (delegateId: number) => {
@@ -267,13 +267,13 @@ const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange }) => 
 
     const handleFlag = async (delegateId: number) => {
         try {
+            setShowDelegateMenu(null);
             const delegate = delegates.find(d => d.id === delegateId);
             if (!delegate) {
                 toast.error('Delegate not found');
                 return;
             }
             
-            setShowDelegateMenu(null);
             const newFlagState = !delegate.flag;
             await toggleDelegateFlagApi(delegateId.toString(), newFlagState);
             
@@ -581,7 +581,7 @@ const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange }) => 
                                         </svg>
                                     )}
 
-                                    <div className="relative" style={{ marginLeft: 'unset !important' }}>
+                                    <div className="relative" style={{ marginLeft: 'unset !important' }} ref={delegateMenuRef}>
                                         <button
                                             onClick={() => setShowDelegateMenu(showDelegateMenu === delegate.id ? null : delegate.id)}
                                             className="p-1 hover:bg-gray-100 rounded"
@@ -595,37 +595,37 @@ const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange }) => 
                                             <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
                                                 <button
                                                     onClick={() => handleAssign(delegate.id)}
-                                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 border-b border-gray-200"
+                                                    className="action-menu w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 border-b border-gray-200"
                                                 >
                                                     Assign
                                                 </button>
                                                 <button
                                                     onClick={() => handleUnassign(delegate.id)}
-                                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 border-b border-gray-200"
+                                                    className="action-menu w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 border-b border-gray-200"
                                                 >
                                                     Unassign
                                                 </button>
                                                 <button
                                                     onClick={() => handleRemoveFromEvent(delegate.id)}
-                                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 border-b border-gray-200"
+                                                    className="action-menu w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 border-b border-gray-200"
                                                 >
                                                     Remove from Event
                                                 </button>
                                                 <button
                                                     onClick={() => handleViewProfile(delegate.id)}
-                                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 border-b border-gray-200"
+                                                    className="action-menu w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 border-b border-gray-200"
                                                 >
                                                     View Profile
                                                 </button>
                                                 <button
                                                     onClick={() => handleFlag(delegate.id)}
-                                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 border-b border-gray-200"
+                                                    className="action-menu w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 border-b border-gray-200"
                                                 >
-                                                    Flag
+                                                    {delegate.flag ? 'Unflag' : 'Flag'}
                                                 </button>
                                                 <button
                                                     onClick={() => handleMerge(delegate.id)}
-                                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                                                    className="action-menu w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
                                                 >
                                                     Merge
                                                 </button>
