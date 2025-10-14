@@ -23,7 +23,6 @@ const SignUp: React.FC = () => {
     try {
       setIsLoading(true);
 
-      // Validate email is a Gmail address and password is at least 6 characters
       const newErrors: Partial<AuthFormData> = {};
       const gmailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
 
