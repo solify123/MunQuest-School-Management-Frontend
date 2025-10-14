@@ -28,6 +28,7 @@ import ProfilePage from './pages/ProfilePage';
 import OrganiserDashboard from './pages/OrganiserDashboard';
 import SuperUser from './pages/SuperUser';
 import TeacherDelegatePage from './pages/teacher/TeacherDelegatePage';
+import UploadDelegatesPage from './components/organiser/Delegates-UploadDelegatesPage';
 import ViewDelegateProfile from './pages/ViewDelegateProfile';
 
 function App() {
@@ -53,6 +54,7 @@ function App() {
               <Route path="/event-create-success" element={<PrivateRoute><EventCreateSuccess /></PrivateRoute>} />
               <Route path="/organiser" element={<PrivateRoute><Organiser /></PrivateRoute>} />
               <Route path="/event-dashboard/:eventId" element={<PrivateRoute><OrganiserDashboard /></PrivateRoute>} />
+              <Route path="/upload-delegates/:eventId" element={<PrivateRoute><UploadDelegatesPage /></PrivateRoute>} />
               <Route path="/view-delegate-profile/:delegateId" element={<PrivateRoute><ViewDelegateProfile /></PrivateRoute>} />
               <Route path="/super-user" element={<PrivateRoute><SuperUser /></PrivateRoute>} />
 
