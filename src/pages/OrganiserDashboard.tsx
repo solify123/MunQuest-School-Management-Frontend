@@ -20,6 +20,8 @@ const OrganiserDashboard: React.FC = () => {
   const { eventId } = useParams<{ eventId: string }>();
   const [activeStep, setActiveStep] = useState('dashboard');
   const [activeSubSection, setActiveSubSection] = useState<string>('');
+  const [activeCommitteeType, setActiveCommitteeType] = useState<string>('');
+  const [activeCommittee, setActiveCommittee] = useState<string>('');
   const [eventName, setEventName] = useState('');
   const [coverImage, setCoverImage] = useState('');
   const [eventDescription, setEventDescription] = useState('');
@@ -356,9 +358,24 @@ const OrganiserDashboard: React.FC = () => {
 
   // Function to generate page title based on current section and sub-section
   const getPageTitle = () => {
+    let committeeRole = "";
+    switch (activeCommitteeType) {
+      case "country":
+        committeeRole = "Country Committees";
+        break;
+      case "role":
+        committeeRole = "Role Committees";
+        break;
+      case "crisis":
+        committeeRole = "Crisis Committees";
+        break;
+      default:
+        committeeRole = "Open Committees";
+        break;
+    }
     const currentStep = steps.find(step => step.id === activeStep);
     if (activeStep === 'delegates' && activeSubSection) {
-      return `Organiser > ${currentStep?.name} > ${activeSubSection}`;
+      return `Organiser > ${currentStep?.name} > ${activeSubSection} > ${committeeRole} > ${activeCommittee}`;
     }
     return `Organiser > ${currentStep?.name || 'Dashboard'}`;
   };
@@ -439,7 +456,11 @@ const OrganiserDashboard: React.FC = () => {
       case 'agendas':
         return renderAgenda();
       case 'delegates':
-        return <DelegatesPage onSubSectionChange={setActiveSubSection} />;
+        return <DelegatesPage 
+          onSubSectionChange={setActiveSubSection} 
+          onActiveCommitteeChange={setActiveCommittee}
+          onActiveCommitteeTypeChange={setActiveCommitteeType}
+        />;
       case 'general-documents':
         return <GeneralDocumentsPage />;
       default:
@@ -458,7 +479,7 @@ const OrganiserDashboard: React.FC = () => {
           {/* Page Title and Navigation */}
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h1 className="text-4xl font-medium text-[#C2A46D] mb-6">
+              <h1 className="text-2xl font-medium text-[#C2A46D] mb-6">
                 {getPageTitle()}
               </h1>
 

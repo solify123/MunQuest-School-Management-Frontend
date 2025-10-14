@@ -22,11 +22,16 @@ interface DelegateItem {
     flag?: boolean;
 }
 
-const DelegatesAllocationPage: React.FC = () => {
+interface DelegatesAllocationPageProps {
+    onActiveCommitteeChange?: (committee: string) => void;
+    onActiveCommitteeTypeChange?: (committeeType: string) => void;
+}
+
+const DelegatesAllocationPage: React.FC<DelegatesAllocationPageProps> = ({onActiveCommitteeChange, onActiveCommitteeTypeChange}) => {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [subTabLoading, setSubTabLoading] = useState<boolean>(false);
     const [activeCommitteeType, setActiveCommitteeType] = useState('country');
-    const [activeCommittee, setActiveCommittee] = useState<string>('FULL');
+    const [activeCommittee, setActiveCommittee] = useState<string>('');
     const [allCommitteesData, setAllCommitteesData] = useState<any[]>([]);
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [showDelegateMenu, setShowDelegateMenu] = useState<number | null>(null);
@@ -332,6 +337,14 @@ const DelegatesAllocationPage: React.FC = () => {
         }
     };
 
+    useEffect(() => {
+        if (onActiveCommitteeChange) onActiveCommitteeChange(activeCommittee);
+    }, [onActiveCommitteeChange, activeCommittee])
+
+    useEffect(() => {
+        if (onActiveCommitteeTypeChange) onActiveCommitteeTypeChange(activeCommitteeType);
+    }, [onActiveCommitteeTypeChange, activeCommitteeType])
+
     // Close menus when clicking outside
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -362,7 +375,14 @@ const DelegatesAllocationPage: React.FC = () => {
                             seats: item ? item.seats : 0
                         };
                     });
-                    setAllCommitteesData(Array.isArray(normalized) ? normalized : []);
+                    const normalizedList = Array.isArray(normalized) ? normalized : [];
+                    setAllCommitteesData(normalizedList);
+
+                    // Set default active committee to the first committee in the current type
+                    const firstOfType = normalizedList.find((c: any) => c.category === activeCommitteeType);
+                    if (firstOfType) {
+                        setActiveCommittee(firstOfType.abbr);
+                    }
                 }
             } catch (error: any) {
                 toast.error(error?.message || 'Failed to load allocation data');
@@ -486,8 +506,9 @@ const DelegatesAllocationPage: React.FC = () => {
     const handleCommitteeTypeChange = (type: string) => {
         setActiveCommitteeType(type);
         setSubTabLoading(true);
-        // Switch to FULL list on type switch
-        setActiveCommittee('FULL');
+        // Pick first committee of this type (fallback to FULL if none yet)
+        const firstOfType = allCommitteesData.find((c: any) => c.category === type);
+        setActiveCommittee(firstOfType ? firstOfType.abbr : 'FULL');
         setTimeout(() => setSubTabLoading(false), 200);
     };
 
