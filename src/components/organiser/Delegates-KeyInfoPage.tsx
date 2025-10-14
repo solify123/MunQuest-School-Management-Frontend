@@ -40,6 +40,7 @@ const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange }) => 
     // Confirmation modal state
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [delegateToDelete, setDelegateToDelete] = useState<number | null>(null);
+    const [showGlobalAllocationConfirm, setShowGlobalAllocationConfirm] = useState(false);
 
     // Merge state
     const [isMergeMode, setIsMergeMode] = useState(false);
@@ -189,7 +190,142 @@ const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange }) => 
     };
 
     const handleGlobalAllocation = () => {
-        toast.success('Global Allocation feature coming soon');
+        setShowGlobalAllocationConfirm(true);
+    };
+
+    const handleConfirmGlobalAllocation = async () => {
+        setShowGlobalAllocationConfirm(false);
+        try {
+            setIsLoading(true);
+            
+            // Filter delegates that need allocation (unassigned and not locked)
+            const unassignedDelegates = delegates.filter(delegate => 
+                !delegate.assignedCommittees && !delegate.isLocked
+            );
+
+            if (unassignedDelegates.length === 0) {
+                toast.info('All delegates are already assigned or locked');
+                return;
+            }
+
+            // Create a copy of committees and countries to track assignments
+            const committeeCapacity = new Map<string, number>();
+            const countryAvailability = new Map<string, boolean>();
+            
+            // Initialize committee capacities (assuming each committee can hold multiple delegates)
+            allCommittees.forEach(committee => {
+                const currentAssigned = delegates.filter(d => d.assignedCommittees === committee.id).length;
+                const maxCapacity = committee.seats || 50; // Default capacity if not specified
+                committeeCapacity.set(committee.id, maxCapacity - currentAssigned);
+            });
+
+            // Initialize country availability
+            allCountries.forEach(country => {
+                countryAvailability.set(country.id, !delegates.some(d => d.assignedCountry === country.id));
+            });
+
+            let successCount = 0;
+            let errorCount = 0;
+
+            // Sort delegates by MUN experience (higher experience gets priority)
+            const sortedDelegates = [...unassignedDelegates].sort((a, b) => b.munExperience - a.munExperience);
+
+            for (const delegate of sortedDelegates) {
+                try {
+                    // Step 1: Assign Committee based on preferences
+                    let assignedCommittee = null;
+                    
+                    // Try to assign from preferred committees
+                    for (const preferredCommittee of delegate.preferredCommittees) {
+                        const committee = allCommittees.find(c => c.abbr === preferredCommittee);
+                        if (committee && committeeCapacity.get(committee.id)! > 0) {
+                            assignedCommittee = committee;
+                            committeeCapacity.set(committee.id, committeeCapacity.get(committee.id)! - 1);
+                            break;
+                        }
+                    }
+
+                    // If no preferred committee available, assign to any available committee
+                    if (!assignedCommittee) {
+                        for (const [committeeId, capacity] of committeeCapacity) {
+                            if (capacity > 0) {
+                                assignedCommittee = allCommittees.find(c => c.id === committeeId);
+                                committeeCapacity.set(committeeId, capacity - 1);
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!assignedCommittee) {
+                        console.warn(`No available committee for delegate ${delegate.name}`);
+                        errorCount++;
+                        continue;
+                    }
+
+                    // Step 2: Assign Country based on tier eligibility
+                    let assignedCountry = null;
+                    const eligibleCountries = getEligibleCountries(delegate.munExperience);
+                    
+                    // Try to find an available country from eligible ones
+                    for (const country of eligibleCountries) {
+                        if (countryAvailability.get(country.id)) {
+                            assignedCountry = country;
+                            countryAvailability.set(country.id, false);
+                            break;
+                        }
+                    }
+
+                    // If no eligible country available, assign to any available country
+                    if (!assignedCountry) {
+                        for (const [countryId, available] of countryAvailability) {
+                            if (available) {
+                                assignedCountry = allCountries.find(c => c.id === countryId);
+                                countryAvailability.set(countryId, false);
+                                break;
+                            }
+                        }
+                    }
+
+                    // Step 3: Make API calls to assign committee and country
+                    await assignDelegateApi(delegate.id.toString(), assignedCommittee.id, assignedCountry?.id || '');
+                    
+                    // Update local state
+                    setDelegates(prev => prev.map(d => 
+                        d.id === delegate.id 
+                            ? { 
+                                ...d, 
+                                assignedCommittees: assignedCommittee!.id,
+                                assignedCountry: assignedCountry?.id || null
+                              }
+                            : d
+                    ));
+
+                    successCount++;
+
+                } catch (error) {
+                    console.error(`Failed to assign delegate ${delegate.name}:`, error);
+                    errorCount++;
+                }
+            }
+
+            // Refresh data from backend
+            if (eventId) {
+                await refreshRegistrationsData(eventId);
+            }
+
+            if (successCount > 0) {
+                toast.success(`Successfully allocated ${successCount} delegates`);
+            }
+            if (errorCount > 0) {
+                toast.error(`Failed to allocate ${errorCount} delegates`);
+            }
+
+        } catch (error: any) {
+            console.error('Global allocation error:', error);
+            toast.error('Failed to perform global allocation');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleUploadDelegates = () => {
@@ -338,6 +474,31 @@ const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange }) => 
         setSelectedDelegatesForMerge([]);
     };
 
+    // Helper function to calculate delegate tier based on MUN experience
+    const getDelegateTier = (munExperience: number): string[] => {
+        if (munExperience >= 3) {
+            return ['S', 'A', 'B']; // Eligible for S, A, B countries
+        } else if (munExperience >= 1) {
+            return ['A', 'B']; // Eligible for A, B countries
+        } else {
+            return ['B']; // Eligible for B countries only
+        }
+    };
+
+    // Helper function to get countries eligible for a delegate based on their MUN experience
+    const getEligibleCountries = (munExperience: number) => {
+        const delegateTiers = getDelegateTier(munExperience);
+        return allCountries.filter(country => {
+            // Assuming country.tier exists and contains 'S', 'A', or 'B'
+            const countryTier = country.tier || 'B'; // Default to 'B' if tier not specified
+            return delegateTiers.includes(countryTier);
+        });
+    };
+
+
+    const handleCancelGlobalAllocation = () => {
+        setShowGlobalAllocationConfirm(false);
+    };
 
     const confirmDelete = async () => {
         if (!delegateToDelete) return;
@@ -419,12 +580,24 @@ const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange }) => 
 						<div className="flex items-center space-x-3">
 							<button
 								onClick={handleGlobalAllocation}
-								className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-[20px] hover:bg-green-700 transition-colors duration-200"
+								disabled={isLoading}
+								className={`flex items-center space-x-2 px-4 py-2 rounded-[20px] transition-colors duration-200 ${
+									isLoading 
+										? 'bg-gray-400 text-gray-200 cursor-not-allowed' 
+										: 'bg-green-600 text-white hover:bg-green-700'
+								}`}
 							>
-								<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-								</svg>
-								<span>Global Allocation</span>
+								{isLoading ? (
+									<svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+										<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+										<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+									</svg>
+								) : (
+									<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+									</svg>
+								)}
+								<span>{isLoading ? 'Allocating...' : 'Global Allocation'}</span>
 							</button>
 
 							<button
@@ -681,7 +854,7 @@ const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange }) => 
                 </div>
             </div>
 
-            {/* Confirmation Modal */}
+            {/* Confirmation Modal for Delete */}
             <ConfirmationModal
                 isOpen={showDeleteConfirm}
                 onClose={() => setShowDeleteConfirm(false)}
@@ -691,6 +864,18 @@ const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange }) => 
                 confirmText="Remove"
                 cancelText="Cancel"
                 confirmButtonColor="text-red-600"
+            />
+
+            {/* Confirmation Modal for Global Allocation */}
+            <ConfirmationModal
+                isOpen={showGlobalAllocationConfirm}
+                onClose={handleCancelGlobalAllocation}
+                onConfirm={handleConfirmGlobalAllocation}
+                title="Global Allocation"
+                message="This will automatically assign committees and countries to all unassigned delegates based on their preferences and tier eligibility. Continue?"
+                confirmText="Allocate"
+                cancelText="Cancel"
+                confirmButtonColor="text-green-600"
             />
 
 			</>
