@@ -91,7 +91,7 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
     <div className={`relative ${className}`} ref={dropdownRef}>
       {/* Display Value */}
       <div
-        className={`flex items-center justify-between bg-white px-3 py-2 text-sm rounded-md border border-gray-200 cursor-pointer ${
+        className={`h-full flex items-center justify-between bg-white px-3 py-2 text-sm rounded-md border border-gray-200 cursor-pointer ${
           disabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-gray-300'
         }`}
         onClick={handleToggle}
