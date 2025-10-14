@@ -26,9 +26,11 @@ interface DelegateItem {
 
 interface DelegatesPageProps {
   onSubSectionChange?: (subSection: string) => void;
+  onActiveCommitteeChange?: (committee: string) => void;
+  onActiveCommitteeTypeChange?: (committeeType: string) => void;
 }
 
-const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange }) => {
+const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange, onActiveCommitteeChange, onActiveCommitteeTypeChange }) => {
     const [activeSubTab, setActiveSubTab] = useState('key-info');
     const [delegates, setDelegates] = useState<DelegateItem[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -40,7 +42,6 @@ const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange }) => 
     // Confirmation modal state
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [delegateToDelete, setDelegateToDelete] = useState<number | null>(null);
-    const [showGlobalAllocationConfirm, setShowGlobalAllocationConfirm] = useState(false);
 
     // Merge state
     const [isMergeMode, setIsMergeMode] = useState(false);
@@ -189,12 +190,7 @@ const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange }) => 
         // Implement search logic here
     };
 
-    const handleGlobalAllocation = () => {
-        setShowGlobalAllocationConfirm(true);
-    };
-
-    const handleConfirmGlobalAllocation = async () => {
-        setShowGlobalAllocationConfirm(false);
+    const handleGlobalAllocation = async () => {
         try {
             setIsLoading(true);
             
@@ -496,10 +492,6 @@ const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange }) => 
     };
 
 
-    const handleCancelGlobalAllocation = () => {
-        setShowGlobalAllocationConfirm(false);
-    };
-
     const confirmDelete = async () => {
         if (!delegateToDelete) return;
 
@@ -557,7 +549,7 @@ const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange }) => 
 			) : activeSubTab === 'food-info' ? (
 				<DelegatesFoodInfoPage />
 			) : activeSubTab === 'allocation' ? (
-				<DelegatesAllocationPage />
+				<DelegatesAllocationPage onActiveCommitteeChange={onActiveCommitteeChange} onActiveCommitteeTypeChange={onActiveCommitteeTypeChange} />
 			) : (
 				<>
 					{/* Search and Action Bar */}
@@ -580,24 +572,12 @@ const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange }) => 
 						<div className="flex items-center space-x-3">
 							<button
 								onClick={handleGlobalAllocation}
-								disabled={isLoading}
-								className={`flex items-center space-x-2 px-4 py-2 rounded-[20px] transition-colors duration-200 ${
-									isLoading 
-										? 'bg-gray-400 text-gray-200 cursor-not-allowed' 
-										: 'bg-green-600 text-white hover:bg-green-700'
-								}`}
+								className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-[20px] hover:bg-green-700 transition-colors duration-200"
 							>
-								{isLoading ? (
-									<svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-										<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-										<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-									</svg>
-								) : (
-									<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-									</svg>
-								)}
-								<span>{isLoading ? 'Allocating...' : 'Global Allocation'}</span>
+								<svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+								</svg>
+								<span>Global Allocation</span>
 							</button>
 
 							<button
@@ -854,7 +834,7 @@ const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange }) => 
                 </div>
             </div>
 
-            {/* Confirmation Modal for Delete */}
+            {/* Confirmation Modal */}
             <ConfirmationModal
                 isOpen={showDeleteConfirm}
                 onClose={() => setShowDeleteConfirm(false)}
@@ -864,18 +844,6 @@ const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange }) => 
                 confirmText="Remove"
                 cancelText="Cancel"
                 confirmButtonColor="text-red-600"
-            />
-
-            {/* Confirmation Modal for Global Allocation */}
-            <ConfirmationModal
-                isOpen={showGlobalAllocationConfirm}
-                onClose={handleCancelGlobalAllocation}
-                onConfirm={handleConfirmGlobalAllocation}
-                title="Global Allocation"
-                message="This will automatically assign committees and countries to all unassigned delegates based on their preferences and tier eligibility. Continue?"
-                confirmText="Allocate"
-                cancelText="Cancel"
-                confirmButtonColor="text-green-600"
             />
 
 			</>

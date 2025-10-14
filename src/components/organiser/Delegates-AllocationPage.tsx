@@ -22,11 +22,16 @@ interface DelegateItem {
     flag?: boolean;
 }
 
-const DelegatesAllocationPage: React.FC = () => {
+interface DelegatesAllocationPageProps {
+    onActiveCommitteeChange?: (committee: string) => void;
+    onActiveCommitteeTypeChange?: (committeeType: string) => void;
+}
+
+const DelegatesAllocationPage: React.FC<DelegatesAllocationPageProps> = ({onActiveCommitteeChange, onActiveCommitteeTypeChange}) => {
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [subTabLoading, setSubTabLoading] = useState<boolean>(false);
     const [activeCommitteeType, setActiveCommitteeType] = useState('country');
-    const [activeCommittee, setActiveCommittee] = useState<string>('FULL');
+    const [activeCommittee, setActiveCommittee] = useState<string>('');
     const [allCommitteesData, setAllCommitteesData] = useState<any[]>([]);
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [showDelegateMenu, setShowDelegateMenu] = useState<number | null>(null);
@@ -218,11 +223,110 @@ const DelegatesAllocationPage: React.FC = () => {
         setSelectedDelegatesForMerge([]);
     };
 
+    const handleCommitteeAllocation = async () => {
+        try {
+            
+            // Filter delegates that need allocation (unassigned and not locked)
+            const unassignedDelegates = delegates.filter(delegate => 
+                !delegate.assignedCommittees && !delegate.isLocked
+            );
+
+            if (unassignedDelegates.length === 0) {
+                toast.info('All delegates are already assigned or locked');
+                return;
+            }
+
+            // Create a copy of committees and countries to track assignments
+            const committeeCapacity = new Map<string, number>();
+            
+            // Initialize committee capacities (assuming each committee can hold multiple delegates)
+            allCommittees.forEach(committee => {
+                const currentAssigned = delegates.filter(d => d.assignedCommittees === committee.id).length;
+                const maxCapacity = committee.seats || 50; // Default capacity if not specified
+                committeeCapacity.set(committee.id, maxCapacity - currentAssigned);
+            });
+
+            let successCount = 0;
+            let errorCount = 0;
+
+            // Sort delegates by MUN experience (higher experience gets priority)
+            const sortedDelegates = [...unassignedDelegates].sort((a, b) => Number(b.munExperience) - Number(a.munExperience));
+
+            for (const delegate of sortedDelegates) {
+                try {
+                    // Step 1: Assign Committee based on preferences
+                    let assignedCommittee = null;
+                    
+                    // Try to assign from preferred committees
+                    for (const preferredCommittee of delegate.preferredCommittees) {
+                        const committee = allCommittees.find(c => c.abbr === preferredCommittee);
+                        if (committee && committeeCapacity.get(committee.id)! > 0) {
+                            assignedCommittee = committee;
+                            committeeCapacity.set(committee.id, committeeCapacity.get(committee.id)! - 1);
+                            break;
+                        }
+                    }
+
+                    // If no preferred committee available, assign to any available committee
+                    if (!assignedCommittee) {
+                        for (const [committeeId, capacity] of committeeCapacity) {
+                            if (capacity > 0) {
+                                assignedCommittee = allCommittees.find(c => c.id === committeeId);
+                                committeeCapacity.set(committeeId, capacity - 1);
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!assignedCommittee) {
+                        console.warn(`No available committee for delegate ${delegate.name}`);
+                        errorCount++;
+                        continue;
+                    }
+
+                    // Step 3: Make API calls to assign committee and country
+                    await assignDelegateApi(delegate.id.toString(), assignedCommittee.id, '');
+                    
+                    // Update local state
+                    setDelegates(prev => prev.map(d => 
+                        d.id === delegate.id 
+                            ? { 
+                                ...d, 
+                                assignedCommittees: assignedCommittee!.id,
+                                assignedCountry: null
+                              }
+                            : d
+                    ));
+
+                    successCount++;
+
+                } catch (error) {
+                    console.error(`Failed to assign delegate ${delegate.name}:`, error);
+                    errorCount++;
+                }
+            }
+
+            // Refresh data from backend
+            if (eventId) {
+                await refreshRegistrationsData(eventId);
+            }
+
+            if (successCount > 0) {
+                toast.success(`Successfully allocated ${successCount} delegates`);
+            }
+            if (errorCount > 0) {
+                toast.error(`Failed to allocate ${errorCount} delegates`);
+            }
+
+        } catch (error: any) {
+            console.error('Global allocation error:', error);
+            toast.error('Failed to perform global allocation');
+        }
+    }
+
     // Helper function to proceed with assignment
     const proceedWithAssignment = async (delegateId: number, committeeId: string, assignedCountry: string | null) => {
         try {
-            console.log(delegateId.toString(), committeeId, assignedCountry ? assignedCountry : '');
-            
             // Add delegate to committee
             await assignDelegateApi(
                 delegateId.toString(),
@@ -332,6 +436,14 @@ const DelegatesAllocationPage: React.FC = () => {
         }
     };
 
+    useEffect(() => {
+        if (onActiveCommitteeChange) onActiveCommitteeChange(activeCommittee);
+    }, [onActiveCommitteeChange, activeCommittee])
+
+    useEffect(() => {
+        if (onActiveCommitteeTypeChange) onActiveCommitteeTypeChange(activeCommitteeType);
+    }, [onActiveCommitteeTypeChange, activeCommitteeType])
+
     // Close menus when clicking outside
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -362,7 +474,14 @@ const DelegatesAllocationPage: React.FC = () => {
                             seats: item ? item.seats : 0
                         };
                     });
-                    setAllCommitteesData(Array.isArray(normalized) ? normalized : []);
+                    const normalizedList = Array.isArray(normalized) ? normalized : [];
+                    setAllCommitteesData(normalizedList);
+
+                    // Set default active committee to the first committee in the current type
+                    const firstOfType = normalizedList.find((c: any) => c.category === activeCommitteeType);
+                    if (firstOfType) {
+                        setActiveCommittee(firstOfType.abbr);
+                    }
                 }
             } catch (error: any) {
                 toast.error(error?.message || 'Failed to load allocation data');
@@ -430,7 +549,6 @@ const DelegatesAllocationPage: React.FC = () => {
             } as DelegateItem;
         });
     }, [allRegistrations]);
-
     // Update delegates state when builtDelegates changes
     useEffect(() => {
         setDelegates(builtDelegates);
@@ -486,8 +604,9 @@ const DelegatesAllocationPage: React.FC = () => {
     const handleCommitteeTypeChange = (type: string) => {
         setActiveCommitteeType(type);
         setSubTabLoading(true);
-        // Switch to FULL list on type switch
-        setActiveCommittee('FULL');
+        // Pick first committee of this type (fallback to FULL if none yet)
+        const firstOfType = allCommitteesData.find((c: any) => c.category === type);
+        setActiveCommittee(firstOfType ? firstOfType.abbr : 'FULL');
         setTimeout(() => setSubTabLoading(false), 200);
     };
 
@@ -542,7 +661,7 @@ const DelegatesAllocationPage: React.FC = () => {
                                 } ${subTabLoading ? 'opacity-60 cursor-not-allowed' : ''}`}
                                 style={{fontSize: '14px'}}
                         >
-                            {abbr.abbr}
+                            {abbr.abbr === "FULL" ? "FULL LIST" : abbr.abbr}
                             <div className="text-black flex items-center justify-center gap-2" style={{ fontSize: '14px', fontWeight: 300 }}>
                                 <span className='flex items-center justify-center gap-2'>
                                     Total:
@@ -560,22 +679,25 @@ const DelegatesAllocationPage: React.FC = () => {
 
             {/* Search + Download */}
             <div className="flex items-center justify-start p-4 rounded-lg gap-8">
-                <button
-                    onClick={() => toast.success('Download coming soon')}
-                    className="w-[250px] text-white font-medium transition-colors hover:opacity-90"
-                    style={{
-                        height: '44px',
-                        borderRadius: '30px',
-                        paddingLeft: '16px',
-                        paddingRight: '16px',
-                        cursor: 'pointer',
-                        border: 'none',
-                        boxShadow: 'none',
-                        background: '#4CAF50',
-                    }}
-                >
-                    Committee Allocations
-                </button>
+                {
+                    activeCommittee === "FULL" ? (<button
+                                        onClick={handleCommitteeAllocation}
+                                        className="w-[250px] text-white font-medium transition-colors hover:opacity-90"
+                                        style={{
+                                            height: '44px',
+                                            borderRadius: '30px',
+                                            paddingLeft: '16px',
+                                            paddingRight: '16px',
+                                            cursor: 'pointer',
+                                            border: 'none',
+                                            boxShadow: 'none',
+                                            background: '#4CAF50',
+                                        }}
+                                    >
+                                    Committee Allocations
+                                </button>) : ""
+                }
+                
                 <div className="flex items-center space-x-4">
                     <div className="relative">
                         <input
