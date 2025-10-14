@@ -103,6 +103,254 @@ const DelegatesAllocationPage: React.FC<DelegatesAllocationPageProps> = ({onActi
         toast.success('All delegates unlocked');
     };
 
+    // Handle download list
+    const handleDownloadList = () => {
+        if (activeCommittee === 'FULL') {
+            downloadFullListTemplate();
+        } else {
+            downloadCommitteeTemplate();
+        }
+    };
+
+    // Download committee-specific template
+    const downloadCommitteeTemplate = () => {
+        const committeeDelegates = filteredDelegates;
+        
+        const committeeData = {
+            title: "Committee",
+            subtitle: activeCommittee,
+            headers: ["Unique ID", "Name", "Academic Level", "School", "MUN Experience", "Preferred Committees", "Assigned Committees", "Assigned Country"],
+            data: committeeDelegates.map(delegate => ({
+                uniqueId: delegate.uniqueId || "N/A",
+                name: delegate.name || "N/A",
+                academicLevel: delegate.academicLevel || "N/A",
+                school: delegate.school || "N/A",
+                munExperience: delegate.munExperience?.toString() || "N/A",
+                preferredCommittees: delegate.preferredCommittees?.join(', ') || "N/A",
+                assignedCommittees: delegate.assignedCommittees || "N/A",
+                assignedCountry: delegate.assignedCountry || "N/A"
+            }))
+        };
+
+        const htmlContent = generateCommitteeHTML(committeeData);
+        downloadHTML(htmlContent, `committee-${activeCommittee.toLowerCase().replace(/\s+/g, '-')}-template.html`);
+        toast.success(`${activeCommittee} template downloaded successfully`);
+    };
+
+    // Download full list template
+    const downloadFullListTemplate = () => {
+        const fullListData = {
+            title: "Country Committees",
+            subtitle: "Full List",
+            headers: ["Unique ID", "Name", "Academic Level", "School", "MUN Experience", "Preferred Committees", "Assigned Committees", "Assigned Country"],
+            data: filteredDelegates.map(delegate => ({
+                uniqueId: delegate.uniqueId || "N/A",
+                name: delegate.name || "N/A",
+                academicLevel: delegate.academicLevel || "N/A",
+                school: delegate.school || "N/A",
+                munExperience: delegate.munExperience?.toString() || "N/A",
+                preferredCommittees: delegate.preferredCommittees?.join(', ') || "N/A",
+                assignedCommittees: delegate.assignedCommittees || "N/A",
+                assignedCountry: delegate.assignedCountry || "N/A"
+            }))
+        };
+
+        const htmlContent = generateFullListHTML(fullListData);
+        downloadHTML(htmlContent, 'full-list-template.html');
+        toast.success('Full list template downloaded successfully');
+    };
+
+    // Generate committee-specific HTML template
+    const generateCommitteeHTML = (data: any) => {
+        return `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>${data.title} ${data.subtitle}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: white;
+        }
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: black;
+        }
+        .subtitle {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: black;
+        }
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 20px;
+        }
+        th {
+            background-color: #E0F2F7;
+            color: black;
+            font-weight: bold;
+            text-align: center;
+            padding: 12px 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin: 2px;
+        }
+        td {
+            background-color: white;
+            color: black;
+            text-align: left;
+            padding: 12px 8px;
+            border: 1px solid #ddd;
+            white-space: pre-line;
+        }
+        tr:nth-child(even) td {
+            background-color: #f9f9f9;
+        }
+        tr:first-child th:first-child {
+            border-top-left-radius: 6px;
+        }
+        tr:first-child th:last-child {
+            border-top-right-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="title">${data.title}</div>
+    <div class="subtitle">${data.subtitle}</div>
+    <table>
+        <thead>
+            <tr>
+                ${data.headers.map((header: string) => `<th>${header}</th>`).join('')}
+            </tr>
+        </thead>
+        <tbody>
+            ${data.data.map((row: any) => `
+                <tr>
+                    <td>${row.uniqueId}</td>
+                    <td>${row.name}</td>
+                    <td>${row.academicLevel}</td>
+                    <td>${row.school}</td>
+                    <td>${row.munExperience}</td>
+                    <td>${row.preferredCommittees}</td>
+                    <td>${row.assignedCommittees}</td>
+                    <td>${row.assignedCountry}</td>
+                </tr>
+            `).join('')}
+        </tbody>
+    </table>
+</body>
+</html>`;
+    };
+
+    // Generate full list HTML template
+    const generateFullListHTML = (data: any) => {
+        return `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>${data.title} ${data.subtitle}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: white;
+        }
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: black;
+        }
+        .subtitle {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: black;
+        }
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 20px;
+        }
+        th {
+            background-color: #E0F2F7;
+            color: black;
+            font-weight: bold;
+            text-align: center;
+            padding: 12px 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin: 2px;
+        }
+        td {
+            background-color: white;
+            color: black;
+            text-align: left;
+            padding: 12px 8px;
+            border: 1px solid #ddd;
+            white-space: pre-line;
+        }
+        tr:nth-child(even) td {
+            background-color: #f9f9f9;
+        }
+        tr:first-child th:first-child {
+            border-top-left-radius: 6px;
+        }
+        tr:first-child th:last-child {
+            border-top-right-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="title">${data.title}</div>
+    <div class="subtitle">${data.subtitle}</div>
+    <table>
+        <thead>
+            <tr>
+                ${data.headers.map((header: string) => `<th>${header}</th>`).join('')}
+            </tr>
+        </thead>
+        <tbody>
+            ${data.data.map((row: any) => `
+                <tr>
+                    <td>${row.uniqueId}</td>
+                    <td>${row.name}</td>
+                    <td>${row.academicLevel}</td>
+                    <td>${row.school}</td>
+                    <td>${row.munExperience}</td>
+                    <td>${row.preferredCommittees}</td>
+                    <td>${row.assignedCommittees}</td>
+                    <td>${row.assignedCountry}</td>
+                </tr>
+            `).join('')}
+        </tbody>
+    </table>
+</body>
+</html>`;
+    };
+
+    // Download HTML file
+    const downloadHTML = (htmlContent: string, filename: string) => {
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    };
+
     // Handle assign delegate
     const handleAssign = async (delegateId: number) => {
         try {
@@ -718,7 +966,7 @@ const DelegatesAllocationPage: React.FC<DelegatesAllocationPageProps> = ({onActi
                         
                         {/* Search Results Dropdown */}
                         {showSearchResults && filteredAllEventUsers.length > 0 && (
-                            <div className="absolute top-full left-0 right-0 mt-1 z-50 max-h-60 overflow-y-auto">
+                            <div className="absolute top-full left-0 right-0 mt-1 z-50 max-h-60 overflow-y-auto bg-white rounded-[5px]">
                                 {filteredAllEventUsers.map((user) => (
                                     <div key={user.id} className="flex items-center justify-between px-1">
                                         <div className="flex-1">
@@ -769,7 +1017,7 @@ const DelegatesAllocationPage: React.FC<DelegatesAllocationPageProps> = ({onActi
                 </div>
 
                 <button
-                    onClick={() => toast.success('Download coming soon')}
+                    onClick={handleDownloadList}
                     className="text-white font-medium transition-colors hover:opacity-90"
                     style={{
                         height: '44px',
