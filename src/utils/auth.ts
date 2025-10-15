@@ -6,7 +6,7 @@ export const getSupabaseToken = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     return session?.access_token || null;
   } catch (error) {
-    console.error('Error getting Supabase token:', error);
+    console.log('Error getting Supabase token:', error);
     return null;
   }
 };
@@ -16,7 +16,7 @@ export const getSupabaseUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     return user;
   } catch (error) {
-    console.error('Error getting Supabase user:', error);
+    console.log('Error getting Supabase user:', error);
     return null;
   }
 };

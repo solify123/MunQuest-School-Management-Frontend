@@ -22,7 +22,7 @@ const Organiser: React.FC = () => {
           toast.error(response.message);
         }
       } catch (error: any) {
-        console.error('Error fetching events:', error);
+        console.log('Error fetching events:', error);
         toast.error(error.message);
       } finally {
         setIsLoading(false);

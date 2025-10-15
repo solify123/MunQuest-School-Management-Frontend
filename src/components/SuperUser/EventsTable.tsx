@@ -53,7 +53,7 @@ const EventsTable: React.FC<EventsTableProps> = ({ events, onAction }) => {
       }
       onAction(action, eventId);
     } catch (error) {
-      console.error('Error updating event status:', error);
+      console.log('Error updating event status:', error);
       toast.error('Failed to update event status');
     } finally {
       setUpdatingEventId(null);

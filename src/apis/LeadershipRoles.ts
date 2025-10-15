@@ -11,7 +11,7 @@ export const getAllLeadershipRolesApi = async () => {
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response?.data?.message || 'Failed to fetch leadership roles');
+        console.error('Failed to fetch leadership roles:', error);
     }
 };
 

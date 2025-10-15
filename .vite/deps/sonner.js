@@ -985,7 +985,7 @@ var Toaster = import_react.default.forwardRef(function Toaster2(props, ref) {
             setActualTheme("light");
           }
         } catch (e) {
-          console.error(e);
+          console.log(e);
         }
       });
     }

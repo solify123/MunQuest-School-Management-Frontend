@@ -22,7 +22,7 @@ const Dashboard: React.FC = () => {
           return;
         }
       } catch (error) {
-        console.error('Error checking events:', error);
+        console.log('Error checking events:', error);
         navigate('/home');
         return;
       } finally {

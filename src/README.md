@@ -131,7 +131,7 @@ try {
   }
 } catch (error: any) {
   toast.error('An error occurred');
-  console.error('Error:', error);
+  console.log('Error:', error);
 }
 ```
 

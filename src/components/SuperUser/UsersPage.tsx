@@ -24,7 +24,7 @@ const UsersPage: React.FC<UsersPageProps> = ({ userType }) => {
         setError(response.message || 'Failed to fetch users');
       }
     } catch (error: any) {
-      console.error('Error fetching users:', error);
+      console.log('Error fetching users:', error);
       setError(error.message || 'Failed to fetch users');
     } finally {
       setLoading(false);

@@ -189,7 +189,7 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
                 }
             }
         } catch (error: any) {
-            console.error('Error updating locality:', error);
+            console.log('Error updating locality:', error);
             toast.error(error.message || 'Failed to update locality');
         } finally {
             setUpdatingLocalityId(null);
@@ -251,7 +251,7 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
                 refreshSchoolsData()
             ]);
         } catch (error: any) {
-            console.error('Error saving new row:', error);
+            console.log('Error saving new row:', error);
             toast.error('Failed to save new area');
         }
     };
@@ -374,7 +374,7 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
             }
             
         } catch (error: any) {
-            console.error('Error merging localities:', error);
+            console.log('Error merging localities:', error);
             toast.error('Failed to merge localities');
         }
     };

@@ -81,7 +81,7 @@ const DelegatesUploadPage: React.FC = () => {
                 toast.error(`Upload completed with ${result.errors.length} errors. Check details below.`);
             }
         } catch (error) {
-            console.error('Upload error:', error);
+            console.log('Upload error:', error);
             toast.error('Failed to process upload. Please check file format and try again.');
         } finally {
             setIsUploading(false);

@@ -263,11 +263,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       if (response.success) {
         setAllRegistrations(response.data || []);
       } else {
-        console.error('API response not successful:', response.message);
+        console.log('API response not successful:', response.message);
         toast.error(response.message);
       }
     } catch (error) {
-      console.error('Error in refreshRegistrationsData:', error);
+      console.log('Error in refreshRegistrationsData:', error);
       let token = localStorage.getItem('token');
       if (loginStatus && token) {
         toast.error('JWT token is expired. Please login again.');
@@ -368,8 +368,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 export const useApp = (): AppContextType => {
   const context = useContext(AppContext);
   if (context === undefined) {
-    console.error('useApp - Context is undefined, this should not happen if component is wrapped in AppProvider');
-    console.error('Stack trace:', new Error().stack);
+    console.log('useApp - Context is undefined, this should not happen if component is wrapped in AppProvider');
+    console.log('Stack trace:', new Error().stack);
     // Instead of throwing an error, return a default context to prevent crashes
     return {
       userType: null,

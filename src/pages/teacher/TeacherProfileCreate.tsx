@@ -69,7 +69,7 @@ const TeacherProfile: React.FC = () => {
         ]);
 
       } catch (error) {
-        console.error('Error loading data:', error);
+        console.log('Error loading data:', error);
         toast.error('Failed to load profile data. Please refresh the page.');
       }
     };
@@ -561,7 +561,7 @@ const TeacherProfile: React.FC = () => {
       }
 
     } catch (error: any) {
-      console.error('Teacher Profile Error:', error);
+      console.log('Teacher Profile Error:', error);
       if (error.errors) {
         setErrors(error.errors);
         toast.error(error.errors.message);

@@ -171,7 +171,7 @@ var require_scheduler_development = __commonJS({
         task.callback = null;
       };
       exports.unstable_forceFrameRate = function(fps) {
-        0 > fps || 125 < fps ? console.error(
+        0 > fps || 125 < fps ? console.log(
           "forceFrameRate takes a positive int between 0 and 125, forcing frame rates higher than 125 fps is not supported"
         ) : frameInterval = 0 < fps ? Math.floor(1e3 / fps) : 5;
       };
@@ -335,12 +335,12 @@ var require_react_dom_client_development = __commonJS({
       function warnForMissingKey() {
       }
       function warnInvalidHookAccess() {
-        console.error(
+        console.log(
           "Do not call Hooks inside useEffect(...), useMemo(...), or other built-in Hooks. You can only call Hooks at the top level of your React function. For more information, see https://react.dev/link/rules-of-hooks"
         );
       }
       function warnInvalidContextAccess() {
-        console.error(
+        console.log(
           "Context can only be read while React is rendering. In classes, you can read it in the render method or getDerivedStateFromProps. In function components, you can read it directly in the function body, but not inside Hooks like useReducer() or useMemo()."
         );
       }
@@ -513,7 +513,7 @@ var require_react_dom_client_development = __commonJS({
             return "Activity";
         }
         if ("object" === typeof type)
-          switch ("number" === typeof type.tag && console.error(
+          switch ("number" === typeof type.tag && console.log(
             "Received an unexpected object in getComponentNameFromType(). This is likely a bug in React. Please file an issue."
           ), type.$$typeof) {
             case REACT_PORTAL_TYPE:
@@ -608,7 +608,7 @@ var require_react_dom_client_development = __commonJS({
         return { current: defaultValue };
       }
       function pop(cursor, fiber) {
-        0 > index$jscomp$0 ? console.error("Unexpected pop.") : (fiber !== fiberStack[index$jscomp$0] && console.error("Unexpected Fiber popped."), cursor.current = valueStack[index$jscomp$0], valueStack[index$jscomp$0] = null, fiberStack[index$jscomp$0] = null, index$jscomp$0--);
+        0 > index$jscomp$0 ? console.log("Unexpected pop.") : (fiber !== fiberStack[index$jscomp$0] && console.log("Unexpected Fiber popped."), cursor.current = valueStack[index$jscomp$0], valueStack[index$jscomp$0] = null, fiberStack[index$jscomp$0] = null, index$jscomp$0--);
       }
       function push(cursor, value, fiber) {
         index$jscomp$0++;
@@ -617,7 +617,7 @@ var require_react_dom_client_development = __commonJS({
         cursor.current = value;
       }
       function requiredContext(c) {
-        null === c && console.error(
+        null === c && console.log(
           "Expected host context to exist. This error is likely caused by a bug in React. Please file an issue."
         );
         return c;
@@ -696,7 +696,7 @@ var require_react_dom_client_development = __commonJS({
       }
       function checkAttributeStringCoercion(value, attributeName) {
         if (willCoercionThrow(value))
-          return console.error(
+          return console.log(
             "The provided `%s` attribute is an unsupported type %s. This value must be coerced to a string before using it here.",
             attributeName,
             typeName(value)
@@ -704,7 +704,7 @@ var require_react_dom_client_development = __commonJS({
       }
       function checkCSSPropertyStringCoercion(value, propName) {
         if (willCoercionThrow(value))
-          return console.error(
+          return console.log(
             "The provided `%s` CSS property is an unsupported type %s. This value must be coerced to a string before using it here.",
             propName,
             typeName(value)
@@ -712,7 +712,7 @@ var require_react_dom_client_development = __commonJS({
       }
       function checkFormFieldValueStringCoercion(value) {
         if (willCoercionThrow(value))
-          return console.error(
+          return console.log(
             "Form field values (value, checked, defaultValue, or defaultChecked props) must be strings, not %s. This value must be coerced to a string before using it here.",
             typeName(value)
           ), testStringCoercion(value);
@@ -722,13 +722,13 @@ var require_react_dom_client_development = __commonJS({
         var hook = __REACT_DEVTOOLS_GLOBAL_HOOK__;
         if (hook.isDisabled) return true;
         if (!hook.supportsFiber)
-          return console.error(
+          return console.log(
             "The installed version of React DevTools is too old and will not work with the current version of React. Please update React DevTools. https://react.dev/link/react-devtools"
           ), true;
         try {
           rendererID = hook.inject(internals), injectedHook = hook;
         } catch (err) {
-          console.error("React instrumentation encountered an error: %s.", err);
+          console.log("React instrumentation encountered an error: %s.", err);
         }
         return hook.checkDCE ? true : false;
       }
@@ -738,7 +738,7 @@ var require_react_dom_client_development = __commonJS({
           try {
             injectedHook.setStrictMode(rendererID, newIsStrictMode);
           } catch (err) {
-            hasLoggedError || (hasLoggedError = true, console.error(
+            hasLoggedError || (hasLoggedError = true, console.log(
               "React instrumentation encountered an error: %s",
               err
             ));
@@ -836,7 +836,7 @@ var require_react_dom_client_development = __commonJS({
           case 1073741824:
             return 0;
           default:
-            return console.error(
+            return console.log(
               "Should have found matching lanes. This is a bug in React."
             ), lanes;
         }
@@ -891,7 +891,7 @@ var require_react_dom_client_development = __commonJS({
           case 1073741824:
             return -1;
           default:
-            return console.error(
+            return console.log(
               "Should have found matching lanes. This is a bug in React."
             ), -1;
         }
@@ -1088,7 +1088,7 @@ var require_react_dom_client_development = __commonJS({
         registerDirectEvent(registrationName + "Capture", dependencies);
       }
       function registerDirectEvent(registrationName, dependencies) {
-        registrationNameDependencies[registrationName] && console.error(
+        registrationNameDependencies[registrationName] && console.log(
           "EventRegistry: More than one plugin attempted to publish the same registration name, `%s`.",
           registrationName
         );
@@ -1100,12 +1100,12 @@ var require_react_dom_client_development = __commonJS({
           allNativeEvents.add(dependencies[registrationName]);
       }
       function checkControlledValueProps(tagName, props) {
-        hasReadOnlyValue[props.type] || props.onChange || props.onInput || props.readOnly || props.disabled || null == props.value || ("select" === tagName ? console.error(
+        hasReadOnlyValue[props.type] || props.onChange || props.onInput || props.readOnly || props.disabled || null == props.value || ("select" === tagName ? console.log(
           "You provided a `value` prop to a form field without an `onChange` handler. This will render a read-only field. If the field should be mutable use `defaultValue`. Otherwise, set `onChange`."
-        ) : console.error(
+        ) : console.log(
           "You provided a `value` prop to a form field without an `onChange` handler. This will render a read-only field. If the field should be mutable use `defaultValue`. Otherwise, set either `onChange` or `readOnly`."
         ));
-        props.onChange || props.readOnly || props.disabled || null == props.checked || console.error(
+        props.onChange || props.readOnly || props.disabled || null == props.checked || console.log(
           "You provided a `checked` prop to a form field without an `onChange` handler. This will render a read-only field. If the field should be mutable use `defaultChecked`. Otherwise, set either `onChange` or `readOnly`."
         );
       }
@@ -1117,7 +1117,7 @@ var require_react_dom_client_development = __commonJS({
         if (VALID_ATTRIBUTE_NAME_REGEX.test(attributeName))
           return validatedAttributeNameCache[attributeName] = true;
         illegalAttributeNameCache[attributeName] = true;
-        console.error("Invalid attribute name: `%s`", attributeName);
+        console.log("Invalid attribute name: `%s`", attributeName);
         return false;
       }
       function getValueForAttributeOnCustomComponent(node, name, expected) {
@@ -1234,7 +1234,7 @@ var require_react_dom_client_development = __commonJS({
             groupEnd: assign({}, props, { value: prevGroupEnd })
           });
         }
-        0 > disabledDepth && console.error(
+        0 > disabledDepth && console.log(
           "disabledDepth fell below zero. This is a bug in React. Please file an issue."
         );
       }
@@ -1584,12 +1584,12 @@ var require_react_dom_client_development = __commonJS({
         );
       }
       function validateInputProps(element, props) {
-        void 0 === props.checked || void 0 === props.defaultChecked || didWarnCheckedDefaultChecked || (console.error(
+        void 0 === props.checked || void 0 === props.defaultChecked || didWarnCheckedDefaultChecked || (console.log(
           "%s contains an input of type %s with both checked and defaultChecked props. Input elements must be either controlled or uncontrolled (specify either the checked prop, or the defaultChecked prop, but not both). Decide between using a controlled or uncontrolled input element and remove one of these props. More info: https://react.dev/link/controlled-components",
           getCurrentFiberOwnerNameInDevOrNull() || "A component",
           props.type
         ), didWarnCheckedDefaultChecked = true);
-        void 0 === props.value || void 0 === props.defaultValue || didWarnValueDefaultValue$1 || (console.error(
+        void 0 === props.value || void 0 === props.defaultValue || didWarnValueDefaultValue$1 || (console.log(
           "%s contains an input of type %s with both value and defaultValue props. Input elements must be either controlled or uncontrolled (specify either the value prop, or the defaultValue prop, but not both). Decide between using a controlled or uncontrolled input element and remove one of these props. More info: https://react.dev/link/controlled-components",
           getCurrentFiberOwnerNameInDevOrNull() || "A component",
           props.type
@@ -1632,13 +1632,13 @@ var require_react_dom_client_development = __commonJS({
       }
       function validateOptionProps(element, props) {
         null == props.value && ("object" === typeof props.children && null !== props.children ? React.Children.forEach(props.children, function(child) {
-          null == child || "string" === typeof child || "number" === typeof child || "bigint" === typeof child || didWarnInvalidChild || (didWarnInvalidChild = true, console.error(
+          null == child || "string" === typeof child || "number" === typeof child || "bigint" === typeof child || didWarnInvalidChild || (didWarnInvalidChild = true, console.log(
             "Cannot infer the option value of complex children. Pass a `value` prop or use a plain string as children to <option>."
           ));
-        }) : null == props.dangerouslySetInnerHTML || didWarnInvalidInnerHTML || (didWarnInvalidInnerHTML = true, console.error(
+        }) : null == props.dangerouslySetInnerHTML || didWarnInvalidInnerHTML || (didWarnInvalidInnerHTML = true, console.log(
           "Pass a `value` prop if you set dangerouslyInnerHTML so React knows which value should be selected."
         )));
-        null == props.selected || didWarnSelectedSetOnOption || (console.error(
+        null == props.selected || didWarnSelectedSetOnOption || (console.log(
           "Use the `defaultValue` or `value` props on <select> instead of setting `selected` on <option>."
         ), didWarnSelectedSetOnOption = true);
       }
@@ -1673,27 +1673,27 @@ var require_react_dom_client_development = __commonJS({
           var propName = valuePropNames[element];
           if (null != props[propName]) {
             var propNameIsArray = isArrayImpl(props[propName]);
-            props.multiple && !propNameIsArray ? console.error(
+            props.multiple && !propNameIsArray ? console.log(
               "The `%s` prop supplied to <select> must be an array if `multiple` is true.%s",
               propName,
               getDeclarationErrorAddendum()
-            ) : !props.multiple && propNameIsArray && console.error(
+            ) : !props.multiple && propNameIsArray && console.log(
               "The `%s` prop supplied to <select> must be a scalar value if `multiple` is false.%s",
               propName,
               getDeclarationErrorAddendum()
             );
           }
         }
-        void 0 === props.value || void 0 === props.defaultValue || didWarnValueDefaultValue || (console.error(
+        void 0 === props.value || void 0 === props.defaultValue || didWarnValueDefaultValue || (console.log(
           "Select elements must be either controlled or uncontrolled (specify either the value prop, or the defaultValue prop, but not both). Decide between using a controlled or uncontrolled select element and remove one of these props. More info: https://react.dev/link/controlled-components"
         ), didWarnValueDefaultValue = true);
       }
       function validateTextareaProps(element, props) {
-        void 0 === props.value || void 0 === props.defaultValue || didWarnValDefaultVal || (console.error(
+        void 0 === props.value || void 0 === props.defaultValue || didWarnValDefaultVal || (console.log(
           "%s contains a textarea with both value and defaultValue props. Textarea elements must be either controlled or uncontrolled (specify either the value prop, or the defaultValue prop, but not both). Decide between using a controlled or uncontrolled textarea and remove one of these props. More info: https://react.dev/link/controlled-components",
           getCurrentFiberOwnerNameInDevOrNull() || "A component"
         ), didWarnValDefaultVal = true);
-        null != props.children && null == props.value && console.error(
+        null != props.children && null == props.value && console.log(
           "Use the `defaultValue` or `value` props instead of setting children on <textarea>."
         );
       }
@@ -1951,7 +1951,7 @@ var require_react_dom_client_development = __commonJS({
               serverComponentName,
               i,
               added(indent)
-            ), indent++) : "string" === typeof node.serverProps ? console.error(
+            ), indent++) : "string" === typeof node.serverProps ? console.log(
               "Should not have matched a non HostText fiber to a Text node. This is a bug in React."
             ) : (debugInfo = describeElementDiff(
               serverComponentName,
@@ -2151,20 +2151,20 @@ var require_react_dom_client_development = __commonJS({
         if (didWarn[ancestorInfo]) return false;
         didWarn[ancestorInfo] = true;
         var ancestor = (ancestorInfo = current) ? findAncestor(ancestorInfo.return, ancestorTag) : null, ancestorDescription = null !== ancestorInfo && null !== ancestor ? describeAncestors(ancestor, ancestorInfo, null) : "", tagDisplayName = "<" + childTag + ">";
-        parentInfo ? (parentInfo = "", "table" === ancestorTag && "tr" === childTag && (parentInfo += " Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated by the browser."), console.error(
+        parentInfo ? (parentInfo = "", "table" === ancestorTag && "tr" === childTag && (parentInfo += " Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated by the browser."), console.log(
           "In HTML, %s cannot be a child of <%s>.%s\nThis will cause a hydration error.%s",
           tagDisplayName,
           ancestorTag,
           parentInfo,
           ancestorDescription
-        )) : console.error(
+        )) : console.log(
           "In HTML, %s cannot be a descendant of <%s>.\nThis will cause a hydration error.%s",
           tagDisplayName,
           ancestorTag,
           ancestorDescription
         );
         ancestorInfo && (childTag = ancestorInfo.return, null === ancestor || null === childTag || ancestor === childTag && childTag._debugOwner === ancestorInfo._debugOwner || runWithFiberInDEV(ancestor, function() {
-          console.error(
+          console.log(
             "<%s> cannot contain a nested %s.\nSee this log for the ancestor stack trace.",
             ancestorTag,
             tagDisplayName
@@ -2184,11 +2184,11 @@ var require_react_dom_client_development = __commonJS({
           implicitRootScope,
           6 !== implicitRootScope.tag ? { children: null } : null
         ) : "";
-        /\S/.test(childText) ? console.error(
+        /\S/.test(childText) ? console.log(
           "In HTML, text nodes cannot be a child of <%s>.\nThis will cause a hydration error.%s",
           parentTag,
           implicitRootScope
-        ) : console.error(
+        ) : console.log(
           "In HTML, whitespace text nodes cannot be a child of <%s>. Make sure you don't have any extra whitespace between tags on each line of your source code.\nThis will cause a hydration error.%s",
           parentTag,
           implicitRootScope
@@ -2212,22 +2212,22 @@ var require_react_dom_client_development = __commonJS({
       }
       function setValueForStyle(style2, styleName, value) {
         var isCustomProperty = 0 === styleName.indexOf("--");
-        isCustomProperty || (-1 < styleName.indexOf("-") ? warnedStyleNames.hasOwnProperty(styleName) && warnedStyleNames[styleName] || (warnedStyleNames[styleName] = true, console.error(
+        isCustomProperty || (-1 < styleName.indexOf("-") ? warnedStyleNames.hasOwnProperty(styleName) && warnedStyleNames[styleName] || (warnedStyleNames[styleName] = true, console.log(
           "Unsupported style property %s. Did you mean %s?",
           styleName,
           camelize(styleName.replace(msPattern, "ms-"))
-        )) : badVendoredStyleNamePattern.test(styleName) ? warnedStyleNames.hasOwnProperty(styleName) && warnedStyleNames[styleName] || (warnedStyleNames[styleName] = true, console.error(
+        )) : badVendoredStyleNamePattern.test(styleName) ? warnedStyleNames.hasOwnProperty(styleName) && warnedStyleNames[styleName] || (warnedStyleNames[styleName] = true, console.log(
           "Unsupported vendor-prefixed style property %s. Did you mean %s?",
           styleName,
           styleName.charAt(0).toUpperCase() + styleName.slice(1)
-        )) : !badStyleValueWithSemicolonPattern.test(value) || warnedStyleValues.hasOwnProperty(value) && warnedStyleValues[value] || (warnedStyleValues[value] = true, console.error(
+        )) : !badStyleValueWithSemicolonPattern.test(value) || warnedStyleValues.hasOwnProperty(value) && warnedStyleValues[value] || (warnedStyleValues[value] = true, console.log(
           `Style property values shouldn't contain a semicolon. Try "%s: %s" instead.`,
           styleName,
           value.replace(badStyleValueWithSemicolonPattern, "")
-        )), "number" === typeof value && (isNaN(value) ? warnedForNaNValue || (warnedForNaNValue = true, console.error(
+        )), "number" === typeof value && (isNaN(value) ? warnedForNaNValue || (warnedForNaNValue = true, console.log(
           "`NaN` is an invalid value for the `%s` css style property.",
           styleName
-        )) : isFinite(value) || warnedForInfinityValue || (warnedForInfinityValue = true, console.error(
+        )) : isFinite(value) || warnedForInfinityValue || (warnedForInfinityValue = true, console.log(
           "`Infinity` is an invalid value for the `%s` css style property.",
           styleName
         ))));
@@ -2306,12 +2306,12 @@ var require_react_dom_client_development = __commonJS({
           tagName = "aria-" + name.slice(4).toLowerCase();
           tagName = ariaProperties.hasOwnProperty(tagName) ? tagName : null;
           if (null == tagName)
-            return console.error(
+            return console.log(
               "Invalid ARIA attribute `%s`. ARIA attributes follow the pattern aria-* and must be lowercase.",
               name
             ), warnedProperties$1[name] = true;
           if (name !== tagName)
-            return console.error(
+            return console.log(
               "Invalid ARIA attribute `%s`. Did you mean `%s`?",
               name,
               tagName
@@ -2321,7 +2321,7 @@ var require_react_dom_client_development = __commonJS({
           tagName = name.toLowerCase();
           tagName = ariaProperties.hasOwnProperty(tagName) ? tagName : null;
           if (null == tagName) return warnedProperties$1[name] = true, false;
-          name !== tagName && (console.error(
+          name !== tagName && (console.log(
             "Unknown ARIA attribute `%s`. Did you mean `%s`?",
             name,
             tagName
@@ -2336,11 +2336,11 @@ var require_react_dom_client_development = __commonJS({
         props = invalidProps.map(function(prop) {
           return "`" + prop + "`";
         }).join(", ");
-        1 === invalidProps.length ? console.error(
+        1 === invalidProps.length ? console.log(
           "Invalid aria prop %s on <%s> tag. For details, see https://react.dev/link/invalid-aria-props",
           props,
           type
-        ) : 1 < invalidProps.length && console.error(
+        ) : 1 < invalidProps.length && console.log(
           "Invalid aria props %s on <%s> tag. For details, see https://react.dev/link/invalid-aria-props",
           props,
           type
@@ -2351,7 +2351,7 @@ var require_react_dom_client_development = __commonJS({
           return true;
         var lowerCasedName = name.toLowerCase();
         if ("onfocusin" === lowerCasedName || "onfocusout" === lowerCasedName)
-          return console.error(
+          return console.log(
             "React uses onFocus and onBlur instead of onFocusIn and onFocusOut. All React events are normalized to bubble, so onFocusIn and onFocusOut are not needed/supported by React."
           ), warnedProperties[name] = true;
         if ("function" === typeof value && ("form" === tagName && "action" === name || "input" === tagName && "formAction" === name || "button" === tagName && "formAction" === name))
@@ -2362,49 +2362,49 @@ var require_react_dom_client_development = __commonJS({
             return true;
           eventRegistry = tagName.hasOwnProperty(lowerCasedName) ? tagName[lowerCasedName] : null;
           if (null != eventRegistry)
-            return console.error(
+            return console.log(
               "Invalid event handler property `%s`. Did you mean `%s`?",
               name,
               eventRegistry
             ), warnedProperties[name] = true;
           if (EVENT_NAME_REGEX.test(name))
-            return console.error(
+            return console.log(
               "Unknown event handler property `%s`. It will be ignored.",
               name
             ), warnedProperties[name] = true;
         } else if (EVENT_NAME_REGEX.test(name))
-          return INVALID_EVENT_NAME_REGEX.test(name) && console.error(
+          return INVALID_EVENT_NAME_REGEX.test(name) && console.log(
             "Invalid event handler property `%s`. React events use the camelCase naming convention, for example `onClick`.",
             name
           ), warnedProperties[name] = true;
         if (rARIA.test(name) || rARIACamel.test(name)) return true;
         if ("innerhtml" === lowerCasedName)
-          return console.error(
+          return console.log(
             "Directly setting property `innerHTML` is not permitted. For more information, lookup documentation on `dangerouslySetInnerHTML`."
           ), warnedProperties[name] = true;
         if ("aria" === lowerCasedName)
-          return console.error(
+          return console.log(
             "The `aria` attribute is reserved for future use in React. Pass individual `aria-` attributes instead."
           ), warnedProperties[name] = true;
         if ("is" === lowerCasedName && null !== value && void 0 !== value && "string" !== typeof value)
-          return console.error(
+          return console.log(
             "Received a `%s` for a string attribute `is`. If this is expected, cast the value to a string.",
             typeof value
           ), warnedProperties[name] = true;
         if ("number" === typeof value && isNaN(value))
-          return console.error(
+          return console.log(
             "Received NaN for the `%s` attribute. If this is expected, cast the value to a string.",
             name
           ), warnedProperties[name] = true;
         if (possibleStandardNames.hasOwnProperty(lowerCasedName)) {
           if (lowerCasedName = possibleStandardNames[lowerCasedName], lowerCasedName !== name)
-            return console.error(
+            return console.log(
               "Invalid DOM property `%s`. Did you mean `%s`?",
               name,
               lowerCasedName
             ), warnedProperties[name] = true;
         } else if (name !== lowerCasedName)
-          return console.error(
+          return console.log(
             "React does not recognize the `%s` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `%s` instead. If you accidentally passed it from a parent component, remove it from the DOM element.",
             name,
             lowerCasedName
@@ -2470,14 +2470,14 @@ var require_react_dom_client_development = __commonJS({
                 lowerCasedName = name.toLowerCase().slice(0, 5);
                 if ("data-" === lowerCasedName || "aria-" === lowerCasedName)
                   return true;
-                value ? console.error(
+                value ? console.log(
                   'Received `%s` for a non-boolean attribute `%s`.\n\nIf you want to write it to the DOM, pass a string instead: %s="%s" or %s={value.toString()}.',
                   value,
                   name,
                   name,
                   value,
                   name
-                ) : console.error(
+                ) : console.log(
                   'Received `%s` for a non-boolean attribute `%s`.\n\nIf you want to write it to the DOM, pass a string instead: %s="%s" or %s={value.toString()}.\n\nIf you used to conditionally omit it with %s={condition && value}, pass %s={condition ? value : undefined} instead.',
                   value,
                   name,
@@ -2526,7 +2526,7 @@ var require_react_dom_client_development = __commonJS({
                 default:
                   return true;
               }
-              console.error(
+              console.log(
                 "Received the string `%s` for the boolean attribute `%s`. %s Did you mean %s={%s}?",
                 value,
                 name,
@@ -2546,11 +2546,11 @@ var require_react_dom_client_development = __commonJS({
         props = unknownProps.map(function(prop) {
           return "`" + prop + "`";
         }).join(", ");
-        1 === unknownProps.length ? console.error(
+        1 === unknownProps.length ? console.log(
           "Invalid value for prop %s on <%s> tag. Either remove it from the element, or pass a string or number value to keep it in the DOM. For details, see https://react.dev/link/attribute-behavior ",
           props,
           type
-        ) : 1 < unknownProps.length && console.error(
+        ) : 1 < unknownProps.length && console.log(
           "Invalid values for props %s on <%s> tag. Either remove them from the element, or pass a string or number value to keep them in the DOM. For details, see https://react.dev/link/attribute-behavior ",
           props,
           type
@@ -3001,7 +3001,7 @@ var require_react_dom_client_development = __commonJS({
           throw nestedPassiveUpdateCount = nestedUpdateCount = 0, rootWithPassiveNestedUpdates = rootWithNestedUpdates = null, Error(
             "Maximum update depth exceeded. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. React limits the number of nested updates to prevent infinite loops."
           );
-        nestedPassiveUpdateCount > NESTED_PASSIVE_UPDATE_LIMIT && (nestedPassiveUpdateCount = 0, rootWithPassiveNestedUpdates = null, console.error(
+        nestedPassiveUpdateCount > NESTED_PASSIVE_UPDATE_LIMIT && (nestedPassiveUpdateCount = 0, rootWithPassiveNestedUpdates = null, console.log(
           "Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render."
         ));
         null === sourceFiber.alternate && 0 !== (sourceFiber.flags & 4098) && warnAboutUpdateOnNotYetMountedFiberInDEV(sourceFiber);
@@ -3177,7 +3177,7 @@ var require_react_dom_client_development = __commonJS({
               mode |= StrictEffectsMode;
               break;
             case REACT_PROFILER_TYPE:
-              return type = pendingProps, owner = mode, "string" !== typeof type.id && console.error(
+              return type = pendingProps, owner = mode, "string" !== typeof type.id && console.log(
                 'Profiler must specify an "id" of type `string` as a prop. Received the type `%s` instead.',
                 typeof type.id
               ), key = createFiber(12, type, key, owner | ProfileMode), key.elementType = REACT_PROFILER_TYPE, key.lanes = lanes, key.stateNode = { effectDuration: 0, passiveEffectDuration: 0 }, key;
@@ -3304,7 +3304,7 @@ var require_react_dom_client_development = __commonJS({
           treeContextProvider = idStack[--idStackIndex], idStack[idStackIndex] = null, treeContextOverflow = idStack[--idStackIndex], idStack[idStackIndex] = null, treeContextId = idStack[--idStackIndex], idStack[idStackIndex] = null;
       }
       function warnIfNotHydrating() {
-        isHydrating || console.error(
+        isHydrating || console.log(
           "Expected to be hydrating. This is a bug in React. Please file an issue."
         );
       }
@@ -3496,7 +3496,7 @@ var require_react_dom_client_development = __commonJS({
           for (var diff = describeDiff(diffRoot); 0 < diffRoot.children.length; )
             diffRoot = diffRoot.children[0];
           runWithFiberInDEV(diffRoot.fiber, function() {
-            console.error(
+            console.log(
               "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n%s%s",
               "https://react.dev/link/hydration-mismatch",
               diff
@@ -3512,7 +3512,7 @@ var require_react_dom_client_development = __commonJS({
         push(valueCursor, context._currentValue, providerFiber);
         context._currentValue = nextValue;
         push(rendererCursorDEV, context._currentRenderer, providerFiber);
-        void 0 !== context._currentRenderer && null !== context._currentRenderer && context._currentRenderer !== rendererSigil && console.error(
+        void 0 !== context._currentRenderer && null !== context._currentRenderer && context._currentRenderer !== rendererSigil && console.log(
           "Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported."
         );
         context._currentRenderer = rendererSigil;
@@ -3531,7 +3531,7 @@ var require_react_dom_client_development = __commonJS({
           if (parent === propagationRoot) break;
           parent = parent.return;
         }
-        parent !== propagationRoot && console.error(
+        parent !== propagationRoot && console.log(
           "Expected to find the propagation root when scheduling context work. This error is likely caused by a bug in React. Please file an issue."
         );
       }
@@ -3645,7 +3645,7 @@ var require_react_dom_client_development = __commonJS({
         null !== workInProgress2 && (workInProgress2.firstContext = null);
       }
       function readContext(context) {
-        isDisallowedContextReadInDEV && console.error(
+        isDisallowedContextReadInDEV && console.log(
           "Context can only be read while React is rendering. In classes, you can read it in the render method or getDerivedStateFromProps. In function components, you can read it directly in the function body, but not inside Hooks like useReducer() or useMemo()."
         );
         return readContextForConsumer(currentlyRenderingFiber$1, context);
@@ -3817,7 +3817,7 @@ var require_react_dom_client_development = __commonJS({
         null !== ReactSharedInternals.actQueue && (ReactSharedInternals.didUsePromise = true);
         var trackedThenables = thenableState2.thenables;
         index = trackedThenables[index];
-        void 0 === index ? trackedThenables.push(thenable) : index !== thenable && (thenableState2.didWarnAboutUncachedPromise || (thenableState2.didWarnAboutUncachedPromise = true, console.error(
+        void 0 === index ? trackedThenables.push(thenable) : index !== thenable && (thenableState2.didWarnAboutUncachedPromise || (thenableState2.didWarnAboutUncachedPromise = true, console.log(
           "A component was suspended by an uncached promise. Creating promises inside a Client Component or hook is not yet supported, except via a Suspense-compatible library or framework."
         )), thenable.then(noop$3, noop$3), thenable = index);
         switch (thenable.status) {
@@ -3914,7 +3914,7 @@ var require_react_dom_client_development = __commonJS({
         updateQueue = updateQueue.shared;
         if (currentlyProcessingQueue === updateQueue && !didWarnUpdateInsideUpdate) {
           var componentName2 = getComponentNameFromFiber(fiber);
-          console.error(
+          console.log(
             "An update (setState, replaceState, or forceUpdate) was scheduled from inside an update function. Update functions should be pure, with zero side-effects. Consider using componentDidUpdate or a callback.\n\nPlease update the following component: %s",
             componentName2
           );
@@ -4143,7 +4143,7 @@ var require_react_dom_client_development = __commonJS({
               oldHookName += newHookName + "\n";
               table += oldHookName;
             }
-            console.error(
+            console.log(
               "React has detected a change in the order of Hooks called by %s. This will lead to bugs and errors if not fixed. For more information, read the Rules of Hooks: https://react.dev/link/rules-of-hooks\n\n   Previous render            Next render\n   ------------------------------------------------------\n%s   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n",
               componentName2,
               table
@@ -4152,7 +4152,7 @@ var require_react_dom_client_development = __commonJS({
         }
       }
       function checkDepsAreArrayDev(deps) {
-        void 0 === deps || null === deps || isArrayImpl(deps) || console.error(
+        void 0 === deps || null === deps || isArrayImpl(deps) || console.log(
           "%s received a final argument that is not an array (instead, received `%s`). When specified, the final argument must be an array.",
           currentHookNameInDev,
           typeof deps
@@ -4160,7 +4160,7 @@ var require_react_dom_client_development = __commonJS({
       }
       function warnOnUseFormStateInDev() {
         var componentName2 = getComponentNameFromFiber(currentlyRenderingFiber);
-        didWarnAboutUseFormState.has(componentName2) || (didWarnAboutUseFormState.add(componentName2), console.error(
+        didWarnAboutUseFormState.has(componentName2) || (didWarnAboutUseFormState.add(componentName2), console.log(
           "ReactDOM.useFormState has been renamed to React.useActionState. Please update %s to use React.useActionState.",
           componentName2
         ));
@@ -4173,11 +4173,11 @@ var require_react_dom_client_development = __commonJS({
       function areHookInputsEqual(nextDeps, prevDeps) {
         if (ignorePreviousDependencies) return false;
         if (null === prevDeps)
-          return console.error(
+          return console.log(
             "%s received a final argument during this render, but not during the previous render. Even though the final argument is optional, its type cannot change between renders.",
             currentHookNameInDev
           ), false;
-        nextDeps.length !== prevDeps.length && console.error(
+        nextDeps.length !== prevDeps.length && console.log(
           "The final argument passed to %s changed size between renders. The order and size of this array must remain constant.\n\nPrevious: %s\nIncoming: %s",
           currentHookNameInDev,
           "[" + prevDeps.join(", ") + "]",
@@ -4194,7 +4194,7 @@ var require_react_dom_client_development = __commonJS({
         hookTypesUpdateIndexDev = -1;
         ignorePreviousDependencies = null !== current2 && current2.type !== workInProgress2.type;
         if ("[object AsyncFunction]" === Object.prototype.toString.call(Component) || "[object AsyncGeneratorFunction]" === Object.prototype.toString.call(Component))
-          nextRenderLanes = getComponentNameFromFiber(currentlyRenderingFiber), didWarnAboutAsyncClientComponent.has(nextRenderLanes) || (didWarnAboutAsyncClientComponent.add(nextRenderLanes), console.error(
+          nextRenderLanes = getComponentNameFromFiber(currentlyRenderingFiber), didWarnAboutAsyncClientComponent.has(nextRenderLanes) || (didWarnAboutAsyncClientComponent.add(nextRenderLanes), console.log(
             "%s is an async Client Component. Only Server Components can be async at the moment. This error is often caused by accidentally adding `'use client'` to a module that was originally written for the server.",
             null === nextRenderLanes ? "An unknown Component" : "<" + nextRenderLanes + ">"
           ));
@@ -4239,7 +4239,7 @@ var require_react_dom_client_development = __commonJS({
         renderLanes = 0;
         hookTypesDev = currentHookNameInDev = workInProgressHook = currentHook = currentlyRenderingFiber = null;
         hookTypesUpdateIndexDev = -1;
-        null !== current2 && (current2.flags & 65011712) !== (workInProgress2.flags & 65011712) && console.error(
+        null !== current2 && (current2.flags & 65011712) !== (workInProgress2.flags & 65011712) && console.log(
           "Internal React error: Expected static flag was missing. Please notify the React team."
         );
         didScheduleRenderPhaseUpdate = false;
@@ -4251,7 +4251,7 @@ var require_react_dom_client_development = __commonJS({
           );
         null === current2 || didReceiveUpdate || (current2 = current2.dependencies, null !== current2 && checkIfContextChanged(current2) && (didReceiveUpdate = true));
         needsToResetSuspendedThenableDEV ? (needsToResetSuspendedThenableDEV = false, current2 = true) : current2 = false;
-        current2 && (workInProgress2 = getComponentNameFromFiber(workInProgress2) || "Unknown", didWarnAboutUseWrappedInTryCatch.has(workInProgress2) || didWarnAboutAsyncClientComponent.has(workInProgress2) || (didWarnAboutUseWrappedInTryCatch.add(workInProgress2), console.error(
+        current2 && (workInProgress2 = getComponentNameFromFiber(workInProgress2) || "Unknown", didWarnAboutUseWrappedInTryCatch.has(workInProgress2) || didWarnAboutAsyncClientComponent.has(workInProgress2) || (didWarnAboutUseWrappedInTryCatch.add(workInProgress2), console.log(
           "`use` was called from inside a try/catch block. This is not allowed and can lead to unexpected behavior. To handle errors triggered by `use`, wrap your component in a error boundary."
         )));
       }
@@ -4394,7 +4394,7 @@ var require_react_dom_client_development = __commonJS({
           for (updateQueue = memoCache.data[memoCache.index] = Array(size), current2 = 0; current2 < size; current2++)
             updateQueue[current2] = REACT_MEMO_CACHE_SENTINEL;
         else
-          updateQueue.length !== size && console.error(
+          updateQueue.length !== size && console.log(
             "Expected a constant size argument for each invocation of useMemoCache. The previous cache was allocated with size %s but size %s was requested.",
             updateQueue.length,
             size
@@ -4452,7 +4452,7 @@ var require_react_dom_client_development = __commonJS({
             baseQueue.next = pendingQueue.next;
             pendingQueue.next = baseFirst;
           }
-          current2.baseQueue !== baseQueue && console.error(
+          current2.baseQueue !== baseQueue && console.log(
             "Internal error: Expected work-in-progress queue to be a clone. This is a bug in React."
           );
           current2.baseQueue = baseQueue = pendingQueue;
@@ -4543,12 +4543,12 @@ var require_react_dom_client_development = __commonJS({
               "Missing getServerSnapshot, which is required for server-rendered content. Will revert to client rendering."
             );
           var nextSnapshot = getServerSnapshot();
-          didWarnUncachedGetSnapshot || nextSnapshot === getServerSnapshot() || (console.error(
+          didWarnUncachedGetSnapshot || nextSnapshot === getServerSnapshot() || (console.log(
             "The result of getServerSnapshot should be cached to avoid an infinite loop"
           ), didWarnUncachedGetSnapshot = true);
         } else {
           nextSnapshot = getSnapshot();
-          didWarnUncachedGetSnapshot || (getServerSnapshot = getSnapshot(), objectIs(nextSnapshot, getServerSnapshot) || (console.error(
+          didWarnUncachedGetSnapshot || (getServerSnapshot = getSnapshot(), objectIs(nextSnapshot, getServerSnapshot) || (console.log(
             "The result of getSnapshot should be cached to avoid an infinite loop"
           ), didWarnUncachedGetSnapshot = true));
           if (null === workInProgressRoot)
@@ -4589,7 +4589,7 @@ var require_react_dom_client_development = __commonJS({
           getServerSnapshot = getServerSnapshot();
         } else if (getServerSnapshot = getSnapshot(), !didWarnUncachedGetSnapshot) {
           var cachedSnapshot = getSnapshot();
-          objectIs(getServerSnapshot, cachedSnapshot) || (console.error(
+          objectIs(getServerSnapshot, cachedSnapshot) || (console.log(
             "The result of getSnapshot should be cached to avoid an infinite loop"
           ), didWarnUncachedGetSnapshot = true);
         }
@@ -4778,7 +4778,7 @@ var require_react_dom_client_development = __commonJS({
           function(error) {
             return onActionError(actionQueue, node, error);
           }
-        ), node.isTransition || console.error(
+        ), node.isTransition || console.log(
           "An async function with useActionState was called outside of a transition. This is likely not what you intended (for example, isPending will not update correctly). Either call the returned function inside startTransition, or pass it to an `action` or `formAction` prop."
         )) : onActionSuccess(actionQueue, node, returnValue);
       }
@@ -4995,7 +4995,7 @@ var require_react_dom_client_development = __commonJS({
           };
         }
         if (null !== ref && void 0 !== ref)
-          return ref.hasOwnProperty("current") || console.error(
+          return ref.hasOwnProperty("current") || console.log(
             "Expected useImperativeHandle() first argument to either be a ref callback or React.createRef() object. Instead received: %s.",
             "an object with keys {" + Object.keys(ref).join(", ") + "}"
           ), create = create(), ref.current = create, function() {
@@ -5003,7 +5003,7 @@ var require_react_dom_client_development = __commonJS({
           };
       }
       function mountImperativeHandle(ref, create, deps) {
-        "function" !== typeof create && console.error(
+        "function" !== typeof create && console.log(
           "Expected useImperativeHandle() second argument to be a function that creates a handle. Instead received: %s.",
           null !== create ? typeof create : "null"
         );
@@ -5018,7 +5018,7 @@ var require_react_dom_client_development = __commonJS({
         );
       }
       function updateImperativeHandle(ref, create, deps) {
-        "function" !== typeof create && console.error(
+        "function" !== typeof create && console.log(
           "Expected useImperativeHandle() second argument to be a function that creates a handle. Instead received: %s.",
           null !== create ? typeof create : "null"
         );
@@ -5216,7 +5216,7 @@ var require_react_dom_client_development = __commonJS({
         return existingStateHook;
       }
       function requestFormReset$1(formFiber) {
-        null === ReactSharedInternals.T && console.error(
+        null === ReactSharedInternals.T && console.log(
           "requestFormReset was called outside a transition or action. To fix, move to an action, or wrap with startTransition."
         );
         var resetStateQueue = ensureFormComponentIsStateful(formFiber).next.queue;
@@ -5286,7 +5286,7 @@ var require_react_dom_client_development = __commonJS({
               var root2 = enqueueUpdate(provider, fiber, lane);
               null !== root2 && (scheduleUpdateOnFiber(root2, provider, lane), entangleTransitions(root2, provider, lane));
               provider = createCache();
-              null !== seedKey && void 0 !== seedKey && null !== root2 && console.error(
+              null !== seedKey && void 0 !== seedKey && null !== root2 && console.log(
                 "The seed argument is not enabled outside experimental channels."
               );
               fiber.payload = { cache: provider };
@@ -5297,7 +5297,7 @@ var require_react_dom_client_development = __commonJS({
       }
       function dispatchReducerAction(fiber, queue, action) {
         var args = arguments;
-        "function" === typeof args[3] && console.error(
+        "function" === typeof args[3] && console.log(
           "State updates from the useState() and useReducer() Hooks don't support the second callback argument. To execute a side effect after rendering, declare it in the component body with useEffect()."
         );
         args = requestUpdateLane(fiber);
@@ -5314,7 +5314,7 @@ var require_react_dom_client_development = __commonJS({
       }
       function dispatchSetState(fiber, queue, action) {
         var args = arguments;
-        "function" === typeof args[3] && console.error(
+        "function" === typeof args[3] && console.log(
           "State updates from the useState() and useReducer() Hooks don't support the second callback argument. To execute a side effect after rendering, declare it in the component body with useEffect()."
         );
         args = requestUpdateLane(fiber);
@@ -5354,7 +5354,7 @@ var require_react_dom_client_development = __commonJS({
         return false;
       }
       function dispatchOptimisticSetState(fiber, throwIfDuringRender, queue, action) {
-        null === ReactSharedInternals.T && 0 === currentEntangledLane && console.error(
+        null === ReactSharedInternals.T && 0 === currentEntangledLane && console.log(
           "An optimistic state update occurred outside a transition or action. To fix, move the update to an action, or wrap with startTransition."
         );
         action = {
@@ -5368,7 +5368,7 @@ var require_react_dom_client_development = __commonJS({
         if (isRenderPhaseUpdate(fiber)) {
           if (throwIfDuringRender)
             throw Error("Cannot update optimistic state while rendering.");
-          console.error("Cannot call startTransition while rendering.");
+          console.log("Cannot call startTransition while rendering.");
         } else
           throwIfDuringRender = enqueueConcurrentHookUpdate(
             fiber,
@@ -5410,7 +5410,7 @@ var require_react_dom_client_development = __commonJS({
             runWithFiberInDEV(
               fiber,
               function(erroredKey) {
-                console.error(
+                console.log(
                   "Invalid prop `%s` supplied to `React.Fragment`. React.Fragment can only have `key` and `children` props.",
                   erroredKey
                 );
@@ -5443,12 +5443,12 @@ var require_react_dom_client_development = __commonJS({
       }
       function warnOnFunctionType(returnFiber, invalidChild) {
         var parentName = getComponentNameFromFiber(returnFiber) || "Component";
-        ownerHasFunctionTypeWarning[parentName] || (ownerHasFunctionTypeWarning[parentName] = true, invalidChild = invalidChild.displayName || invalidChild.name || "Component", 3 === returnFiber.tag ? console.error(
+        ownerHasFunctionTypeWarning[parentName] || (ownerHasFunctionTypeWarning[parentName] = true, invalidChild = invalidChild.displayName || invalidChild.name || "Component", 3 === returnFiber.tag ? console.log(
           "Functions are not valid as a React child. This may happen if you return %s instead of <%s /> from render. Or maybe you meant to call this function rather than return it.\n  root.render(%s)",
           invalidChild,
           invalidChild,
           invalidChild
-        ) : console.error(
+        ) : console.log(
           "Functions are not valid as a React child. This may happen if you return %s instead of <%s /> from render. Or maybe you meant to call this function rather than return it.\n  <%s>{%s}</%s>",
           invalidChild,
           invalidChild,
@@ -5459,10 +5459,10 @@ var require_react_dom_client_development = __commonJS({
       }
       function warnOnSymbolType(returnFiber, invalidChild) {
         var parentName = getComponentNameFromFiber(returnFiber) || "Component";
-        ownerHasSymbolTypeWarning[parentName] || (ownerHasSymbolTypeWarning[parentName] = true, invalidChild = String(invalidChild), 3 === returnFiber.tag ? console.error(
+        ownerHasSymbolTypeWarning[parentName] || (ownerHasSymbolTypeWarning[parentName] = true, invalidChild = String(invalidChild), 3 === returnFiber.tag ? console.log(
           "Symbols are not valid as a React child.\n  root.render(%s)",
           invalidChild
-        ) : console.error(
+        ) : console.log(
           "Symbols are not valid as a React child.\n  <%s>%s</%s>",
           parentName,
           invalidChild,
@@ -5746,7 +5746,7 @@ var require_react_dom_client_development = __commonJS({
                 break;
               }
               runWithFiberInDEV(workInProgress2, function() {
-                console.error(
+                console.log(
                   "Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.",
                   key
                 );
@@ -6008,11 +6008,11 @@ var require_react_dom_client_development = __commonJS({
               var newChildren = key.call(newChild);
               if (newChildren === newChild) {
                 if (0 !== returnFiber.tag || "[object GeneratorFunction]" !== Object.prototype.toString.call(returnFiber.type) || "[object Generator]" !== Object.prototype.toString.call(newChildren))
-                  didWarnAboutGenerators || console.error(
+                  didWarnAboutGenerators || console.log(
                     "Using Iterators as children is unsupported and will likely yield unexpected results because enumerating a generator mutates it. You may convert it to an array with `Array.from()` or the `[...spread]` operator before rendering. You can also use an Iterable that can iterate multiple times over the same items."
                   ), didWarnAboutGenerators = true;
               } else
-                newChild.entries !== key || didWarnAboutMaps || (console.error(
+                newChild.entries !== key || didWarnAboutMaps || (console.log(
                   "Using Maps as children is not supported. Use an array of keyed ReactElements instead."
                 ), didWarnAboutMaps = true);
               returnFiber = reconcileChildrenIterator(
@@ -6145,7 +6145,7 @@ var require_react_dom_client_development = __commonJS({
       function warnOnInvalidCallback(callback) {
         if (null !== callback && "function" !== typeof callback) {
           var key = String(callback);
-          didWarnOnInvalidCallback.has(key) || (didWarnOnInvalidCallback.add(key), console.error(
+          didWarnOnInvalidCallback.has(key) || (didWarnOnInvalidCallback.add(key), console.log(
             "Expected the last optional `callback` argument to be a function. Instead received: %s.",
             callback
           ));
@@ -6161,7 +6161,7 @@ var require_react_dom_client_development = __commonJS({
             setIsStrictModeForDevtools(false);
           }
         }
-        void 0 === partialState && (ctor = getComponentNameFromType(ctor) || "Component", didWarnAboutUndefinedDerivedState.has(ctor) || (didWarnAboutUndefinedDerivedState.add(ctor), console.error(
+        void 0 === partialState && (ctor = getComponentNameFromType(ctor) || "Component", didWarnAboutUndefinedDerivedState.has(ctor) || (didWarnAboutUndefinedDerivedState.add(ctor), console.log(
           "%s.getDerivedStateFromProps(): A valid state object (or null) must be returned. You have returned undefined.",
           ctor
         )));
@@ -6189,7 +6189,7 @@ var require_react_dom_client_development = __commonJS({
               setIsStrictModeForDevtools(false);
             }
           }
-          void 0 === oldProps && console.error(
+          void 0 === oldProps && console.log(
             "%s.shouldComponentUpdate(): Returned undefined instead of a boolean value. Make sure to return true or false.",
             getComponentNameFromType(ctor) || "Component"
           );
@@ -6201,7 +6201,7 @@ var require_react_dom_client_development = __commonJS({
         var oldState = instance.state;
         "function" === typeof instance.componentWillReceiveProps && instance.componentWillReceiveProps(newProps, nextContext);
         "function" === typeof instance.UNSAFE_componentWillReceiveProps && instance.UNSAFE_componentWillReceiveProps(newProps, nextContext);
-        instance.state !== oldState && (workInProgress2 = getComponentNameFromFiber(workInProgress2) || "Component", didWarnAboutStateAssignmentForComponent.has(workInProgress2) || (didWarnAboutStateAssignmentForComponent.add(workInProgress2), console.error(
+        instance.state !== oldState && (workInProgress2 = getComponentNameFromFiber(workInProgress2) || "Component", didWarnAboutStateAssignmentForComponent.has(workInProgress2) || (didWarnAboutStateAssignmentForComponent.add(workInProgress2), console.log(
           "%s.componentWillReceiveProps(): Assigning directly to this.state is deprecated (except inside a component's constructor). Use setState instead.",
           workInProgress2
         )), classComponentUpdater.enqueueReplaceState(
@@ -6261,7 +6261,7 @@ var require_react_dom_client_development = __commonJS({
           JSCompiler_inline_result = bind.apply(console.error, error);
           JSCompiler_inline_result();
         } else
-          console.error(
+          console.log(
             "%o\n\n%s\n\n%s\n",
             error,
             componentNameMessage,
@@ -6347,7 +6347,7 @@ var require_react_dom_client_development = __commonJS({
           );
           "function" !== typeof getDerivedStateFromError && (null === legacyErrorBoundariesThatAlreadyFailed ? legacyErrorBoundariesThatAlreadyFailed = /* @__PURE__ */ new Set([this]) : legacyErrorBoundariesThatAlreadyFailed.add(this));
           callComponentDidCatchInDEV(this, errorInfo);
-          "function" === typeof getDerivedStateFromError || 0 === (fiber.lanes & 2) && console.error(
+          "function" === typeof getDerivedStateFromError || 0 === (fiber.lanes & 2) && console.log(
             "%s: Error boundaries should implement getDerivedStateFromError(). In that method, return a state update to display an error message or fallback UI.",
             getComponentNameFromFiber(fiber) || "Unknown"
           );
@@ -6600,7 +6600,7 @@ var require_react_dom_client_development = __commonJS({
       function updateFunctionComponent(current2, workInProgress2, Component, nextProps, renderLanes2) {
         if (Component.prototype && "function" === typeof Component.prototype.render) {
           var componentName2 = getComponentNameFromType(Component) || "Unknown";
-          didWarnAboutBadClass[componentName2] || (console.error(
+          didWarnAboutBadClass[componentName2] || (console.log(
             "The <%s /> component appears to have a render method, but doesn't extend React.Component. This is likely to cause errors. Change %s to extend React.Component instead.",
             componentName2,
             componentName2
@@ -6610,7 +6610,7 @@ var require_react_dom_client_development = __commonJS({
           workInProgress2,
           null
         );
-        null === current2 && (validateFunctionComponentInDev(workInProgress2, workInProgress2.type), Component.contextTypes && (componentName2 = getComponentNameFromType(Component) || "Unknown", didWarnAboutContextTypes[componentName2] || (didWarnAboutContextTypes[componentName2] = true, console.error(
+        null === current2 && (validateFunctionComponentInDev(workInProgress2, workInProgress2.type), Component.contextTypes && (componentName2 = getComponentNameFromType(Component) || "Unknown", didWarnAboutContextTypes[componentName2] || (didWarnAboutContextTypes[componentName2] = true, console.log(
           "%s uses the legacy contextTypes API which was removed in React 19. Use React.createContext() with React.useContext() instead. (https://react.dev/link/legacy-context)",
           componentName2
         ))));
@@ -6688,7 +6688,7 @@ var require_react_dom_client_development = __commonJS({
         if (null === workInProgress2.stateNode) {
           state = emptyContextObject;
           _instance = Component.contextType;
-          "contextType" in Component && null !== _instance && (void 0 === _instance || _instance.$$typeof !== REACT_CONTEXT_TYPE) && !didWarnAboutInvalidateContextType.has(Component) && (didWarnAboutInvalidateContextType.add(Component), lane = void 0 === _instance ? " However, it is set to undefined. This can be caused by a typo or by mixing up named and default imports. This can also happen due to a circular dependency, so try moving the createContext() call to a separate file." : "object" !== typeof _instance ? " However, it is set to a " + typeof _instance + "." : _instance.$$typeof === REACT_CONSUMER_TYPE ? " Did you accidentally pass the Context.Consumer instead?" : " However, it is set to an object with keys {" + Object.keys(_instance).join(", ") + "}.", console.error(
+          "contextType" in Component && null !== _instance && (void 0 === _instance || _instance.$$typeof !== REACT_CONTEXT_TYPE) && !didWarnAboutInvalidateContextType.has(Component) && (didWarnAboutInvalidateContextType.add(Component), lane = void 0 === _instance ? " However, it is set to undefined. This can be caused by a typo or by mixing up named and default imports. This can also happen due to a circular dependency, so try moving the createContext() call to a separate file." : "object" !== typeof _instance ? " However, it is set to a " + typeof _instance + "." : _instance.$$typeof === REACT_CONSUMER_TYPE ? " Did you accidentally pass the Context.Consumer instead?" : " However, it is set to an object with keys {" + Object.keys(_instance).join(", ") + "}.", console.log(
             "%s defines an invalid contextType. contextType should point to the Context object returned by React.createContext().%s",
             getComponentNameFromType(Component) || "Component",
             lane
@@ -6708,7 +6708,7 @@ var require_react_dom_client_development = __commonJS({
           workInProgress2.stateNode = _instance;
           _instance._reactInternals = workInProgress2;
           _instance._reactInternalInstance = fakeInternalInstance;
-          "function" === typeof Component.getDerivedStateFromProps && null === state && (state = getComponentNameFromType(Component) || "Component", didWarnAboutUninitializedState.has(state) || (didWarnAboutUninitializedState.add(state), console.error(
+          "function" === typeof Component.getDerivedStateFromProps && null === state && (state = getComponentNameFromType(Component) || "Component", didWarnAboutUninitializedState.has(state) || (didWarnAboutUninitializedState.add(state), console.log(
             "`%s` uses `getDerivedStateFromProps` but its initial state is %s. This is not recommended. Instead, define the initial state by assigning an object to `this.state` in the constructor of `%s`. This ensures that `getDerivedStateFromProps` arguments have a consistent shape.",
             state,
             null === _instance.state ? "null" : "undefined",
@@ -6722,7 +6722,7 @@ var require_react_dom_client_development = __commonJS({
             if (null !== state || null !== lane || null !== foundWillUpdateName) {
               _instance = getComponentNameFromType(Component) || "Component";
               var newApiName = "function" === typeof Component.getDerivedStateFromProps ? "getDerivedStateFromProps()" : "getSnapshotBeforeUpdate()";
-              didWarnAboutLegacyLifecyclesAndDerivedState.has(_instance) || (didWarnAboutLegacyLifecyclesAndDerivedState.add(_instance), console.error(
+              didWarnAboutLegacyLifecyclesAndDerivedState.has(_instance) || (didWarnAboutLegacyLifecyclesAndDerivedState.add(_instance), console.log(
                 "Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n%s uses %s but also contains the following legacy lifecycles:%s%s%s\n\nThe above lifecycles should be removed. Learn more about this warning here:\nhttps://react.dev/link/unsafe-component-lifecycles",
                 _instance,
                 newApiName,
@@ -6734,85 +6734,85 @@ var require_react_dom_client_development = __commonJS({
           }
           _instance = workInProgress2.stateNode;
           state = getComponentNameFromType(Component) || "Component";
-          _instance.render || (Component.prototype && "function" === typeof Component.prototype.render ? console.error(
+          _instance.render || (Component.prototype && "function" === typeof Component.prototype.render ? console.log(
             "No `render` method found on the %s instance: did you accidentally return an object from the constructor?",
             state
-          ) : console.error(
+          ) : console.log(
             "No `render` method found on the %s instance: you may have forgotten to define `render`.",
             state
           ));
-          !_instance.getInitialState || _instance.getInitialState.isReactClassApproved || _instance.state || console.error(
+          !_instance.getInitialState || _instance.getInitialState.isReactClassApproved || _instance.state || console.log(
             "getInitialState was defined on %s, a plain JavaScript class. This is only supported for classes created using React.createClass. Did you mean to define a state property instead?",
             state
           );
-          _instance.getDefaultProps && !_instance.getDefaultProps.isReactClassApproved && console.error(
+          _instance.getDefaultProps && !_instance.getDefaultProps.isReactClassApproved && console.log(
             "getDefaultProps was defined on %s, a plain JavaScript class. This is only supported for classes created using React.createClass. Use a static property to define defaultProps instead.",
             state
           );
-          _instance.contextType && console.error(
+          _instance.contextType && console.log(
             "contextType was defined as an instance property on %s. Use a static property to define contextType instead.",
             state
           );
-          Component.childContextTypes && !didWarnAboutChildContextTypes.has(Component) && (didWarnAboutChildContextTypes.add(Component), console.error(
+          Component.childContextTypes && !didWarnAboutChildContextTypes.has(Component) && (didWarnAboutChildContextTypes.add(Component), console.log(
             "%s uses the legacy childContextTypes API which was removed in React 19. Use React.createContext() instead. (https://react.dev/link/legacy-context)",
             state
           ));
-          Component.contextTypes && !didWarnAboutContextTypes$1.has(Component) && (didWarnAboutContextTypes$1.add(Component), console.error(
+          Component.contextTypes && !didWarnAboutContextTypes$1.has(Component) && (didWarnAboutContextTypes$1.add(Component), console.log(
             "%s uses the legacy contextTypes API which was removed in React 19. Use React.createContext() with static contextType instead. (https://react.dev/link/legacy-context)",
             state
           ));
-          "function" === typeof _instance.componentShouldUpdate && console.error(
+          "function" === typeof _instance.componentShouldUpdate && console.log(
             "%s has a method called componentShouldUpdate(). Did you mean shouldComponentUpdate()? The name is phrased as a question because the function is expected to return a value.",
             state
           );
-          Component.prototype && Component.prototype.isPureReactComponent && "undefined" !== typeof _instance.shouldComponentUpdate && console.error(
+          Component.prototype && Component.prototype.isPureReactComponent && "undefined" !== typeof _instance.shouldComponentUpdate && console.log(
             "%s has a method called shouldComponentUpdate(). shouldComponentUpdate should not be used when extending React.PureComponent. Please extend React.Component if shouldComponentUpdate is used.",
             getComponentNameFromType(Component) || "A pure component"
           );
-          "function" === typeof _instance.componentDidUnmount && console.error(
+          "function" === typeof _instance.componentDidUnmount && console.log(
             "%s has a method called componentDidUnmount(). But there is no such lifecycle method. Did you mean componentWillUnmount()?",
             state
           );
-          "function" === typeof _instance.componentDidReceiveProps && console.error(
+          "function" === typeof _instance.componentDidReceiveProps && console.log(
             "%s has a method called componentDidReceiveProps(). But there is no such lifecycle method. If you meant to update the state in response to changing props, use componentWillReceiveProps(). If you meant to fetch data or run side-effects or mutations after React has updated the UI, use componentDidUpdate().",
             state
           );
-          "function" === typeof _instance.componentWillRecieveProps && console.error(
+          "function" === typeof _instance.componentWillRecieveProps && console.log(
             "%s has a method called componentWillRecieveProps(). Did you mean componentWillReceiveProps()?",
             state
           );
-          "function" === typeof _instance.UNSAFE_componentWillRecieveProps && console.error(
+          "function" === typeof _instance.UNSAFE_componentWillRecieveProps && console.log(
             "%s has a method called UNSAFE_componentWillRecieveProps(). Did you mean UNSAFE_componentWillReceiveProps()?",
             state
           );
           lane = _instance.props !== nextProps;
-          void 0 !== _instance.props && lane && console.error(
+          void 0 !== _instance.props && lane && console.log(
             "When calling super() in `%s`, make sure to pass up the same props that your component's constructor was passed.",
             state
           );
-          _instance.defaultProps && console.error(
+          _instance.defaultProps && console.log(
             "Setting defaultProps as an instance property on %s is not supported and will be ignored. Instead, define defaultProps as a static property on %s.",
             state,
             state
           );
-          "function" !== typeof _instance.getSnapshotBeforeUpdate || "function" === typeof _instance.componentDidUpdate || didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate.has(Component) || (didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate.add(Component), console.error(
+          "function" !== typeof _instance.getSnapshotBeforeUpdate || "function" === typeof _instance.componentDidUpdate || didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate.has(Component) || (didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate.add(Component), console.log(
             "%s: getSnapshotBeforeUpdate() should be used with componentDidUpdate(). This component defines getSnapshotBeforeUpdate() only.",
             getComponentNameFromType(Component)
           ));
-          "function" === typeof _instance.getDerivedStateFromProps && console.error(
+          "function" === typeof _instance.getDerivedStateFromProps && console.log(
             "%s: getDerivedStateFromProps() is defined as an instance method and will be ignored. Instead, declare it as a static method.",
             state
           );
-          "function" === typeof _instance.getDerivedStateFromError && console.error(
+          "function" === typeof _instance.getDerivedStateFromError && console.log(
             "%s: getDerivedStateFromError() is defined as an instance method and will be ignored. Instead, declare it as a static method.",
             state
           );
-          "function" === typeof Component.getSnapshotBeforeUpdate && console.error(
+          "function" === typeof Component.getSnapshotBeforeUpdate && console.log(
             "%s: getSnapshotBeforeUpdate() is defined as a static method and will be ignored. Instead, declare it as an instance method.",
             state
           );
-          (lane = _instance.state) && ("object" !== typeof lane || isArrayImpl(lane)) && console.error("%s.state: must be set to an object or null", state);
-          "function" === typeof _instance.getChildContext && "object" !== typeof Component.childContextTypes && console.error(
+          (lane = _instance.state) && ("object" !== typeof lane || isArrayImpl(lane)) && console.log("%s.state: must be set to an object or null", state);
+          "function" === typeof _instance.getChildContext && "object" !== typeof Component.childContextTypes && console.log(
             "%s.getChildContext(): childContextTypes must be defined in order to use getChildContext().",
             state
           );
@@ -6823,7 +6823,7 @@ var require_react_dom_client_development = __commonJS({
           initializeUpdateQueue(workInProgress2);
           state = Component.contextType;
           _instance.context = "object" === typeof state && null !== state ? readContext(state) : emptyContextObject;
-          _instance.state === nextProps && (state = getComponentNameFromType(Component) || "Component", didWarnAboutDirectlyAssigningPropsToState.has(state) || (didWarnAboutDirectlyAssigningPropsToState.add(state), console.error(
+          _instance.state === nextProps && (state = getComponentNameFromType(Component) || "Component", didWarnAboutDirectlyAssigningPropsToState.has(state) || (didWarnAboutDirectlyAssigningPropsToState.add(state), console.log(
             "%s: It is not recommended to assign props directly to state because updates to props won't be reflected in state. In most cases, it is better to use props directly.",
             state
           )));
@@ -6843,7 +6843,7 @@ var require_react_dom_client_development = __commonJS({
             state,
             nextProps
           ), _instance.state = workInProgress2.memoizedState);
-          "function" === typeof Component.getDerivedStateFromProps || "function" === typeof _instance.getSnapshotBeforeUpdate || "function" !== typeof _instance.UNSAFE_componentWillMount && "function" !== typeof _instance.componentWillMount || (state = _instance.state, "function" === typeof _instance.componentWillMount && _instance.componentWillMount(), "function" === typeof _instance.UNSAFE_componentWillMount && _instance.UNSAFE_componentWillMount(), state !== _instance.state && (console.error(
+          "function" === typeof Component.getDerivedStateFromProps || "function" === typeof _instance.getSnapshotBeforeUpdate || "function" !== typeof _instance.UNSAFE_componentWillMount && "function" !== typeof _instance.componentWillMount || (state = _instance.state, "function" === typeof _instance.componentWillMount && _instance.componentWillMount(), "function" === typeof _instance.UNSAFE_componentWillMount && _instance.UNSAFE_componentWillMount(), state !== _instance.state && (console.log(
             "%s.componentWillMount(): Assigning directly to this.state is deprecated (except inside a component's constructor). Use setState instead.",
             getComponentNameFromFiber(workInProgress2) || "Component"
           ), classComponentUpdater.enqueueReplaceState(
@@ -6977,7 +6977,7 @@ var require_react_dom_client_development = __commonJS({
             renderLanes2
           );
         renderLanes2 = workInProgress2.stateNode;
-        _instance && renderLanes2.props !== nextProps && (didWarnAboutReassigningProps || console.error(
+        _instance && renderLanes2.props !== nextProps && (didWarnAboutReassigningProps || console.log(
           "It looks like %s is reassigning its own `this.props` while rendering. This is not supported and can lead to confusing bugs.",
           getComponentNameFromFiber(workInProgress2) || "a component"
         ), didWarnAboutReassigningProps = true);
@@ -6990,15 +6990,15 @@ var require_react_dom_client_development = __commonJS({
         return workInProgress2.child;
       }
       function validateFunctionComponentInDev(workInProgress2, Component) {
-        Component && Component.childContextTypes && console.error(
+        Component && Component.childContextTypes && console.log(
           "childContextTypes cannot be defined on a function component.\n  %s.childContextTypes = ...",
           Component.displayName || Component.name || "Component"
         );
-        "function" === typeof Component.getDerivedStateFromProps && (workInProgress2 = getComponentNameFromType(Component) || "Unknown", didWarnAboutGetDerivedStateOnFunctionComponent[workInProgress2] || (console.error(
+        "function" === typeof Component.getDerivedStateFromProps && (workInProgress2 = getComponentNameFromType(Component) || "Unknown", didWarnAboutGetDerivedStateOnFunctionComponent[workInProgress2] || (console.log(
           "%s: Function components do not support getDerivedStateFromProps.",
           workInProgress2
         ), didWarnAboutGetDerivedStateOnFunctionComponent[workInProgress2] = true));
-        "object" === typeof Component.contextType && null !== Component.contextType && (Component = getComponentNameFromType(Component) || "Unknown", didWarnAboutContextTypeOnFunctionComponent[Component] || (console.error(
+        "object" === typeof Component.contextType && null !== Component.contextType && (Component = getComponentNameFromType(Component) || "Unknown", didWarnAboutContextTypeOnFunctionComponent[Component] || (console.log(
           "%s: Function components do not support contextType.",
           Component
         ), didWarnAboutContextTypeOnFunctionComponent[Component] = true));
@@ -7114,7 +7114,7 @@ var require_react_dom_client_development = __commonJS({
               JSCompiler_object_inline_digest_2451,
               renderLanes2
             ), workInProgress2.memoizedState = SUSPENDED_MARKER, workInProgress2 = JSCompiler_object_inline_componentStack_2453);
-          else if (pushPrimaryTreeSuspenseHandler(workInProgress2), isHydrating && console.error(
+          else if (pushPrimaryTreeSuspenseHandler(workInProgress2), isHydrating && console.log(
             "We should not be hydrating here. This is a bug in React. Please file a bug."
           ), isSuspenseInstanceFallback(JSCompiler_object_inline_message_2450)) {
             JSCompiler_object_inline_digest_2451 = JSCompiler_object_inline_message_2450.nextSibling && JSCompiler_object_inline_message_2450.nextSibling.dataset;
@@ -7261,7 +7261,7 @@ var require_react_dom_client_development = __commonJS({
       function validateSuspenseListNestedChild(childSlot, index) {
         var isAnArray = isArrayImpl(childSlot);
         childSlot = !isAnArray && "function" === typeof getIteratorFn(childSlot);
-        return isAnArray || childSlot ? (isAnArray = isAnArray ? "array" : "iterable", console.error(
+        return isAnArray || childSlot ? (isAnArray = isAnArray ? "array" : "iterable", console.log(
           "A nested %s was passed to row #%s in <SuspenseList />. Wrap it in an additional SuspenseList to configure its revealOrder: <SuspenseList revealOrder=...> ... <SuspenseList revealOrder=...>{%s}</SuspenseList> ... </SuspenseList>",
           isAnArray,
           index,
@@ -7288,7 +7288,7 @@ var require_react_dom_client_development = __commonJS({
               case "together":
               case "forwards":
               case "backwards":
-                console.error(
+                console.log(
                   '"%s" is not a valid value for revealOrder on <SuspenseList />. Use lowercase "%s" instead.',
                   revealOrder,
                   revealOrder.toLowerCase()
@@ -7296,27 +7296,27 @@ var require_react_dom_client_development = __commonJS({
                 break;
               case "forward":
               case "backward":
-                console.error(
+                console.log(
                   '"%s" is not a valid value for revealOrder on <SuspenseList />. React uses the -s suffix in the spelling. Use "%ss" instead.',
                   revealOrder,
                   revealOrder.toLowerCase()
                 );
                 break;
               default:
-                console.error(
+                console.log(
                   '"%s" is not a supported revealOrder on <SuspenseList />. Did you mean "together", "forwards" or "backwards"?',
                   revealOrder
                 );
             }
           else
-            console.error(
+            console.log(
               '%s is not a supported value for revealOrder on <SuspenseList />. Did you mean "together", "forwards" or "backwards"?',
               revealOrder
             );
-        void 0 === tailMode || didWarnAboutTailOptions[tailMode] || ("collapsed" !== tailMode && "hidden" !== tailMode ? (didWarnAboutTailOptions[tailMode] = true, console.error(
+        void 0 === tailMode || didWarnAboutTailOptions[tailMode] || ("collapsed" !== tailMode && "hidden" !== tailMode ? (didWarnAboutTailOptions[tailMode] = true, console.log(
           '"%s" is not a supported value for tail on <SuspenseList />. Did you mean "collapsed" or "hidden"?',
           tailMode
-        )) : "forwards" !== revealOrder && "backwards" !== revealOrder && (didWarnAboutTailOptions[tailMode] = true, console.error(
+        )) : "forwards" !== revealOrder && "backwards" !== revealOrder && (didWarnAboutTailOptions[tailMode] = true, console.log(
           '<SuspenseList tail="%s" /> is only valid if revealOrder is "forwards" or "backwards". Did you mean to specify revealOrder="forwards"?',
           tailMode
         )));
@@ -7332,7 +7332,7 @@ var require_react_dom_client_development = __commonJS({
                 _i++;
               }
           } else
-            console.error(
+            console.log(
               'A single row was passed to a <SuspenseList revealOrder="%s" />. This is not useful since it needs multiple rows. Did you mean to pass multiple children or an array?',
               revealOrder
             );
@@ -7890,7 +7890,7 @@ var require_react_dom_client_development = __commonJS({
               renderLanes2
             ), workInProgress2.child;
           case 10:
-            return returnFiber = workInProgress2.type, prevSibling = workInProgress2.pendingProps, prevState = prevSibling.value, "value" in prevSibling || hasWarnedAboutUsingNoValuePropOnContextProvider || (hasWarnedAboutUsingNoValuePropOnContextProvider = true, console.error(
+            return returnFiber = workInProgress2.type, prevSibling = workInProgress2.pendingProps, prevState = prevSibling.value, "value" in prevSibling || hasWarnedAboutUsingNoValuePropOnContextProvider || (hasWarnedAboutUsingNoValuePropOnContextProvider = true, console.log(
               "The `value` prop is required for the `<Context.Provider>`. Did you misspell it or forget to pass it?"
             )), pushProvider(workInProgress2, returnFiber, prevState), reconcileChildren(
               current2,
@@ -7899,7 +7899,7 @@ var require_react_dom_client_development = __commonJS({
               renderLanes2
             ), workInProgress2.child;
           case 9:
-            return prevSibling = workInProgress2.type._context, returnFiber = workInProgress2.pendingProps.children, "function" !== typeof returnFiber && console.error(
+            return prevSibling = workInProgress2.type._context, returnFiber = workInProgress2.pendingProps.children, "function" !== typeof returnFiber && console.log(
               "A context consumer was rendered with multiple children, or a child that isn't a function. A context consumer expects a single child that is a function. If you did pass a function, make sure there is no trailing or leading whitespace around it."
             ), prepareToReadContext(workInProgress2), prevSibling = readContext(prevSibling), markComponentRenderStarted(workInProgress2), returnFiber = callComponentInDEV(
               returnFiber,
@@ -8146,13 +8146,13 @@ var require_react_dom_client_development = __commonJS({
                       default:
                         current2 = "string" === typeof newProps.is ? current2.createElement(renderLanes2, {
                           is: newProps.is
-                        }) : current2.createElement(renderLanes2), -1 === renderLanes2.indexOf("-") && (renderLanes2 !== renderLanes2.toLowerCase() && console.error(
+                        }) : current2.createElement(renderLanes2), -1 === renderLanes2.indexOf("-") && (renderLanes2 !== renderLanes2.toLowerCase() && console.log(
                           "<%s /> is using incorrect casing. Use PascalCase for React components, or lowercase for HTML elements.",
                           renderLanes2
                         ), "[object HTMLUnknownElement]" !== Object.prototype.toString.call(current2) || hasOwnProperty.call(
                           warnedUnknownTags,
                           renderLanes2
-                        ) || (warnedUnknownTags[renderLanes2] = true, console.error(
+                        ) || (warnedUnknownTags[renderLanes2] = true, console.log(
                           "The tag <%s> is unrecognized in this browser. If you meant to render a React component, start its name with an uppercase letter.",
                           renderLanes2
                         )));
@@ -8469,7 +8469,7 @@ var require_react_dom_client_development = __commonJS({
                 runWithFiberInDEV(
                   finishedWork,
                   function(n, a) {
-                    console.error(
+                    console.log(
                       "%s must not return anything besides a function, which is used for clean-up.%s",
                       n,
                       a
@@ -8532,10 +8532,10 @@ var require_react_dom_client_development = __commonJS({
         var updateQueue = finishedWork.updateQueue;
         if (null !== updateQueue) {
           var instance = finishedWork.stateNode;
-          finishedWork.type.defaultProps || "ref" in finishedWork.memoizedProps || didWarnAboutReassigningProps || (instance.props !== finishedWork.memoizedProps && console.error(
+          finishedWork.type.defaultProps || "ref" in finishedWork.memoizedProps || didWarnAboutReassigningProps || (instance.props !== finishedWork.memoizedProps && console.log(
             "Expected %s props to match memoized props before processing the update queue. This might either be because of a bug in React, or because a component reassigns its own `this.props`. Please file an issue.",
             getComponentNameFromFiber(finishedWork) || "instance"
-          ), instance.state !== finishedWork.memoizedState && console.error(
+          ), instance.state !== finishedWork.memoizedState && console.log(
             "Expected %s state to match memoized state before processing the update queue. This might either be because of a bug in React, or because a component reassigns its own `this.state`. Please file an issue.",
             getComponentNameFromFiber(finishedWork) || "instance"
           ));
@@ -8557,10 +8557,10 @@ var require_react_dom_client_development = __commonJS({
       function commitClassSnapshot(finishedWork, current2) {
         var prevProps = current2.memoizedProps, prevState = current2.memoizedState;
         current2 = finishedWork.stateNode;
-        finishedWork.type.defaultProps || "ref" in finishedWork.memoizedProps || didWarnAboutReassigningProps || (current2.props !== finishedWork.memoizedProps && console.error(
+        finishedWork.type.defaultProps || "ref" in finishedWork.memoizedProps || didWarnAboutReassigningProps || (current2.props !== finishedWork.memoizedProps && console.log(
           "Expected %s props to match memoized props before getSnapshotBeforeUpdate. This might either be because of a bug in React, or because a component reassigns its own `this.props`. Please file an issue.",
           getComponentNameFromFiber(finishedWork) || "instance"
-        ), current2.state !== finishedWork.memoizedState && console.error(
+        ), current2.state !== finishedWork.memoizedState && console.log(
           "Expected %s state to match memoized state before getSnapshotBeforeUpdate. This might either be because of a bug in React, or because a component reassigns its own `this.state`. Please file an issue.",
           getComponentNameFromFiber(finishedWork) || "instance"
         ));
@@ -8579,7 +8579,7 @@ var require_react_dom_client_development = __commonJS({
           );
           prevProps = didWarnAboutUndefinedSnapshotBeforeUpdate;
           void 0 !== snapshot || prevProps.has(finishedWork.type) || (prevProps.add(finishedWork.type), runWithFiberInDEV(finishedWork, function() {
-            console.error(
+            console.log(
               "%s.getSnapshotBeforeUpdate(): A snapshot value (or null) must be returned. You have returned undefined.",
               getComponentNameFromFiber(finishedWork)
             );
@@ -8633,7 +8633,7 @@ var require_react_dom_client_development = __commonJS({
               }
             else finishedWork.refCleanup = ref(instanceToUse);
           else
-            "string" === typeof ref ? console.error("String refs are no longer supported.") : ref.hasOwnProperty("current") || console.error(
+            "string" === typeof ref ? console.log("String refs are no longer supported.") : ref.hasOwnProperty("current") || console.log(
               "Unexpected ref object provided for %s. Use either a ref-setter function or React.createRef().",
               getComponentNameFromFiber(finishedWork)
             ), ref.current = instanceToUse;
@@ -8960,10 +8960,10 @@ var require_react_dom_client_development = __commonJS({
             recursivelyTraverseLayoutEffects(finishedRoot, finishedWork);
             if (flags & 4)
               if (finishedRoot = finishedWork.stateNode, null === current2)
-                finishedWork.type.defaultProps || "ref" in finishedWork.memoizedProps || didWarnAboutReassigningProps || (finishedRoot.props !== finishedWork.memoizedProps && console.error(
+                finishedWork.type.defaultProps || "ref" in finishedWork.memoizedProps || didWarnAboutReassigningProps || (finishedRoot.props !== finishedWork.memoizedProps && console.log(
                   "Expected %s props to match memoized props before componentDidMount. This might either be because of a bug in React, or because a component reassigns its own `this.props`. Please file an issue.",
                   getComponentNameFromFiber(finishedWork) || "instance"
-                ), finishedRoot.state !== finishedWork.memoizedState && console.error(
+                ), finishedRoot.state !== finishedWork.memoizedState && console.log(
                   "Expected %s state to match memoized state before componentDidMount. This might either be because of a bug in React, or because a component reassigns its own `this.state`. Please file an issue.",
                   getComponentNameFromFiber(finishedWork) || "instance"
                 )), shouldProfile(finishedWork) ? (startEffectTimer(), runWithFiberInDEV(
@@ -8983,10 +8983,10 @@ var require_react_dom_client_development = __commonJS({
                   current2.memoizedProps
                 );
                 current2 = current2.memoizedState;
-                finishedWork.type.defaultProps || "ref" in finishedWork.memoizedProps || didWarnAboutReassigningProps || (finishedRoot.props !== finishedWork.memoizedProps && console.error(
+                finishedWork.type.defaultProps || "ref" in finishedWork.memoizedProps || didWarnAboutReassigningProps || (finishedRoot.props !== finishedWork.memoizedProps && console.log(
                   "Expected %s props to match memoized props before componentDidUpdate. This might either be because of a bug in React, or because a component reassigns its own `this.props`. Please file an issue.",
                   getComponentNameFromFiber(finishedWork) || "instance"
-                ), finishedRoot.state !== finishedWork.memoizedState && console.error(
+                ), finishedRoot.state !== finishedWork.memoizedState && console.log(
                   "Expected %s state to match memoized state before componentDidUpdate. This might either be because of a bug in React, or because a component reassigns its own `this.state`. Please file an issue.",
                   getComponentNameFromFiber(finishedWork) || "instance"
                 ));
@@ -9126,7 +9126,7 @@ var require_react_dom_client_development = __commonJS({
           try {
             injectedHook.onCommitFiberUnmount(rendererID, deletedFiber);
           } catch (err) {
-            hasLoggedError || (hasLoggedError = true, console.error(
+            hasLoggedError || (hasLoggedError = true, console.log(
               "React instrumentation encountered an error: %s",
               err
             ));
@@ -9515,7 +9515,7 @@ var require_react_dom_client_development = __commonJS({
               root2,
               null !== current2 ? current2.memoizedProps : root2
             ));
-            flags & 1024 && (needsFormReset = true, "form" !== finishedWork.type && console.error(
+            flags & 1024 && (needsFormReset = true, "form" !== finishedWork.type && console.log(
               "Unexpected host component type. Expected a form. This is a bug in React."
             ));
             break;
@@ -10269,7 +10269,7 @@ var require_react_dom_client_development = __commonJS({
       }
       function isConcurrentActEnvironment() {
         var isReactActEnvironmentGlobal = "undefined" !== typeof IS_REACT_ACT_ENVIRONMENT ? IS_REACT_ACT_ENVIRONMENT : void 0;
-        isReactActEnvironmentGlobal || null === ReactSharedInternals.actQueue || console.error(
+        isReactActEnvironmentGlobal || null === ReactSharedInternals.actQueue || console.log(
           "The current testing environment is not configured to support act(...)"
         );
         return isReactActEnvironmentGlobal;
@@ -10287,7 +10287,7 @@ var require_react_dom_client_development = __commonJS({
         return workInProgressDeferredLane;
       }
       function scheduleUpdateOnFiber(root2, fiber, lane) {
-        isRunningInsertionEffect && console.error("useInsertionEffect must not schedule updates.");
+        isRunningInsertionEffect && console.log("useInsertionEffect must not schedule updates.");
         isFlushingPassiveEffects && (didScheduleUpdateDuringPassiveEffects = true);
         if (root2 === workInProgressRoot && (workInProgressSuspendedReason === SuspendedOnData || workInProgressSuspendedReason === SuspendedOnAction) || null !== root2.cancelPendingCommit)
           prepareFreshStack(root2, 0), markRootSuspended(
@@ -10304,7 +10304,7 @@ var require_react_dom_client_development = __commonJS({
               case 11:
               case 15:
                 root2 = workInProgress && getComponentNameFromFiber(workInProgress) || "Unknown";
-                didWarnAboutUpdateInRenderForAnotherComponent.has(root2) || (didWarnAboutUpdateInRenderForAnotherComponent.add(root2), fiber = getComponentNameFromFiber(fiber) || "Unknown", console.error(
+                didWarnAboutUpdateInRenderForAnotherComponent.has(root2) || (didWarnAboutUpdateInRenderForAnotherComponent.add(root2), fiber = getComponentNameFromFiber(fiber) || "Unknown", console.log(
                   "Cannot update a component (`%s`) while rendering a different component (`%s`). To locate the bad setState() call inside `%s`, follow the stack trace as described in https://react.dev/link/setstate-in-render",
                   fiber,
                   root2,
@@ -10312,7 +10312,7 @@ var require_react_dom_client_development = __commonJS({
                 ));
                 break;
               case 1:
-                didWarnAboutUpdateInRender || (console.error(
+                didWarnAboutUpdateInRender || (console.log(
                   "Cannot update during an existing state transition (such as within `render`). Render methods should be a pure function of props and state."
                 ), didWarnAboutUpdateInRender = true);
             }
@@ -10809,7 +10809,7 @@ var require_react_dom_client_development = __commonJS({
                       }
                       break;
                     default:
-                      console.error(
+                      console.log(
                         "Unexpected type of fiber triggered a suspensey commit. This is a bug in React."
                       );
                   }
@@ -11032,7 +11032,7 @@ var require_react_dom_client_development = __commonJS({
         null !== injectedProfilingHooks && "function" === typeof injectedProfilingHooks.markCommitStarted && injectedProfilingHooks.markCommitStarted(lanes);
         if (null === finishedWork) markCommitStopped();
         else {
-          0 === lanes && console.error(
+          0 === lanes && console.log(
             "finishedLanes should not be empty during a commit. This is a bug in React."
           );
           if (finishedWork === root2.current)
@@ -11220,7 +11220,7 @@ var require_react_dom_client_development = __commonJS({
                 didError
               );
             } catch (err) {
-              hasLoggedError || (hasLoggedError = true, console.error(
+              hasLoggedError || (hasLoggedError = true, console.log(
                 "React instrumentation encountered an error: %s",
                 err
               ));
@@ -11259,7 +11259,7 @@ var require_react_dom_client_development = __commonJS({
         componentStack = { componentStack };
         Object.defineProperty(componentStack, "digest", {
           get: function() {
-            console.error(
+            console.log(
               'You are accessing "digest" from the errorInfo object passed to onRecoverableError. This property is no longer provided as part of errorInfo but can be accessed as a property of the Error instance itself.'
             );
           }
@@ -11315,7 +11315,7 @@ var require_react_dom_client_development = __commonJS({
             try {
               injectedHook.onPostCommitFiberRoot(rendererID, root$jscomp$0);
             } catch (err) {
-              hasLoggedError || (hasLoggedError = true, console.error(
+              hasLoggedError || (hasLoggedError = true, console.log(
                 "React instrumentation encountered an error: %s",
                 err
               ));
@@ -11365,7 +11365,7 @@ var require_react_dom_client_development = __commonJS({
             }
             nearestMountedAncestor = nearestMountedAncestor.return;
           }
-          console.error(
+          console.log(
             "Internal React error: Attempted to capture a commit phase error inside a detached tree. This indicates a bug in React. Potential causes include deleting the same fiber more than once, committing an already-finished tree, or an inconsistent return pointer.\n\nError message:\n\n%s",
             error
           );
@@ -11386,7 +11386,7 @@ var require_react_dom_client_development = __commonJS({
         null !== pingCache && pingCache.delete(wakeable);
         root2.pingedLanes |= root2.suspendedLanes & pingedLanes;
         root2.warmLanes &= ~pingedLanes;
-        isConcurrentActEnvironment() && null === ReactSharedInternals.actQueue && console.error(
+        isConcurrentActEnvironment() && null === ReactSharedInternals.actQueue && console.log(
           "A suspended resource finished loading inside a test, but the event was not wrapped in act(...).\n\nWhen testing, code that resolves suspended data should be wrapped into act(...):\n\nact(() => {\n  /* finish loading suspended data */\n});\n/* assert on the output */\n\nThis ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act"
         );
         workInProgressRoot === root2 && (workInProgressRootRenderLanes & pingedLanes) === pingedLanes && (workInProgressRootExitStatus === RootSuspendedWithDelay || workInProgressRootExitStatus === RootSuspended && (workInProgressRootRenderLanes & 62914560) === workInProgressRootRenderLanes && now$1() - globalMostRecentFallbackTime < FALLBACK_THROTTLE_MS ? (executionContext & RenderContext) === NoContext && prepareFreshStack(root2, 0) : workInProgressRootPingedLanes |= pingedLanes, workInProgressSuspendedRetryLanes === workInProgressRootRenderLanes && (workInProgressSuspendedRetryLanes = 0));
@@ -11482,7 +11482,7 @@ var require_react_dom_client_development = __commonJS({
               didWarnStateUpdateForNotYetMountedComponent.add(tag);
             } else didWarnStateUpdateForNotYetMountedComponent = /* @__PURE__ */ new Set([tag]);
             runWithFiberInDEV(fiber, function() {
-              console.error(
+              console.log(
                 "Can't perform a React state update on a component that hasn't mounted yet. This indicates that you have a side-effect in your render function that asynchronously later calls tries to update the component. Move this work to useEffect instead."
               );
             });
@@ -11500,7 +11500,7 @@ var require_react_dom_client_development = __commonJS({
       }
       function warnIfUpdatesNotWrappedWithActDEV(fiber) {
         isConcurrentActEnvironment() && null === ReactSharedInternals.actQueue && runWithFiberInDEV(fiber, function() {
-          console.error(
+          console.log(
             "An update to %s inside a test was not wrapped in act(...).\n\nWhen testing, code that causes React state updates should be wrapped into act(...):\n\nact(() => {\n  /* fire events that update state */\n});\n/* assert on the output */\n\nThis ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act",
             getComponentNameFromFiber(fiber)
           );
@@ -11782,7 +11782,7 @@ var require_react_dom_client_development = __commonJS({
         }
       }
       function listenToNonDelegatedEvent(domEventName, targetElement) {
-        nonDelegatedEvents.has(domEventName) || console.error(
+        nonDelegatedEvents.has(domEventName) || console.log(
           'Did not expect a listenToNonDelegatedEvent() call for "%s". This is a bug in React. Please file an issue.',
           domEventName
         );
@@ -11792,7 +11792,7 @@ var require_react_dom_client_development = __commonJS({
         listenerSet.has(listenerSetKey) || (addTrappedEventListener(targetElement, domEventName, 2, false), listenerSet.add(listenerSetKey));
       }
       function listenToNativeEvent(domEventName, isCapturePhaseListener, target) {
-        nonDelegatedEvents.has(domEventName) && !isCapturePhaseListener && console.error(
+        nonDelegatedEvents.has(domEventName) && !isCapturePhaseListener && console.log(
           'Did not expect a listenToNativeEvent() call for "%s" in the bubble phase. This is a bug in React. Please file an issue.',
           domEventName
         );
@@ -12226,10 +12226,10 @@ var require_react_dom_client_development = __commonJS({
       }
       function validatePropertiesInDevelopment(type, props) {
         validateProperties$2(type, props);
-        "input" !== type && "textarea" !== type && "select" !== type || null == props || null !== props.value || didWarnValueNull || (didWarnValueNull = true, "select" === type && props.multiple ? console.error(
+        "input" !== type && "textarea" !== type && "select" !== type || null == props || null !== props.value || didWarnValueNull || (didWarnValueNull = true, "select" === type && props.multiple ? console.log(
           "`value` prop on `%s` should not be null. Consider using an empty array when `multiple` is set to `true` to clear the component or `undefined` for uncontrolled components.",
           type
-        ) : console.error(
+        ) : console.log(
           "`value` prop on `%s` should not be null. Consider using an empty string to clear the component or `undefined` for uncontrolled components.",
           type
         ));
@@ -12238,7 +12238,7 @@ var require_react_dom_client_development = __commonJS({
           possibleRegistrationNames
         };
         isCustomElement(type) || "string" === typeof props.is || warnUnknownProperties(type, props, eventRegistry);
-        props.contentEditable && !props.suppressContentEditableWarning && null != props.children && console.error(
+        props.contentEditable && !props.suppressContentEditableWarning && null != props.children && console.log(
           "A component is `contentEditable` and contains `children` managed by React. It is now your responsibility to guarantee that none of those nodes are unexpectedly modified or duplicated. This is probably not intentional."
         );
       }
@@ -12251,12 +12251,12 @@ var require_react_dom_client_development = __commonJS({
         });
       }
       function warnForInvalidEventListener(registrationName, listener) {
-        false === listener ? console.error(
+        false === listener ? console.log(
           "Expected `%s` listener to be a function, instead got `false`.\n\nIf you used to conditionally omit it with %s={condition && value}, pass %s={condition ? value : undefined} instead.",
           registrationName,
           registrationName,
           registrationName
-        ) : console.error(
+        ) : console.log(
           "Expected `%s` listener to be a function, instead got a value of `%s` type.",
           registrationName,
           typeof listener
@@ -12271,7 +12271,7 @@ var require_react_dom_client_development = __commonJS({
         return parent.innerHTML;
       }
       function normalizeMarkupForTextOrAttribute(markup) {
-        willCoercionThrow(markup) && (console.error(
+        willCoercionThrow(markup) && (console.log(
           "The provided HTML markup uses a value of unsupported type %s. This value must be coerced to a string before using it here.",
           typeName(markup)
         ), testStringCoercion(markup));
@@ -12315,11 +12315,11 @@ var require_react_dom_client_development = __commonJS({
           case "src":
           case "href":
             if ("" === value && ("a" !== tag || "href" !== key)) {
-              "src" === key ? console.error(
+              "src" === key ? console.log(
                 'An empty string ("") was passed to the %s attribute. This may cause the browser to download the whole page again over the network. To fix this, either do not render the element at all or pass null to %s instead of an empty string.',
                 key,
                 key
-              ) : console.error(
+              ) : console.log(
                 'An empty string ("") was passed to the %s attribute. To fix this, either do not render the element at all or pass null to %s instead of an empty string.',
                 key,
                 key
@@ -12337,27 +12337,27 @@ var require_react_dom_client_development = __commonJS({
             break;
           case "action":
           case "formAction":
-            null != value && ("form" === tag ? "formAction" === key ? console.error(
+            null != value && ("form" === tag ? "formAction" === key ? console.log(
               "You can only pass the formAction prop to <input> or <button>. Use the action prop on <form>."
-            ) : "function" === typeof value && (null == props.encType && null == props.method || didWarnFormActionMethod || (didWarnFormActionMethod = true, console.error(
+            ) : "function" === typeof value && (null == props.encType && null == props.method || didWarnFormActionMethod || (didWarnFormActionMethod = true, console.log(
               "Cannot specify a encType or method for a form that specifies a function as the action. React provides those automatically. They will get overridden."
-            )), null == props.target || didWarnFormActionTarget || (didWarnFormActionTarget = true, console.error(
+            )), null == props.target || didWarnFormActionTarget || (didWarnFormActionTarget = true, console.log(
               "Cannot specify a target for a form that specifies a function as the action. The function will always be executed in the same window."
-            ))) : "input" === tag || "button" === tag ? "action" === key ? console.error(
+            ))) : "input" === tag || "button" === tag ? "action" === key ? console.log(
               "You can only pass the action prop to <form>. Use the formAction prop on <input> or <button>."
-            ) : "input" !== tag || "submit" === props.type || "image" === props.type || didWarnFormActionType ? "button" !== tag || null == props.type || "submit" === props.type || didWarnFormActionType ? "function" === typeof value && (null == props.name || didWarnFormActionName || (didWarnFormActionName = true, console.error(
+            ) : "input" !== tag || "submit" === props.type || "image" === props.type || didWarnFormActionType ? "button" !== tag || null == props.type || "submit" === props.type || didWarnFormActionType ? "function" === typeof value && (null == props.name || didWarnFormActionName || (didWarnFormActionName = true, console.log(
               'Cannot specify a "name" prop for a button that specifies a function as a formAction. React needs it to encode which action should be invoked. It will get overridden.'
-            )), null == props.formEncType && null == props.formMethod || didWarnFormActionMethod || (didWarnFormActionMethod = true, console.error(
+            )), null == props.formEncType && null == props.formMethod || didWarnFormActionMethod || (didWarnFormActionMethod = true, console.log(
               "Cannot specify a formEncType or formMethod for a button that specifies a function as a formAction. React provides those automatically. They will get overridden."
-            )), null == props.formTarget || didWarnFormActionTarget || (didWarnFormActionTarget = true, console.error(
+            )), null == props.formTarget || didWarnFormActionTarget || (didWarnFormActionTarget = true, console.log(
               "Cannot specify a formTarget for a button that specifies a function as a formAction. The function will always be executed in the same window."
-            ))) : (didWarnFormActionType = true, console.error(
+            ))) : (didWarnFormActionType = true, console.log(
               'A button can only specify a formAction along with type="submit" or no type.'
-            )) : (didWarnFormActionType = true, console.error(
+            )) : (didWarnFormActionType = true, console.log(
               'An input can only specify a formAction along with type="submit" or type="image".'
-            )) : "action" === key ? console.error(
+            )) : "action" === key ? console.log(
               "You can only pass the action prop to <form>."
-            ) : console.error(
+            ) : console.log(
               "You can only pass the formAction prop to <input> or <button>."
             ));
             if ("function" === typeof value) {
@@ -12471,7 +12471,7 @@ var require_react_dom_client_development = __commonJS({
             null != value && "function" !== typeof value && "symbol" !== typeof value ? (checkAttributeStringCoercion(value, key), domElement.setAttribute(key, "" + value)) : domElement.removeAttribute(key);
             break;
           case "inert":
-            "" !== value || didWarnForNewBooleanPropsWithEmptyValue[key] || (didWarnForNewBooleanPropsWithEmptyValue[key] = true, console.error(
+            "" !== value || didWarnForNewBooleanPropsWithEmptyValue[key] || (didWarnForNewBooleanPropsWithEmptyValue[key] = true, console.log(
               "Received an empty string for a boolean attribute `%s`. This will treat the attribute as if it were false. Either pass `false` to silence this warning, or pass `true` if you used an empty string in earlier versions of React to indicate this attribute is true.",
               key
             ));
@@ -12591,7 +12591,7 @@ var require_react_dom_client_development = __commonJS({
             );
             break;
           case "is":
-            null != prevValue && console.error(
+            null != prevValue && console.log(
               'Cannot update the "is" prop after it has been initialized.'
             );
             setValueForAttribute(domElement, "is", value);
@@ -12600,7 +12600,7 @@ var require_react_dom_client_development = __commonJS({
           case "textContent":
             break;
           case "popoverTarget":
-            didWarnPopoverTargetObject || null == value || "object" !== typeof value || (didWarnPopoverTargetObject = true, console.error(
+            didWarnPopoverTargetObject || null == value || "object" !== typeof value || (didWarnPopoverTargetObject = true, console.log(
               "The `popoverTarget` prop expects the ID of an Element as a string. Received %s instead.",
               value
             ));
@@ -12976,10 +12976,10 @@ var require_react_dom_client_development = __commonJS({
             }
             tag = "checkbox" === lastProps.type || "radio" === lastProps.type ? null != lastProps.checked : null != lastProps.value;
             nextProps = "checkbox" === nextProps.type || "radio" === nextProps.type ? null != nextProps.checked : null != nextProps.value;
-            tag || !nextProps || didWarnUncontrolledToControlled || (console.error(
+            tag || !nextProps || didWarnUncontrolledToControlled || (console.log(
               "A component is changing an uncontrolled input to be controlled. This is likely caused by the value changing from undefined to a defined value, which should not happen. Decide between using a controlled or uncontrolled input element for the lifetime of the component. More info: https://react.dev/link/controlled-components"
             ), didWarnUncontrolledToControlled = true);
-            !tag || nextProps || didWarnControlledToUncontrolled || (console.error(
+            !tag || nextProps || didWarnControlledToUncontrolled || (console.log(
               "A component is changing a controlled input to be uncontrolled. This is likely caused by the value changing from a defined to undefined, which should not happen. Decide between using a controlled or uncontrolled input element for the lifetime of the component. More info: https://react.dev/link/controlled-components"
             ), didWarnControlledToUncontrolled = true);
             updateInput(
@@ -13200,7 +13200,7 @@ var require_react_dom_client_development = __commonJS({
       }
       function diffHydratedStyles(domElement, value$jscomp$0, serverDifferences) {
         if (null != value$jscomp$0 && "object" !== typeof value$jscomp$0)
-          console.error(
+          console.log(
             "The `style` prop expects a mapping from style properties to values, not a string. For example, style={{marginRight: spacing + 'em'}} when using JSX."
           );
         else {
@@ -13387,7 +13387,7 @@ var require_react_dom_client_development = __commonJS({
                     case "outerText":
                     case "outerHTML":
                       extraAttributes.delete(propKey.toLowerCase());
-                      console.error(
+                      console.log(
                         "Assignment to read-only property will result in a no-op: `%s`",
                         propKey
                       );
@@ -13517,11 +13517,11 @@ var require_react_dom_client_development = __commonJS({
                   case "src":
                   case "href":
                     if (!("" !== propKey || "a" === tag && "href" === value || "object" === tag && "data" === value)) {
-                      "src" === value ? console.error(
+                      "src" === value ? console.log(
                         'An empty string ("") was passed to the %s attribute. This may cause the browser to download the whole page again over the network. To fix this, either do not render the element at all or pass null to %s instead of an empty string.',
                         value,
                         value
-                      ) : console.error(
+                      ) : console.log(
                         'An empty string ("") was passed to the %s attribute. To fix this, either do not render the element at all or pass null to %s instead of an empty string.',
                         value,
                         value
@@ -13833,7 +13833,7 @@ var require_react_dom_client_development = __commonJS({
                     );
                     continue;
                   case "inert":
-                    "" !== propKey || didWarnForNewBooleanPropsWithEmptyValue[value] || (didWarnForNewBooleanPropsWithEmptyValue[value] = true, console.error(
+                    "" !== propKey || didWarnForNewBooleanPropsWithEmptyValue[value] || (didWarnForNewBooleanPropsWithEmptyValue[value] = true, console.log(
                       "Received an empty string for a boolean attribute `%s`. This will treat the attribute as if it were false. Either pass `false` to silence this warning, or pass `true` if you used an empty string in earlier versions of React to indicate this attribute is true.",
                       value
                     ));
@@ -14203,7 +14203,7 @@ var require_react_dom_client_development = __commonJS({
       function acquireSingletonInstance(type, props, instance, internalInstanceHandle) {
         if (!instance[internalContainerInstanceKey] && getInstanceFromNode(instance)) {
           var tagName = instance.tagName.toLowerCase();
-          console.error(
+          console.log(
             "You are mounting a new %s component when a previous one has not first unmounted. It is an error to render more than one %s component at a time and attributes and children of these components will likely fail in unpredictable ways. Please only render a single instance of <%s> and if you need to mount a new one, ensure any previous ones have unmounted first.",
             tagName,
             tagName,
@@ -14216,7 +14216,7 @@ var require_react_dom_client_development = __commonJS({
           case "body":
             break;
           default:
-            console.error(
+            console.log(
               "acquireSingletonInstance was called with an element type that is not supported. This is a bug in React."
             );
         }
@@ -14467,7 +14467,7 @@ var require_react_dom_client_development = __commonJS({
       function isHostHoistableType(type, props, hostContext) {
         var outsideHostContainerContext = !hostContext.ancestorInfo.containerTagInScope;
         if (hostContext.context === HostContextNamespaceSvg || null != props.itemProp)
-          return !outsideHostContainerContext || null == props.itemProp || "meta" !== type && "title" !== type && "style" !== type && "link" !== type && "script" !== type || console.error(
+          return !outsideHostContainerContext || null == props.itemProp || "meta" !== type && "title" !== type && "style" !== type && "link" !== type && "script" !== type || console.log(
             "Cannot render a <%s> outside the main document if it has an `itemProp` prop. `itemProp` suggests the tag belongs to an `itemScope` which can appear anywhere in the DOM. If you were intending for React to hoist this <%s> remove the `itemProp` prop. Otherwise, try moving this tag into the <head> or <body> of the Document.",
             type,
             type
@@ -14478,7 +14478,7 @@ var require_react_dom_client_development = __commonJS({
             return true;
           case "style":
             if ("string" !== typeof props.precedence || "string" !== typeof props.href || "" === props.href) {
-              outsideHostContainerContext && console.error(
+              outsideHostContainerContext && console.log(
                 'Cannot render a <style> outside the main document without knowing its precedence and a unique href key. React can hoist and deduplicate <style> tags if you provide a `precedence` prop along with an `href` prop that does not conflict with the `href` values used in any other hoisted <style> or <link rel="stylesheet" ...> tags.  Note that hoisting <style> tags is considered an advanced feature that most will not use directly. Consider moving the <style> tag to the <head> or consider adding a `precedence="default"` and `href="some unique resource identifier"`.'
               );
               break;
@@ -14496,23 +14496,23 @@ var require_react_dom_client_development = __commonJS({
                 onError = propNamesListJoin(hostContext, "and");
                 onError += 1 === hostContext.length ? " prop" : " props";
                 disabled = 1 === hostContext.length ? "an " + onError : "the " + onError;
-                hostContext.length && console.error(
+                hostContext.length && console.log(
                   'React encountered a <link rel="stylesheet" href="%s" ... /> with a `precedence` prop that also included %s. The presence of loading and error handlers indicates an intent to manage the stylesheet loading state from your from your Component code and React will not hoist or deduplicate this stylesheet. If your intent was to have React hoist and deduplciate this stylesheet using the `precedence` prop remove the %s, otherwise remove the `precedence` prop.',
                   type,
                   disabled,
                   onError
                 );
               }
-              outsideHostContainerContext && ("string" !== typeof props.rel || "string" !== typeof props.href || "" === props.href ? console.error(
+              outsideHostContainerContext && ("string" !== typeof props.rel || "string" !== typeof props.href || "" === props.href ? console.log(
                 "Cannot render a <link> outside the main document without a `rel` and `href` prop. Try adding a `rel` and/or `href` prop to this <link> or moving the link into the <head> tag"
-              ) : (props.onError || props.onLoad) && console.error(
+              ) : (props.onError || props.onLoad) && console.log(
                 "Cannot render a <link> with onLoad or onError listeners outside the main document. Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or somewhere in the <body>."
               ));
               break;
             }
             switch (props.rel) {
               case "stylesheet":
-                return type = props.precedence, props = props.disabled, "string" !== typeof type && outsideHostContainerContext && console.error(
+                return type = props.precedence, props = props.disabled, "string" !== typeof type && outsideHostContainerContext && console.log(
                   'Cannot render a <link rel="stylesheet" /> outside the main document without knowing its precedence. Consider adding precedence="default" or moving it into the root <head> tag.'
                 ), "string" === typeof type && null == props;
               default:
@@ -14521,11 +14521,11 @@ var require_react_dom_client_development = __commonJS({
           case "script":
             type = props.async && "function" !== typeof props.async && "symbol" !== typeof props.async;
             if (!type || props.onLoad || props.onError || !props.src || "string" !== typeof props.src) {
-              outsideHostContainerContext && (type ? props.onLoad || props.onError ? console.error(
+              outsideHostContainerContext && (type ? props.onLoad || props.onError ? console.log(
                 "Cannot render a <script> with onLoad or onError listeners outside the main document. Try removing onLoad={...} and onError={...} or moving it into the root <head> tag or somewhere in the <body>."
-              ) : console.error(
+              ) : console.log(
                 "Cannot render a <script> outside the main document without `async={true}` and a non-empty `src` prop. Ensure there is a valid `src` and either make the script async or move it into the root <head> tag or somewhere in the <body>."
-              ) : console.error(
+              ) : console.log(
                 'Cannot render a sync or defer <script> outside the main document without knowing its order. Try adding async="" or moving it into the root <head> tag.'
               ));
               break;
@@ -14533,7 +14533,7 @@ var require_react_dom_client_development = __commonJS({
             return true;
           case "noscript":
           case "template":
-            outsideHostContainerContext && console.error(
+            outsideHostContainerContext && console.log(
               "Cannot render <%s> outside the main document. Try moving it into the root <head> tag.",
               type
             );
@@ -14714,7 +14714,7 @@ var require_react_dom_client_development = __commonJS({
           try {
             injectedHook.onScheduleFiberRoot(rendererID, container, element);
           } catch (err) {
-            hasLoggedError || (hasLoggedError = true, console.error(
+            hasLoggedError || (hasLoggedError = true, console.log(
               "React instrumentation encountered an error: %s",
               err
             ));
@@ -14722,14 +14722,14 @@ var require_react_dom_client_development = __commonJS({
         null !== injectedProfilingHooks && "function" === typeof injectedProfilingHooks.markRenderScheduled && injectedProfilingHooks.markRenderScheduled(lane);
         parentComponent = getContextForSubtree(parentComponent);
         null === container.context ? container.context = parentComponent : container.pendingContext = parentComponent;
-        isRendering && null !== current && !didWarnAboutNestedUpdates && (didWarnAboutNestedUpdates = true, console.error(
+        isRendering && null !== current && !didWarnAboutNestedUpdates && (didWarnAboutNestedUpdates = true, console.log(
           "Render methods should be a pure function of props and state; triggering nested component updates from render is not allowed. If necessary, trigger nested updates in componentDidUpdate.\n\nCheck the render method of %s.",
           getComponentNameFromFiber(current) || "Unknown"
         ));
         container = createUpdate(lane);
         container.payload = { element };
         callback = void 0 === callback ? null : callback;
-        null !== callback && ("function" !== typeof callback && console.error(
+        null !== callback && ("function" !== typeof callback && console.log(
           "Expected the last optional `callback` argument to be a function. Instead received: %s.",
           callback
         ), container.callback = callback);
@@ -15105,12 +15105,12 @@ var require_react_dom_client_development = __commonJS({
               nextBlockedOn.type,
               nextBlockedOn
             ), event = nativeEventClone;
-            null !== currentReplayingEvent && console.error(
+            null !== currentReplayingEvent && console.log(
               "Expected currently replaying event to be null. This error is likely caused by a bug in React. Please file an issue."
             );
             currentReplayingEvent = event;
             nextBlockedOn.target.dispatchEvent(nativeEventClone);
-            null === currentReplayingEvent && console.error(
+            null === currentReplayingEvent && console.log(
               "Expected currently replaying event to not be null. This error is likely caused by a bug in React. Please file an issue."
             );
             currentReplayingEvent = null;
@@ -15206,9 +15206,9 @@ var require_react_dom_client_development = __commonJS({
         this._internalRoot = internalRoot;
       }
       function warnIfReactDOMContainerInDEV(container) {
-        container[internalContainerInstanceKey] && (container._reactRootContainer ? console.error(
+        container[internalContainerInstanceKey] && (container._reactRootContainer ? console.log(
           "You are calling ReactDOMClient.createRoot() on a container that was previously passed to ReactDOM.render(). This is not supported."
-        ) : console.error(
+        ) : console.log(
           "You are calling ReactDOMClient.createRoot() on a container that has already been passed to createRoot() before. Instead, call root.render() on the existing root instead if you want to update it."
         ));
       }
@@ -16350,20 +16350,20 @@ var require_react_dom_client_development = __commonJS({
           var sortedNames = setToSortedString(
             UNSAFE_componentWillMountUniqueNames
           );
-          console.error(
+          console.log(
             "Using UNSAFE_componentWillMount in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.\n\n* Move code with side effects to componentDidMount, and set initial state in the constructor.\n\nPlease update the following components: %s",
             sortedNames
           );
         }
         0 < UNSAFE_componentWillReceivePropsUniqueNames.size && (sortedNames = setToSortedString(
           UNSAFE_componentWillReceivePropsUniqueNames
-        ), console.error(
+        ), console.log(
           "Using UNSAFE_componentWillReceiveProps in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.\n\n* Move data fetching code or side effects to componentDidUpdate.\n* If you're updating state whenever props change, refactor your code to use memoization techniques or move it to static getDerivedStateFromProps. Learn more at: https://react.dev/link/derived-state\n\nPlease update the following components: %s",
           sortedNames
         ));
         0 < UNSAFE_componentWillUpdateUniqueNames.size && (sortedNames = setToSortedString(
           UNSAFE_componentWillUpdateUniqueNames
-        ), console.error(
+        ), console.log(
           "Using UNSAFE_componentWillUpdate in strict mode is not recommended and may indicate bugs in your code. See https://react.dev/link/unsafe-component-lifecycles for details.\n\n* Move data fetching code or side effects to componentDidUpdate.\n\nPlease update the following components: %s",
           sortedNames
         ));
@@ -16387,7 +16387,7 @@ var require_react_dom_client_development = __commonJS({
         var strictRoot = null;
         for (var node = fiber; null !== node; )
           node.mode & StrictLegacyMode && (strictRoot = node), node = node.return;
-        null === strictRoot ? console.error(
+        null === strictRoot ? console.log(
           "Expected to find a StrictMode component in a strict mode tree. This error is likely caused by a bug in React. Please file an issue."
         ) : !didWarnAboutLegacyContext.has(fiber.type) && (node = pendingLegacyContextWarning.get(strictRoot), null != fiber.type.contextTypes || null != fiber.type.childContextTypes || null !== instance && "function" === typeof instance.getChildContext) && (void 0 === node && (node = [], pendingLegacyContextWarning.set(strictRoot, node)), node.push(fiber));
       };
@@ -16401,7 +16401,7 @@ var require_react_dom_client_development = __commonJS({
             });
             var sortedNames = setToSortedString(uniqueNames);
             runWithFiberInDEV(firstFiber, function() {
-              console.error(
+              console.log(
                 "Legacy context API has been detected within a strict-mode tree.\n\nThe old API will be supported in all 16.x releases, but applications using it should migrate to the new version.\n\nPlease update the following components: %s\n\nLearn more about this warning here: https://react.dev/link/legacy-context",
                 sortedNames
               );
@@ -16426,7 +16426,7 @@ var require_react_dom_client_development = __commonJS({
         "Suspense Exception: This is not a real error! It's an implementation detail of `useActionState` to interrupt the current render. You must either rethrow it immediately, or move the `useActionState` call outside of the `try/catch` block. Capturing without rethrowing will lead to unexpected behavior.\n\nTo handle async errors, wrap your component in an error boundary."
       ), noopSuspenseyCommitThenable = {
         then: function() {
-          console.error(
+          console.log(
             'Internal React error: A listener was unexpectedly attached to a "noop" thenable. This is a bug in React. Please file an issue.'
           );
         }
@@ -17477,7 +17477,7 @@ var require_react_dom_client_development = __commonJS({
         callComponentWillUnmount
       ), callCreate = {
         react_stack_bottom_frame: function(effect) {
-          null != effect.resourceKind && console.error(
+          null != effect.resourceKind && console.log(
             "Expected only SimpleEffects when enableUseEffectCRUDOverload is disabled, got %s",
             effect.resourceKind
           );
@@ -17522,7 +17522,7 @@ var require_react_dom_client_development = __commonJS({
             var childOwnerAppendix = "";
             null != child && returnFiber !== child && (componentName2 = null, "number" === typeof child.tag ? componentName2 = getComponentNameFromFiber(child) : "string" === typeof child.name && (componentName2 = child.name), componentName2 && (childOwnerAppendix = " It was passed a child from " + componentName2 + "."));
             runWithFiberInDEV(workInProgress2, function() {
-              console.error(
+              console.log(
                 'Each child in a list should have a unique "key" prop.%s%s See https://react.dev/link/warning-keys for more information.',
                 currentComponentErrorInfo,
                 childOwnerAppendix
@@ -17585,7 +17585,7 @@ var require_react_dom_client_development = __commonJS({
           process.emit("uncaughtException", error);
           return;
         }
-        console.error(error);
+        console.log(error);
       }, componentName = null, errorBoundaryName = null, SelectiveHydrationException = Error(
         "This is not a real error. It's an implementation detail of React's selective hydration feature. If this leaks into userspace, it's a bug in React. Please file an issue."
       ), didReceiveUpdate = false;
@@ -17904,11 +17904,11 @@ var require_react_dom_client_development = __commonJS({
         var root2 = this._internalRoot;
         if (null === root2) throw Error("Cannot update an unmounted root.");
         var args = arguments;
-        "function" === typeof args[1] ? console.error(
+        "function" === typeof args[1] ? console.log(
           "does not support the second callback argument. To execute a side effect after rendering, declare it in a component body with useEffect()."
-        ) : isValidContainer(args[1]) ? console.error(
+        ) : isValidContainer(args[1]) ? console.log(
           "You passed a container to the second argument of root.render(...). You don't need to pass it again since you already passed it to create the root."
-        ) : "undefined" !== typeof args[1] && console.error(
+        ) : "undefined" !== typeof args[1] && console.log(
           "You passed a second argument to root.render(...) but it only accepts one argument."
         );
         args = children;
@@ -17917,14 +17917,14 @@ var require_react_dom_client_development = __commonJS({
       };
       ReactDOMHydrationRoot.prototype.unmount = ReactDOMRoot.prototype.unmount = function() {
         var args = arguments;
-        "function" === typeof args[0] && console.error(
+        "function" === typeof args[0] && console.log(
           "does not support a callback argument. To execute a side effect after rendering, declare it in a component body with useEffect()."
         );
         args = this._internalRoot;
         if (null !== args) {
           this._internalRoot = null;
           var container = args.containerInfo;
-          (executionContext & (RenderContext | CommitContext)) !== NoContext && console.error(
+          (executionContext & (RenderContext | CommitContext)) !== NoContext && console.log(
             "Attempted to synchronously unmount a root while React was already rendering. React cannot finish unmounting the root until the current render has completed, which may lead to a race condition."
           );
           updateContainerImpl(args.current, 2, null, args, null, null);
@@ -17948,7 +17948,7 @@ var require_react_dom_client_development = __commonJS({
             'Incompatible React versions: The "react" and "react-dom" packages must have the exact same version. Instead got:\n  - react:      ' + (isomorphicReactPackageVersion + "\n  - react-dom:  19.1.1\nLearn more: https://react.dev/warnings/version-mismatch")
           );
       })();
-      "function" === typeof Map && null != Map.prototype && "function" === typeof Map.prototype.forEach && "function" === typeof Set && null != Set.prototype && "function" === typeof Set.prototype.clear && "function" === typeof Set.prototype.forEach || console.error(
+      "function" === typeof Map && null != Map.prototype && "function" === typeof Map.prototype.forEach && "function" === typeof Set && null != Set.prototype && "function" === typeof Set.prototype.clear && "function" === typeof Set.prototype.forEach || console.log(
         "React depends on Map and Set built-in types. Make sure that you load a polyfill in older browsers. https://react.dev/link/react-polyfills"
       );
       ReactDOMSharedInternals.findDOMNode = function(componentOrElement) {
@@ -18004,7 +18004,7 @@ var require_react_dom_client_development = __commonJS({
         var isStrictMode = false, identifierPrefix = "", onUncaughtError = defaultOnUncaughtError, onCaughtError = defaultOnCaughtError, onRecoverableError = defaultOnRecoverableError, transitionCallbacks = null;
         null !== options && void 0 !== options && (options.hydrate ? console.warn(
           "hydrate through createRoot is deprecated. Use ReactDOMClient.hydrateRoot(container, <App />) instead."
-        ) : "object" === typeof options && null !== options && options.$$typeof === REACT_ELEMENT_TYPE && console.error(
+        ) : "object" === typeof options && null !== options && options.$$typeof === REACT_ELEMENT_TYPE && console.log(
           "You passed a JSX element to createRoot. You probably meant to call root.render instead. Example usage:\n\n  let root = createRoot(domContainer);\n  root.render(<App />);"
         ), true === options.unstable_strictMode && (isStrictMode = true), void 0 !== options.identifierPrefix && (identifierPrefix = options.identifierPrefix), void 0 !== options.onUncaughtError && (onUncaughtError = options.onUncaughtError), void 0 !== options.onCaughtError && (onCaughtError = options.onCaughtError), void 0 !== options.onRecoverableError && (onRecoverableError = options.onRecoverableError), void 0 !== options.unstable_transitionCallbacks && (transitionCallbacks = options.unstable_transitionCallbacks));
         options = createFiberRoot(
@@ -18029,7 +18029,7 @@ var require_react_dom_client_development = __commonJS({
         if (!isValidContainer(container))
           throw Error("Target container is not a DOM element.");
         warnIfReactDOMContainerInDEV(container);
-        void 0 === initialChildren && console.error(
+        void 0 === initialChildren && console.log(
           "Must provide initial children as second argument to hydrateRoot. Example usage: hydrateRoot(domContainer, <App />)"
         );
         var isStrictMode = false, identifierPrefix = "", onUncaughtError = defaultOnUncaughtError, onCaughtError = defaultOnCaughtError, onRecoverableError = defaultOnRecoverableError, transitionCallbacks = null, formState = null;

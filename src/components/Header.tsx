@@ -21,8 +21,7 @@ const Header: React.FC<HeaderProps> = ({
 }) => {
 
   const navigate = useNavigate();
-  const location = useLocation();
-  const isSuperUserPage = location.pathname === '/super-user';
+  const isSuperUserPage = localStorage.getItem('global_role')?.toLowerCase() === 'superuser';
 
   // Use context for global state with error handling
   let userType = null;
@@ -30,7 +29,7 @@ const Header: React.FC<HeaderProps> = ({
     const appContext = useApp();
     userType = appContext.userType;
   } catch (error) {
-    console.error('Error accessing AppContext in Header:', error);
+    console.log('Error accessing AppContext in Header:', error);
     // Fallback to localStorage or default value
     userType = localStorage.getItem('userType') || 'student';
   }
@@ -38,8 +37,12 @@ const Header: React.FC<HeaderProps> = ({
   // Check if user is an organiser by checking localStorage
   const [isOrganiser, setIsOrganiser] = useState<boolean>(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState<Array<{ id: string; text: string }>>([
+    { id: 'n1', text: 'Welcome to MunQuest! Create your first event.' },
+    { id: 'n2', text: 'Tip: Use Allocation to assign committees faster.' },
+  ]);
   const dropdownRef = useRef<HTMLDivElement>(null);
-
   // Update organiser status based on localStorage
   useEffect(() => {
     const organiserId = localStorage.getItem('organiserId');
@@ -65,12 +68,12 @@ const Header: React.FC<HeaderProps> = ({
 
   const handleHomeClick = () => {
     // Check if user is an organiser
-    const organiserId = localStorage.getItem('organiserId');
-    if (organiserId) {
-      navigate('/organiser');
-    } else {
-      navigate('/home');
-    }
+    // const organiserId = localStorage.getItem('organiserId');
+    // if (organiserId) {
+    //   navigate('/organiser');
+    // } else {
+    navigate('/home');
+    // }
   };
 
   const handleOrganiserClick = () => {
@@ -92,14 +95,15 @@ const Header: React.FC<HeaderProps> = ({
 
   const handleLogout = async () => {
     setIsDropdownOpen(false);
-    await supabaseSignOut();
     localStorage.removeItem('token');
     localStorage.removeItem('userAvatar');
     localStorage.removeItem('userId');
     localStorage.removeItem('userRole');
     localStorage.removeItem('organiserId');
-    setIsOrganiser(false); // Update organiser status
+    localStorage.removeItem('global_role')
     navigate('/login');
+    setIsOrganiser(false); // Update organiser status
+    await supabaseSignOut();
   };
 
   // Close dropdown when clicking outside
@@ -125,7 +129,7 @@ const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center justify-between" style={{ height: "100%" }}>
           {/* Logo */}
           <div className="flex-shrink-0" >
-            <Logo size="medium" />
+            <a href="/home"><Logo size="medium" /></a>
           </div>
 
           {/* Navigation Icons */}
@@ -151,11 +155,37 @@ const Header: React.FC<HeaderProps> = ({
 
               {/* Notification Icon - Only show on non-super user pages */}
               {!isSuperUserPage && (
-                <div className="flex flex-col items-center cursor-pointer">
-                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-1">
-                    <img src={NotificationIcon} alt="Notification" className="w-6 h-6" />
+                <div className="relative" onMouseEnter={() => setIsNotifOpen(true)} onMouseLeave={() => setIsNotifOpen(false)}>
+                  <div className="flex flex-col items-center cursor-pointer">
+                    <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-1">
+                      <img src={NotificationIcon} alt="Notification" className="w-6 h-6" />
+                    </div>
+                    <span className="text-xs text-gray-600 font-medium">Notification</span>
                   </div>
-                  <span className="text-xs text-gray-600 font-medium">Notification</span>
+
+                  {isNotifOpen && notifications.length > 0 && (
+                    <div className='absolute right-0 pt-2'>
+                      <div className="w-72 bg-white rounded-md shadow-lg border border-gray-200 z-50">
+                        <div className="max-h-80 overflow-auto py-2">
+                          {notifications.map((n) => (
+                            <div key={n.id} className="py-[5px] px-5 flex items-start gap-3 hover:bg-gray-50">
+                              <div className="flex-1 text-sm text-gray-800">{n.text.slice(0, 25)}...</div>
+                              <button
+                                aria-label="Dismiss"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setNotifications((prev) => prev.filter((x) => x.id !== n.id));
+                                }}
+                                className="text-gray-400 hover:text-gray-600"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 

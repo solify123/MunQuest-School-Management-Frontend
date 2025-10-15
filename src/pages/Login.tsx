@@ -60,7 +60,9 @@ const Login: React.FC = () => {
       if (getUserIdByEmailResponse.success) {
         localStorage.setItem('userId', getUserIdByEmailResponse.user.id);
         localStorage.setItem('userRole', getUserIdByEmailResponse.user.role);
+        localStorage.setItem('global_role', getUserIdByEmailResponse.user.global_role);
         const organiserResponse = await verifyOrganiserApi();
+        console.log(organiserResponse)
         if (organiserResponse.success) {
           localStorage.setItem('organiserId', organiserResponse.data.id);
         }
@@ -70,7 +72,6 @@ const Login: React.FC = () => {
       }
       toast.success('Login successful');
       // Store Supabase JWT token in localStorage
-      console.log(loginResponse.data);
       if (loginResponse.data?.session?.access_token) {
         localStorage.setItem('token', loginResponse.data.session.access_token);
       } else {
@@ -79,22 +80,27 @@ const Login: React.FC = () => {
 
       const userRole = localStorage.getItem('userRole') || 'student';
       const organiserId = localStorage.getItem('organiserId');
+      const global_role = localStorage.getItem('global_role');
       const hasProfile = await checkUserProfileExists();
 
       // Check if user is an organiser first
-      if (organiserId) {
-        navigate('/organiser');
-      } else if (userRole === 'student') {
-        if (hasProfile) {
-          navigate('/student-home');
-        } else {
-          navigate('/student-profile');
-        }
+      if (global_role === 'superuser') {
+        navigate('/super-user');
       } else {
-        if (hasProfile) {
-          navigate('/teacher-home');
+        if (organiserId) {
+          navigate('/organiser');
+        } else if (userRole === 'student') {
+          if (hasProfile) {
+            navigate('/student-home');
+          } else {
+            navigate('/student-profile');
+          }
         } else {
-          navigate('/teacher-profile');
+          if (hasProfile) {
+            navigate('/teacher-home');
+          } else {
+            navigate('/teacher-profile');
+          }
         }
       }
     } catch (error: any) {

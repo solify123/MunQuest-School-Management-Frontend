@@ -549,7 +549,7 @@ const DelegatesAllocationPage: React.FC<DelegatesAllocationPageProps> = ({onActi
                     successCount++;
 
                 } catch (error) {
-                    console.error(`Failed to assign delegate ${delegate.name}:`, error);
+                    console.log(`Failed to assign delegate ${delegate.name}:`, error);
                     errorCount++;
                 }
             }
@@ -567,7 +567,7 @@ const DelegatesAllocationPage: React.FC<DelegatesAllocationPageProps> = ({onActi
             }
 
         } catch (error: any) {
-            console.error('Global allocation error:', error);
+            console.log('Global allocation error:', error);
             toast.error('Failed to perform global allocation');
         }
     }

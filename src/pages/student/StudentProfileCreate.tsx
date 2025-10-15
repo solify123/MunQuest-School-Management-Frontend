@@ -101,7 +101,7 @@ const StudentProfile: React.FC = () => {
           refreshAreasData()
         ]);
       } catch (error) {
-        console.error('Error loading data:', error);
+        console.log('Error loading data:', error);
         toast.error('Failed to load profile data. Please refresh the page.');
       }
     };

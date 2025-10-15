@@ -135,7 +135,7 @@ export const getAllEventsApi = async () => {
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        console.error('Failed to fetch events:', error);
     }
 }
 

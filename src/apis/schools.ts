@@ -11,7 +11,7 @@ export const getAllSchoolsApi = async () => {
         });
         return response.data;
     } catch (error: any) {
-        console.error('Get schools API error:', error);
+        console.log('Get schools API error:', error);
         if (error.response?.data?.message) {
             throw new Error(error.response.data.message);
         } else if (error.message) {
