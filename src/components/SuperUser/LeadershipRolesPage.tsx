@@ -14,7 +14,6 @@ const LeadershipRolesPage: React.FC = () => {
 
     const searchLower = searchTerm.toLowerCase();
     return allLeadershipRoles.filter((role) => {
-      // Safely convert to string and handle different possible field names
       const id = String(role.id || '').toLowerCase();
       const abbreviation = String(role.abbr || role.abbr || '').toLowerCase();
       const title = String(role.leadership_role || role.leadership_role || '').toLowerCase();
