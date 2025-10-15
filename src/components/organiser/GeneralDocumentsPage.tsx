@@ -46,7 +46,7 @@ const GeneralDocumentsPage: React.FC = () => {
                     setGeneralDocuments(documentsData);
                 }
             } catch (error) {
-                console.error('Error loading documents:', error);
+                console.log('Error loading documents:', error);
                 toast.error('Failed to load documents');
             } finally {
                 setIsLoading(false);
@@ -83,7 +83,7 @@ const GeneralDocumentsPage: React.FC = () => {
                 toast.error('Failed to upload document');
             }
         } catch (error) {
-            console.error('Error uploading document:', error);
+            console.log('Error uploading document:', error);
             toast.error('Failed to upload document');
         }
     };
@@ -113,7 +113,7 @@ const GeneralDocumentsPage: React.FC = () => {
             }
             // Simulate file upload - replace with actual API call
         } catch (error) {
-            console.error('Error saving document:', error);
+            console.log('Error saving document:', error);
             toast.error('Failed to save document');
         } finally {
             setIsUploading(false);
@@ -143,7 +143,7 @@ const GeneralDocumentsPage: React.FC = () => {
             setTempValue('');
             toast.success('Document updated successfully');
         } catch (error) {
-            console.error('Error updating document:', error);
+            console.log('Error updating document:', error);
             toast.error('Failed to update document');
         } finally {
             setIsSaving(false);
@@ -179,7 +179,7 @@ const GeneralDocumentsPage: React.FC = () => {
 
             setGeneralDocuments(prev => prev.filter(doc => doc.id.toString() !== documentToDelete));
         } catch (error) {
-            console.error('Error deleting document:', error);
+            console.log('Error deleting document:', error);
             toast.error('Failed to delete document');
         } finally {
             setShowDeleteConfirm(false);

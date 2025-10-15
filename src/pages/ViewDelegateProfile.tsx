@@ -69,7 +69,7 @@ const ViewDelegateProfile: React.FC = () => {
 
         setDelegateProfile(profileData);
       } catch (error) {
-        console.error('Error loading delegate profile:', error);
+        console.log('Error loading delegate profile:', error);
         toast.error('Failed to load delegate profile');
         navigate('/organiser');
       } finally {

@@ -72,7 +72,7 @@ export const teacherProfileApi = async (fullname: string, username: string, birt
         });
         return response.data;
     } catch (error: any) {
-        console.error('Teacher profile API error:', error);
+        console.log('Teacher profile API error:', error);
         if (error.response?.data?.message) {
             throw new Error(error.response.data.message);
         } else if (error.message) {
@@ -112,7 +112,7 @@ export const studentProfileApi = async (fullname: string, username: string, birt
         });
         return response.data;
     } catch (error: any) {
-        console.error('Student profile API error:', error);
+        console.log('Student profile API error:', error);
         if (error.response?.data?.message) {
             throw new Error(error.response.data.message);
         } else if (error.message) {

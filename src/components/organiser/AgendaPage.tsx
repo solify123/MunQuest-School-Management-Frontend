@@ -122,7 +122,7 @@ const AgendaPage: React.FC = () => {
           setAllAgendas(agendasData);
         }
       } catch (error: any) {
-        console.error('Error fetching initial data:', error);
+        console.log('Error fetching initial data:', error);
         toast.error(error.message || 'Failed to fetch data');
       } finally {
         setIsLoading(false);
@@ -166,11 +166,11 @@ const AgendaPage: React.FC = () => {
             setDocuments([]);
           }
         } else {
-          console.error('Failed to fetch documents:', response.error);
+          console.log('Failed to fetch documents:', response.error);
           setDocuments([]);
         }
       } catch (error: any) {
-        console.error('Error fetching documents:', error);
+        console.log('Error fetching documents:', error);
         setDocuments([]);
       } finally {
         // Always set loading to false after fetch completes

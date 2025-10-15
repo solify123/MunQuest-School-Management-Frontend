@@ -236,7 +236,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
         toast.error(response.message || 'Failed to save new organiser');
       }
     } catch (error: any) {
-      console.error('Error saving new organiser:', error);
+      console.log('Error saving new organiser:', error);
       toast.error(error.message || 'Failed to save new organiser');
     }
   };
@@ -261,7 +261,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
         toast.error(response.message);
       }
     } catch (error) {
-      console.error('Error deleting organiser:', error);
+      console.log('Error deleting organiser:', error);
       toast.error('Failed to delete organiser');
     } finally {
       setUpdatingOrganiserId(null);
@@ -287,7 +287,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
       }
       onAction(action, organiserId);
     } catch (error) {
-      console.error('Error updating organiser status:', error);
+      console.log('Error updating organiser status:', error);
       toast.error('Failed to update organiser status');
     } finally {
       setUpdatingOrganiserId(null);

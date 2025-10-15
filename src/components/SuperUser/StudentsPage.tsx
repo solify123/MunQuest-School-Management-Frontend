@@ -22,7 +22,7 @@ const StudentsPage: React.FC = () => {
         setError(response.message || 'Failed to fetch students');
       }
     } catch (error: any) {
-      console.error('Error fetching students:', error);
+      console.log('Error fetching students:', error);
       setError(error.message || 'Failed to fetch students');
     } finally {
       setLoading(false);

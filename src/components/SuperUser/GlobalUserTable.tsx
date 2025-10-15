@@ -128,7 +128,7 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
           }
         }
       } catch (error) {
-        console.error('Error deleting user:', error);
+        console.log('Error deleting user:', error);
         toast.error('Failed to delete user');
       } finally {
         setUpdatingUserId(null);
@@ -161,7 +161,7 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
       setInviteEmail('');
       setShowInviteForm(false);
     } catch (error) {
-      console.error('Error sending invite:', error);
+      console.log('Error sending invite:', error);
       toast.error('Failed to send invitation');
     }
   };
@@ -190,7 +190,7 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
       onAction(action, username, email);
       setIsLoading(false);
     } catch (error) {
-      console.error('Error updating user:', error);
+      console.log('Error updating user:', error);
       toast.error('Failed to update user');
     } finally {
       setUpdatingUserId(null);
@@ -217,7 +217,7 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
       setIsLoading(false);
       setActiveDropdown(null);
     } catch (error) {
-      console.error('Error updating user:', error);
+      console.log('Error updating user:', error);
       toast.error('Failed to update user');
     } finally {
       setUpdatingUserId(null);

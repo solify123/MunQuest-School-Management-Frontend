@@ -299,7 +299,7 @@ const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange, onAct
                     successCount++;
 
                 } catch (error) {
-                    console.error(`Failed to assign delegate ${delegate.name}:`, error);
+                    console.log(`Failed to assign delegate ${delegate.name}:`, error);
                     errorCount++;
                 }
             }
@@ -317,7 +317,7 @@ const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange, onAct
             }
 
         } catch (error: any) {
-            console.error('Global allocation error:', error);
+            console.log('Global allocation error:', error);
             toast.error('Failed to perform global allocation');
         } finally {
             setIsLoading(false);
@@ -502,7 +502,7 @@ const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange, onAct
             setDelegates(prev => prev.filter(delegate => delegate.id !== delegateToDelete));
             toast.success('Delegate removed successfully');
         } catch (error) {
-            console.error('Error removing delegate:', error);
+            console.log('Error removing delegate:', error);
             toast.error('Failed to remove delegate');
         } finally {
             setShowDeleteConfirm(false);

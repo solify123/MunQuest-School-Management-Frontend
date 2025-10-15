@@ -23,7 +23,7 @@ var require_react_dom_development = __commonJS({
         } catch (e) {
           JSCompiler_inline_result = true;
         }
-        JSCompiler_inline_result && (console.error(
+        JSCompiler_inline_result && (console.log(
           "The provided key is an unsupported type %s. This value must be coerced to a string before using it here.",
           "function" === typeof Symbol && Symbol.toStringTag && key[Symbol.toStringTag] || key.constructor.name || "Object"
         ), testStringCoercion(key));
@@ -48,7 +48,7 @@ var require_react_dom_development = __commonJS({
       }
       function resolveDispatcher() {
         var dispatcher = ReactSharedInternals.H;
-        null === dispatcher && console.error(
+        null === dispatcher && console.log(
           "Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem."
         );
         return dispatcher;
@@ -73,7 +73,7 @@ var require_react_dom_development = __commonJS({
         p: 0,
         findDOMNode: null
       }, REACT_PORTAL_TYPE = Symbol.for("react.portal"), ReactSharedInternals = React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
-      "function" === typeof Map && null != Map.prototype && "function" === typeof Map.prototype.forEach && "function" === typeof Set && null != Set.prototype && "function" === typeof Set.prototype.clear && "function" === typeof Set.prototype.forEach || console.error(
+      "function" === typeof Map && null != Map.prototype && "function" === typeof Map.prototype.forEach && "function" === typeof Set && null != Set.prototype && "function" === typeof Set.prototype.clear && "function" === typeof Set.prototype.forEach || console.log(
         "React depends on Map and Set built-in types. Make sure that you load a polyfill in older browsers. https://reactjs.org/link/react-polyfills"
       );
       exports.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE = Internals;
@@ -89,19 +89,19 @@ var require_react_dom_development = __commonJS({
           if (ReactSharedInternals.T = null, Internals.p = 2, fn)
             return fn();
         } finally {
-          ReactSharedInternals.T = previousTransition, Internals.p = previousUpdatePriority, Internals.d.f() && console.error(
+          ReactSharedInternals.T = previousTransition, Internals.p = previousUpdatePriority, Internals.d.f() && console.log(
             "flushSync was called from inside a lifecycle method. React cannot flush when React is already rendering. Consider moving this call to a scheduler task or micro task."
           );
         }
       };
       exports.preconnect = function(href, options) {
-        "string" === typeof href && href ? null != options && "object" !== typeof options ? console.error(
+        "string" === typeof href && href ? null != options && "object" !== typeof options ? console.log(
           "ReactDOM.preconnect(): Expected the `options` argument (second) to be an object but encountered %s instead. The only supported option at this time is `crossOrigin` which accepts a string.",
           getValueDescriptorExpectingEnumForWarning(options)
-        ) : null != options && "string" !== typeof options.crossOrigin && console.error(
+        ) : null != options && "string" !== typeof options.crossOrigin && console.log(
           "ReactDOM.preconnect(): Expected the `crossOrigin` option (second argument) to be a string but encountered %s instead. Try removing this option or passing a string value instead.",
           getValueDescriptorExpectingObjectForWarning(options.crossOrigin)
-        ) : console.error(
+        ) : console.log(
           "ReactDOM.preconnect(): Expected the `href` argument (first) to be a non-empty string but encountered %s instead.",
           getValueDescriptorExpectingObjectForWarning(href)
         );
@@ -109,16 +109,16 @@ var require_react_dom_development = __commonJS({
       };
       exports.prefetchDNS = function(href) {
         if ("string" !== typeof href || !href)
-          console.error(
+          console.log(
             "ReactDOM.prefetchDNS(): Expected the `href` argument (first) to be a non-empty string but encountered %s instead.",
             getValueDescriptorExpectingObjectForWarning(href)
           );
         else if (1 < arguments.length) {
           var options = arguments[1];
-          "object" === typeof options && options.hasOwnProperty("crossOrigin") ? console.error(
+          "object" === typeof options && options.hasOwnProperty("crossOrigin") ? console.log(
             "ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered %s as a second argument instead. This argument is reserved for future options and is currently disallowed. It looks like the you are attempting to set a crossOrigin property for this DNS lookup hint. Browsers do not perform DNS queries using CORS and setting this attribute on the resource hint has no effect. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.",
             getValueDescriptorExpectingEnumForWarning(options)
-          ) : console.error(
+          ) : console.log(
             "ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered %s as a second argument instead. This argument is reserved for future options and is currently disallowed. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.",
             getValueDescriptorExpectingEnumForWarning(options)
           );
@@ -126,13 +126,13 @@ var require_react_dom_development = __commonJS({
         "string" === typeof href && Internals.d.D(href);
       };
       exports.preinit = function(href, options) {
-        "string" === typeof href && href ? null == options || "object" !== typeof options ? console.error(
+        "string" === typeof href && href ? null == options || "object" !== typeof options ? console.log(
           "ReactDOM.preinit(): Expected the `options` argument (second) to be an object with an `as` property describing the type of resource to be preinitialized but encountered %s instead.",
           getValueDescriptorExpectingEnumForWarning(options)
-        ) : "style" !== options.as && "script" !== options.as && console.error(
+        ) : "style" !== options.as && "script" !== options.as && console.log(
           'ReactDOM.preinit(): Expected the `as` property in the `options` argument (second) to contain a valid value describing the type of resource to be preinitialized but encountered %s instead. Valid values for `as` are "style" and "script".',
           getValueDescriptorExpectingEnumForWarning(options.as)
-        ) : console.error(
+        ) : console.log(
           "ReactDOM.preinit(): Expected the `href` argument (first) to be a non-empty string but encountered %s instead.",
           getValueDescriptorExpectingObjectForWarning(href)
         );
@@ -159,7 +159,7 @@ var require_react_dom_development = __commonJS({
         "string" === typeof href && href || (encountered += " The `href` argument encountered was " + getValueDescriptorExpectingObjectForWarning(href) + ".");
         void 0 !== options && "object" !== typeof options ? encountered += " The `options` argument encountered was " + getValueDescriptorExpectingObjectForWarning(options) + "." : options && "as" in options && "script" !== options.as && (encountered += " The `as` option encountered was " + getValueDescriptorExpectingEnumForWarning(options.as) + ".");
         if (encountered)
-          console.error(
+          console.log(
             "ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` string and, optionally, an `options` object with a valid `as` property.%s",
             encountered
           );
@@ -168,7 +168,7 @@ var require_react_dom_development = __commonJS({
             case "script":
               break;
             default:
-              encountered = getValueDescriptorExpectingEnumForWarning(encountered), console.error(
+              encountered = getValueDescriptorExpectingEnumForWarning(encountered), console.log(
                 'ReactDOM.preinitModule(): Currently the only supported "as" type for this function is "script" but received "%s" instead. This warning was generated for `href` "%s". In the future other module types will be supported, aligning with the import-attributes proposal. Learn more here: (https://github.com/tc39/proposal-import-attributes)',
                 encountered,
                 href
@@ -191,7 +191,7 @@ var require_react_dom_development = __commonJS({
         var encountered = "";
         "string" === typeof href && href || (encountered += " The `href` argument encountered was " + getValueDescriptorExpectingObjectForWarning(href) + ".");
         null == options || "object" !== typeof options ? encountered += " The `options` argument encountered was " + getValueDescriptorExpectingObjectForWarning(options) + "." : "string" === typeof options.as && options.as || (encountered += " The `as` option encountered was " + getValueDescriptorExpectingObjectForWarning(options.as) + ".");
-        encountered && console.error(
+        encountered && console.log(
           'ReactDOM.preload(): Expected two arguments, a non-empty `href` string and an `options` object with an `as` property valid for a `<link rel="preload" as="..." />` tag.%s',
           encountered
         );
@@ -218,7 +218,7 @@ var require_react_dom_development = __commonJS({
         var encountered = "";
         "string" === typeof href && href || (encountered += " The `href` argument encountered was " + getValueDescriptorExpectingObjectForWarning(href) + ".");
         void 0 !== options && "object" !== typeof options ? encountered += " The `options` argument encountered was " + getValueDescriptorExpectingObjectForWarning(options) + "." : options && "as" in options && "string" !== typeof options.as && (encountered += " The `as` option encountered was " + getValueDescriptorExpectingObjectForWarning(options.as) + ".");
-        encountered && console.error(
+        encountered && console.log(
           'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag.%s',
           encountered
         );

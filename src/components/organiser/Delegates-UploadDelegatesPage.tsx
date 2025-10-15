@@ -81,7 +81,7 @@ const DelegatesUploadPage: React.FC = () => {
                 toast.error(`Upload completed with ${result.errors.length} errors. Check details below.`);
             }
         } catch (error) {
-            console.error('Upload error:', error);
+            console.log('Upload error:', error);
             toast.error('Failed to process upload. Please check file format and try again.');
         } finally {
             setIsUploading(false);
@@ -258,6 +258,8 @@ const DelegatesUploadPage: React.FC = () => {
         // Never overwrite existing fields with blanks
         // Only fill missing event-specific fields
         // Flag conflicts for review
+        console.log(registration);
+        console.log(delegate)
         console.log('Handling existing registration for:', user.name);
         return { status: 'linked' };
     };
@@ -265,6 +267,7 @@ const DelegatesUploadPage: React.FC = () => {
     const handleNewRegistration = async (user: User, delegate: DelegateData): Promise<ProcessResult> => {
         // Create delegate row for this event
         // Link to existing user
+        console.log(delegate)
         console.log('Creating new registration for:', user.name);
         return { status: 'linked' };
     };

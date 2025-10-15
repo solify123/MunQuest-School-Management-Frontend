@@ -27,7 +27,7 @@ const Avatar: React.FC<AvatarProps> = ({
       setAvatarUrl(avatar);
       setLastAvatarCheck(Date.now());
     } catch (error) {
-      console.error('Error loading avatar:', error);
+      console.log('Error loading avatar:', error);
       // Fallback to default avatar
       const userType = localStorage.getItem('userRole');
       setAvatarUrl(getDefaultAvatar(userType || 'student'));

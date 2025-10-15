@@ -190,7 +190,7 @@ var require_set_cookie = __commonJS({
       try {
         value = options.decodeValues ? decodeURIComponent(value) : value;
       } catch (e) {
-        console.error(
+        console.log(
           "set-cookie-parser encountered an error while decoding a cookie with value '" + value + "'. Set options.decodeValues to false to disable this feature.",
           e
         );
@@ -5518,7 +5518,7 @@ function DefaultErrorComponent() {
   let codeStyles = { padding: "2px 4px", backgroundColor: lightgrey };
   let devInfo = null;
   if (ENABLE_DEV_WARNINGS) {
-    console.error(
+    console.log(
       "Error handled by React Router default ErrorBoundary:",
       error
     );
@@ -5557,7 +5557,7 @@ var RenderErrorBoundary = class extends React2.Component {
     if (this.props.unstable_onError) {
       this.props.unstable_onError(error, errorInfo);
     } else {
-      console.error(
+      console.log(
         "React Router caught the following error during render",
         error
       );
@@ -6367,7 +6367,7 @@ var AwaitErrorBoundary = class extends React3.Component {
     if (this.props.unstable_onError) {
       this.props.unstable_onError(error, errorInfo);
     } else {
-      console.error(
+      console.log(
         "<Await> caught the following error during render",
         error,
         errorInfo
@@ -7834,10 +7834,10 @@ async function loadRouteModule(route, routeModulesCache) {
     routeModulesCache[route.id] = routeModule;
     return routeModule;
   } catch (error) {
-    console.error(
+    console.log(
       `Error loading route module \`${route.module}\`, reloading page...`
     );
-    console.error(error);
+    console.log(error);
     if (window.__reactRouterContext && window.__reactRouterContext.isSpaMode && // @ts-expect-error
     import.meta.hot) {
       throw error;
@@ -8155,14 +8155,14 @@ function preventInvalidServerHandlerCall(type, route) {
   if (type === "loader" && !route.hasLoader || type === "action" && !route.hasAction) {
     let fn = type === "action" ? "serverAction()" : "serverLoader()";
     let msg = `You are trying to call ${fn} on a route that does not have a server ${type} (routeId: "${route.id}")`;
-    console.error(msg);
+    console.log(msg);
     throw new ErrorResponseImpl(400, "Bad Request", new Error(msg), true);
   }
 }
 function noActionDefinedError(type, routeId) {
   let article = type === "clientAction" ? "a" : "an";
   let msg = `Route "${routeId}" does not have ${article} ${type}, but you are trying to submit to it. To fix this, please add ${article} \`${type}\` function to the route`;
-  console.error(msg);
+  console.log(msg);
   throw new ErrorResponseImpl(405, "Method Not Allowed", new Error(msg), true);
 }
 function createClientRoutes(manifest, routeModulesCache, initialState, ssr, isSpaMode, parentId = "", routesByParentId = groupRoutesByParentId(manifest), needsRevalidation) {
@@ -8562,7 +8562,7 @@ function useFogOFWarDiscovery(router2, manifest, routeModules, ssr, routeDiscove
           router2.patchRoutes
         );
       } catch (e) {
-        console.error("Failed to fetch manifest patches", e);
+        console.log("Failed to fetch manifest patches", e);
       }
     }
     let debouncedFetchPatches = debounce(fetchPatches, 100);
@@ -8611,7 +8611,7 @@ async function fetchAndApplyManifestPatches(paths, errorReloadPath, manifest, ro
         return;
       }
       if (sessionStorage.getItem(MANIFEST_VERSION_STORAGE_KEY) === manifest.version) {
-        console.error(
+        console.log(
           "Unable to discover routes due to manifest version mismatch."
         );
         return;
@@ -9215,7 +9215,7 @@ function RemixRootDefaultErrorBoundary({
   error,
   isOutsideRemixApp
 }) {
-  console.error(error);
+  console.log(error);
   let heyDeveloper = React9.createElement(
     "script",
     {
@@ -9685,7 +9685,7 @@ function ScrollRestoration({
         window.scrollTo(0, storedY);
       }
     } catch (error) {
-      console.error(error);
+      console.log(error);
       sessionStorage.removeItem(storageKey2);
     }
   }).toString();
@@ -10870,7 +10870,7 @@ function stripRoutesParam(request) {
 }
 function invariant22(value, message) {
   if (value === false || value === null || typeof value === "undefined") {
-    console.error(
+    console.log(
       "The following error is a bug in React Router; please open an issue! https://github.com/remix-run/react-router/issues/new/choose"
     );
     throw new Error(message);
@@ -11305,7 +11305,7 @@ function derive(build, mode) {
   });
   let errorHandler = build.entry.module.handleError || ((error, { request }) => {
     if (serverMode !== "test" && !request.signal.aborted) {
-      console.error(
+      console.log(
         // @ts-expect-error This is "private" from users but intended for internal use
         isRouteErrorResponse(error) && error.error ? error.error : error
       );
@@ -12037,7 +12037,7 @@ function RSCDefaultRootErrorBoundaryImpl({
   error,
   renderAppShell
 }) {
-  console.error(error);
+  console.log(error);
   let heyDeveloper = import_react.default.createElement(
     "script",
     {
@@ -12536,7 +12536,7 @@ function RSCHydratedRouter({
           fetchImplementation
         );
       } catch (e) {
-        console.error("Failed to fetch manifest patches", e);
+        console.log("Failed to fetch manifest patches", e);
       }
     }
     let debouncedFetchPatches = debounce2(fetchPatches, 100);
@@ -12663,7 +12663,7 @@ function preventInvalidServerHandlerCall2(type, routeId, hasHandler) {
   if (!hasHandler) {
     let fn = type === "action" ? "serverAction()" : "serverLoader()";
     let msg = `You are trying to call ${fn} on a route that does not have a server ${type} (routeId: "${routeId}")`;
-    console.error(msg);
+    console.log(msg);
     throw new ErrorResponseImpl(400, "Bad Request", new Error(msg), true);
   }
 }
@@ -13113,7 +13113,7 @@ function initSsrInfo() {
             importMap.textContent
           ).integrity;
         } catch (err) {
-          console.error("Failed to parse import map", err);
+          console.log("Failed to parse import map", err);
         }
       }
     }

@@ -229,7 +229,7 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
                 }
             }
         } catch (error: any) {
-            console.error('Error updating school:', error);
+            console.log('Error updating school:', error);
             toast.error(error.message || 'Failed to update school');
         } finally {
             setUpdatingSchoolId(null);
@@ -261,7 +261,7 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
                 toast.error(response.message || 'Failed to save new school');
             }
         } catch (error: any) {
-            console.error('Error saving new school:', error);
+            console.log('Error saving new school:', error);
             toast.error(error.message || 'Failed to save new school');
         }
     };
@@ -328,7 +328,7 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
                 toast.error(response.message || 'Failed to update school');
             }
         } catch (error: any) {
-            console.error('Error updating school:', error);
+            console.log('Error updating school:', error);
             toast.error(error.message || 'Failed to update school');
         }
     };
@@ -428,7 +428,7 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
             }
 
         } catch (error: any) {
-            console.error('Error merging schools:', error);
+            console.log('Error merging schools:', error);
             toast.error('Failed to merge schools');
         }
     };

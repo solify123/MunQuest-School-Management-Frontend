@@ -22,7 +22,7 @@ const CommitteesPage: React.FC = () => {
       const response = await getAllCommitteesApi();
       setCommittees(response.data || []);
     } catch (error: any) {
-      console.error('Error fetching committees:', error);
+      console.log('Error fetching committees:', error);
       showToast.error(error.message || 'Failed to fetch committees');
       setCommittees([]);
     } finally {

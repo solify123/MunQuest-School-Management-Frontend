@@ -11,8 +11,7 @@ export const getAllAreasApi = async () => {
         });
         return response.data;
     } catch (error: any) {
-        console.error('Get areas API error:', error);
-        throw new Error(error.response.data.message);
+        console.log('Get areas API error:', error);
     }
 };
 

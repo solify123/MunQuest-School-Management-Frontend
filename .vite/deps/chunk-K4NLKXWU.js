@@ -27,7 +27,7 @@ var require_react_development = __commonJS({
       function warnNoop(publicInstance, callerName) {
         publicInstance = (publicInstance = publicInstance.constructor) && (publicInstance.displayName || publicInstance.name) || "ReactClass";
         var warningKey = publicInstance + "." + callerName;
-        didWarnStateUpdateForUnmountedComponent[warningKey] || (console.error(
+        didWarnStateUpdateForUnmountedComponent[warningKey] || (console.log(
           "Can't call %s on a component that is not yet mounted. This is a no-op, but it might indicate a bug in your application. Instead, assign to `this.state` directly or define a `state = {};` class property with the desired state in the %s component.",
           callerName,
           publicInstance
@@ -89,7 +89,7 @@ var require_react_development = __commonJS({
             return "Activity";
         }
         if ("object" === typeof type)
-          switch ("number" === typeof type.tag && console.error(
+          switch ("number" === typeof type.tag && console.log(
             "Received an unexpected object in getComponentNameFromType(). This is likely a bug in React. Please file an issue."
           ), type.$$typeof) {
             case REACT_PORTAL_TYPE:
@@ -142,7 +142,7 @@ var require_react_development = __commonJS({
       }
       function defineKeyPropWarningGetter(props, displayName) {
         function warnAboutAccessingKey() {
-          specialPropKeyWarningShown || (specialPropKeyWarningShown = true, console.error(
+          specialPropKeyWarningShown || (specialPropKeyWarningShown = true, console.log(
             "%s: `key` is not a prop. Trying to access it will result in `undefined` being returned. If you need to access the same value within the child component, you should pass it as a different prop. (https://react.dev/link/special-props)",
             displayName
           ));
@@ -155,7 +155,7 @@ var require_react_development = __commonJS({
       }
       function elementRefGetterWithDeprecationWarning() {
         var componentName = getComponentNameFromType(this.type);
-        didWarnAboutElementRef[componentName] || (didWarnAboutElementRef[componentName] = true, console.error(
+        didWarnAboutElementRef[componentName] || (didWarnAboutElementRef[componentName] = true, console.log(
           "Accessing element.ref was removed in React 19. ref is now a regular prop. It will be removed from the JSX Element type in a future release."
         ));
         componentName = this.props.ref;
@@ -359,10 +359,10 @@ var require_react_development = __commonJS({
           -1 === payload._status && (payload._status = 0, payload._result = ctor);
         }
         if (1 === payload._status)
-          return ctor = payload._result, void 0 === ctor && console.error(
+          return ctor = payload._result, void 0 === ctor && console.log(
             "lazy: Expected the result of a dynamic import() call. Instead received: %s\n\nYour code should look like: \n  const MyComponent = lazy(() => import('./MyComponent'))\n\nDid you accidentally put curly braces around the import?",
             ctor
-          ), "default" in ctor || console.error(
+          ), "default" in ctor || console.log(
             "lazy: Expected the result of a dynamic import() call. Instead received: %s\n\nYour code should look like: \n  const MyComponent = lazy(() => import('./MyComponent'))",
             ctor
           ), ctor.default;
@@ -370,7 +370,7 @@ var require_react_development = __commonJS({
       }
       function resolveDispatcher() {
         var dispatcher = ReactSharedInternals.H;
-        null === dispatcher && console.error(
+        null === dispatcher && console.log(
           "Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem."
         );
         return dispatcher;
@@ -387,7 +387,7 @@ var require_react_development = __commonJS({
             ).setImmediate;
           } catch (_err) {
             enqueueTaskImpl = function(callback) {
-              false === didWarnAboutMessageChannel && (didWarnAboutMessageChannel = true, "undefined" === typeof MessageChannel && console.error(
+              false === didWarnAboutMessageChannel && (didWarnAboutMessageChannel = true, "undefined" === typeof MessageChannel && console.log(
                 "This browser does not have a MessageChannel implementation, so enqueuing tasks via await act(async () => ...) will fail. Please file an issue at https://github.com/facebook/react/issues if you encounter this warning."
               ));
               var channel = new MessageChannel();
@@ -401,7 +401,7 @@ var require_react_development = __commonJS({
         return 1 < errors.length && "function" === typeof AggregateError ? new AggregateError(errors) : errors[0];
       }
       function popActScope(prevActQueue, prevActScopeDepth) {
-        prevActScopeDepth !== actScopeDepth - 1 && console.error(
+        prevActScopeDepth !== actScopeDepth - 1 && console.log(
           "You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one. "
         );
         actScopeDepth = prevActScopeDepth;
@@ -537,7 +537,7 @@ var require_react_development = __commonJS({
           process.emit("uncaughtException", error);
           return;
         }
-        console.error(error);
+        console.log(error);
       }, didWarnAboutMessageChannel = false, enqueueTaskImpl = null, actScopeDepth = 0, didWarnNoAwaitAct = false, isFlushing = false, queueSeveralMicrotasks = "function" === typeof queueMicrotask ? function(callback) {
         queueMicrotask(function() {
           return queueMicrotask(callback);
@@ -602,7 +602,7 @@ var require_react_development = __commonJS({
         if (null !== result && "object" === typeof result && "function" === typeof result.then) {
           var thenable = result;
           queueSeveralMicrotasks(function() {
-            didAwaitActCall || didWarnNoAwaitAct || (didWarnNoAwaitAct = true, console.error(
+            didAwaitActCall || didWarnNoAwaitAct || (didWarnNoAwaitAct = true, console.log(
               "You called act(async () => ...) without await. This could lead to unexpected testing behaviour, interleaving multiple act calls and mixing their scopes. You should - await act(async () => ...);"
             ));
           });
@@ -646,7 +646,7 @@ var require_react_development = __commonJS({
         var returnValue$jscomp$0 = result;
         popActScope(prevActQueue, prevActScopeDepth);
         0 === prevActScopeDepth && (flushActQueue(queue), 0 !== queue.length && queueSeveralMicrotasks(function() {
-          didAwaitActCall || didWarnNoAwaitAct || (didWarnNoAwaitAct = true, console.error(
+          didAwaitActCall || didWarnNoAwaitAct || (didWarnNoAwaitAct = true, console.log(
             "A component suspended inside an `act` scope, but the `act` call was not awaited. When testing React components that depend on asynchronous data, you must await the result:\n\nawait act(() => ...)"
           ));
         }), ReactSharedInternals.actQueue = null);
@@ -782,16 +782,16 @@ var require_react_development = __commonJS({
         return refObject;
       };
       exports.forwardRef = function(render) {
-        null != render && render.$$typeof === REACT_MEMO_TYPE ? console.error(
+        null != render && render.$$typeof === REACT_MEMO_TYPE ? console.log(
           "forwardRef requires a render function but received a `memo` component. Instead of forwardRef(memo(...)), use memo(forwardRef(...))."
-        ) : "function" !== typeof render ? console.error(
+        ) : "function" !== typeof render ? console.log(
           "forwardRef requires a render function but was given %s.",
           null === render ? "null" : typeof render
-        ) : 0 !== render.length && 2 !== render.length && console.error(
+        ) : 0 !== render.length && 2 !== render.length && console.log(
           "forwardRef render functions accept exactly two parameters: props and ref. %s",
           1 === render.length ? "Did you forget to use the ref parameter?" : "Any additional parameter will be undefined."
         );
-        null != render && null != render.defaultProps && console.error(
+        null != render && null != render.defaultProps && console.log(
           "forwardRef render functions do not support defaultProps. Did you accidentally pass a React component?"
         );
         var elementType = { $$typeof: REACT_FORWARD_REF_TYPE, render }, ownName;
@@ -817,7 +817,7 @@ var require_react_development = __commonJS({
         };
       };
       exports.memo = function(type, compare) {
-        null == type && console.error(
+        null == type && console.log(
           "memo: The first argument must be a component. Instead received: %s",
           null === type ? "null" : typeof type
         );
@@ -874,7 +874,7 @@ var require_react_development = __commonJS({
       };
       exports.useContext = function(Context) {
         var dispatcher = resolveDispatcher();
-        Context.$$typeof === REACT_CONSUMER_TYPE && console.error(
+        Context.$$typeof === REACT_CONSUMER_TYPE && console.log(
           "Calling useContext(Context.Consumer) is not supported and will cause bugs. Did you mean to call useContext(Context) instead?"
         );
         return dispatcher.useContext(Context);

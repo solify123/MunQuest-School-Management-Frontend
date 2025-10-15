@@ -94,7 +94,7 @@ const LeadershipRolesPage: React.FC = () => {
           setAllRegistrations(allRegistrationsResponse.data);
         }
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.log('Error fetching data:', error);
         toast.error('Failed to load leadership roles data');
       } finally {
         setIsLoading(false);

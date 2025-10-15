@@ -11,16 +11,13 @@ export const getAllCommitteesApi = async () => {
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response?.data?.message || 'Failed to fetch committees');
+        console.log('Failed to fetch committees:', error);
     }
 };
 
 export const createCommitteeApi = async (abbr: string, committee: string, category: string) => {
     try {
         const token = localStorage.getItem('token');
-        console.log("abbr", abbr);
-        console.log("committee", committee);
-        console.log("category", category);
         const response = await axios.post(`${backendUrl}/api/v1/committees/add-committee`, {
             abbr,
             committee,
@@ -32,7 +29,7 @@ export const createCommitteeApi = async (abbr: string, committee: string, catego
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response?.data?.message || 'Failed to create committee');
+        console.error('Failed to create committee:', error);
     }
 };
 
@@ -50,7 +47,7 @@ export const updateCommitteeApi = async (committeeId: string, abbr: string, comm
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response?.data?.message || 'Failed to update committee');
+        console.error('Failed to update committee:', error);
     }
 };
 
@@ -64,6 +61,6 @@ export const deleteCommitteeApi = async (committeeId: string) => {
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response?.data?.message || 'Failed to delete committee');
+        console.error('Failed to delete committee:', error);
     }
 };

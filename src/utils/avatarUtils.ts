@@ -15,7 +15,7 @@ export const getUserType = (): string => {
     const userType = localStorage.getItem('userRole');
     return userType || 'student'; // Default fallback
   } catch (error) {
-    console.error('Error getting user type:', error);
+    console.log('Error getting user type:', error);
     return 'student'; // Default fallback
   }
 };
@@ -50,7 +50,7 @@ export const getUserAvatar = async (): Promise<string> => {
     // Fallback to student avatar
     return StudentAvatar;
   } catch (error) {
-    console.error('Error getting user avatar:', error);
+    console.log('Error getting user avatar:', error);
     // Fallback to student avatar
     return StudentAvatar;
   }

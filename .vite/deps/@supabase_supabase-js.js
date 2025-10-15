@@ -5034,7 +5034,7 @@ async function _handleRequest2(fetcher, method, url, options, parameters, body) 
   try {
     result = await fetcher(url, Object.assign({}, requestParams));
   } catch (e) {
-    console.error(e);
+    console.log(e);
     throw new AuthRetryableFetchError(_getErrorMessage2(e), 0);
   }
   if (!result.ok) {
@@ -5604,7 +5604,7 @@ var GoTrueClient = class _GoTrueClient {
       try {
         this.broadcastChannel = new globalThis.BroadcastChannel(this.storageKey);
       } catch (e) {
-        console.error("Failed to create a new BroadcastChannel, multi-tab state changes will not be available", e);
+        console.log("Failed to create a new BroadcastChannel, multi-tab state changes will not be available", e);
       }
       (_b = this.broadcastChannel) === null || _b === void 0 ? void 0 : _b.addEventListener("message", async (event) => {
         this._debug("received broadcast notification from other tab or client", event);
@@ -6790,7 +6790,7 @@ var GoTrueClient = class _GoTrueClient {
       } catch (err) {
         await ((_b = this.stateChangeEmitters.get(id)) === null || _b === void 0 ? void 0 : _b.callback("INITIAL_SESSION", null));
         this._debug("INITIAL_SESSION", "callback id", id, "error", err);
-        console.error(err);
+        console.log(err);
       }
     });
   }
@@ -7000,7 +7000,7 @@ var GoTrueClient = class _GoTrueClient {
         if (this.autoRefreshToken && currentSession.refresh_token) {
           const { error } = await this._callRefreshToken(currentSession.refresh_token);
           if (error) {
-            console.error(error);
+            console.log(error);
             if (!isAuthRetryableFetchError(error)) {
               this._debug(debugName, "refresh failed with a non-retryable error, removing the session", error);
               await this._removeSession();
@@ -7018,7 +7018,7 @@ var GoTrueClient = class _GoTrueClient {
             this._debug(debugName, "could not get user data, skipping SIGNED_IN notification");
           }
         } catch (getUserError) {
-          console.error("Error getting user data:", getUserError);
+          console.log("Error getting user data:", getUserError);
           this._debug(debugName, "error getting user data, skipping SIGNED_IN notification", getUserError);
         }
       } else {
@@ -7026,7 +7026,7 @@ var GoTrueClient = class _GoTrueClient {
       }
     } catch (err) {
       this._debug(debugName, "error", err);
-      console.error(err);
+      console.log(err);
       return;
     } finally {
       this._debug(debugName, "end");
@@ -7089,7 +7089,7 @@ var GoTrueClient = class _GoTrueClient {
       await Promise.all(promises);
       if (errors.length > 0) {
         for (let i = 0; i < errors.length; i += 1) {
-          console.error(errors[i]);
+          console.log(errors[i]);
         }
         throw errors[0];
       }
@@ -7147,7 +7147,7 @@ var GoTrueClient = class _GoTrueClient {
         window.removeEventListener("visibilitychange", callback);
       }
     } catch (e) {
-      console.error("removing visibilitychange callback failed", e);
+      console.log("removing visibilitychange callback failed", e);
     }
   }
   /**
@@ -7242,7 +7242,7 @@ var GoTrueClient = class _GoTrueClient {
               }
             });
           } catch (e) {
-            console.error("Auto refresh tick failed with error. This is likely a transient error.", e);
+            console.log("Auto refresh tick failed with error. This is likely a transient error.", e);
           }
         } finally {
           this._debug("#_autoRefreshTokenTick()", "end");
@@ -7274,7 +7274,7 @@ var GoTrueClient = class _GoTrueClient {
       window === null || window === void 0 ? void 0 : window.addEventListener("visibilitychange", this.visibilityChangedCallback);
       await this._onVisibilityChanged(true);
     } catch (error) {
-      console.error("_handleVisibilityChange", error);
+      console.log("_handleVisibilityChange", error);
     }
   }
   /**

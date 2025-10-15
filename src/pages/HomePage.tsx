@@ -26,7 +26,7 @@ const HomePage: React.FC = () => {
           }
         }
       } catch (error) {
-        console.error('Error checking events:', error);
+        console.log('Error checking events:', error);
       } finally {
         setIsLoading(false);
       }

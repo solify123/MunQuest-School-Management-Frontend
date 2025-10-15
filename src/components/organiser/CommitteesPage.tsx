@@ -140,7 +140,7 @@ const CommitteesPage: React.FC = () => {
           setAllCommitteesData(Array.isArray(normalized) ? normalized : []);
         }
       } catch (error: any) {
-        console.error('Error fetching event committees:', error);
+        console.log('Error fetching event committees:', error);
         toast.error(error.message || 'Failed to fetch event committees');
       } finally {
         setIsInitialLoading(false);
@@ -543,7 +543,7 @@ const CommitteesPage: React.FC = () => {
       }
       toast.success('Committee deleted');
     } catch (error: any) {
-      console.error('Error deleting committee:', error);
+      console.log('Error deleting committee:', error);
       toast.error(error.message || 'Failed to delete committee');
     } finally {
       setShowContextMenu(false);
@@ -620,7 +620,7 @@ const CommitteesPage: React.FC = () => {
       // Reset unsaved changes flag after successful save
       setHasUnsavedChanges(false);
     } catch (error: any) {
-      console.error('Error saving committees:', error);
+      console.log('Error saving committees:', error);
       toast.error(error.message || 'Failed to save committees');
     } finally {
       setIsSaving(false);
@@ -675,7 +675,7 @@ const CommitteesPage: React.FC = () => {
       setHasUnsavedChanges(false);
       setIsUpdateMode(false);
     } catch (error: any) {
-      console.error('Error updating committees:', error);
+      console.log('Error updating committees:', error);
       toast.error(error.message || 'Failed to update committees');
     } finally {
       setIsUpdating(false);
