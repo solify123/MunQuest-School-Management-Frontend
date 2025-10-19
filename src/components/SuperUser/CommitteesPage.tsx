@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { getAllCommitteesApi } from '../../apis/Committees';
-import { showToast } from '../../utils/toast';
 import { LoadingSpinner } from '../ui';
 import CommitteesTable from './CommitteesTable';
 
@@ -23,7 +22,6 @@ const CommitteesPage: React.FC = () => {
       setCommittees(response.data || []);
     } catch (error: any) {
       console.log('Error fetching committees:', error);
-      showToast.error(error.message || 'Failed to fetch committees');
       setCommittees([]);
     } finally {
       setIsLoading(false);

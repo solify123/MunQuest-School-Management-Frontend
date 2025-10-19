@@ -487,12 +487,12 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
                         return (
                             <div key={locality?.id || Math.random()} className={`flex gap-2 mb-2 ${isEditing ? 'edit-row-container' : ''}`}>
                                 {/* Locality Code */}
-                                <div className="w-32 bg-white px-3 py-2 text-sm font-medium text-gray-900 rounded-md border border-gray-200">
+                                <div className="w-32 bg-white px-3 py-2 text-sm font-medium text-gray-900 rounded-md border border-gray-200 break-words">
                                     {locality?.locality?.code || 'N/A'}
                                 </div>
 
                                 {/* Locality Name */}
-                                <div className="w-40 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+                                <div className="w-40 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200 break-words">
                                     {isEditing ? (
                                         <div>
                                             <input
@@ -510,12 +510,12 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
                                 </div>
 
                                 {/* Area Code */}
-                                <div className="w-32 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+                                <div className="w-32 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200 break-words">
                                     {locality?.area?.code || 'N/A'}
                                 </div>
 
                                 {/* Area Name */}
-                                <div className="w-40 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+                                <div className="w-40 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200 break-words">
                                     {isEditing ? (
                                         <div>
                                             <input
@@ -535,17 +535,17 @@ const LocalitiesTable: React.FC<LocalitiesTableProps> = ({ localities, onAction 
                                 </div>
 
                                 {/* Linked Schools (Area) */}
-                                <div className="w-36 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+                                <div className="w-36 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200 break-words">
                                     {locality?.linkedSchoolsCount || '-'}
                                 </div>
 
                                 {/* Linked Students (Area) */}
-                                <div className="w-36 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+                                <div className="w-36 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200 break-words">
                                     {locality?.linkedStudentsCount || '-'}
                                 </div>
 
                                 {/* Status */}
-                                <div className="w-24 bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
+                                <div className="w-24 bg-white px-3 py-2 text-sm rounded-md border border-gray-200 break-words">
                                     {updatingLocalityId === (locality?.area?.id || locality?.id) ? (
                                         <div className="flex items-center space-x-2">
                                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>

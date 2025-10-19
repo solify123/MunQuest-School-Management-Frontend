@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createLeadershipRoleApi, updateLeadershipRoleApi, deleteLeadershipRoleApi } from '../../apis/LeadershipRoles';
-import { showToast } from '../../utils/toast';
+import { toast } from 'sonner';
 import saveIcon from '../../assets/save_icon.svg';
 import ConfirmationModal from '../ui/ConfirmationModal';
 
@@ -47,43 +47,43 @@ const LeadershipRolesTable: React.FC<LeadershipRolesTableProps> = ({ leadershipR
 
   const handleSaveNewRole = async () => {
     if (!newRole.abbr.trim() || !newRole.leadership_role.trim()) {
-      showToast.error('Please fill in all fields');
+      toast.error('Please fill in all fields');
       return;
     }
 
     try {
       const response = await createLeadershipRoleApi(newRole.abbr.trim(), newRole.leadership_role.trim());
       if (response.success) {
-        showToast.success('Leadership role created successfully');
+        toast.success('Leadership role created successfully');
       } else {
-        showToast.error(response.message || 'Failed to create leadership role');
+        toast.error(response.message || 'Failed to create leadership role');
       }
       setNewRole({ abbr: '', leadership_role: '' });
       setIsAdding(false);
       onRefresh();
     } catch (error: any) {
-      showToast.error(error.message || 'Failed to create leadership role');
+      toast.error(error.message || 'Failed to create leadership role');
     }
   };
 
   const handleSave = async (roleId: string) => {
     if (!editRole.abbr.trim() || !editRole.leadership_role.trim()) {
-      showToast.error('Please fill in all fields');
+      toast.error('Please fill in all fields');
       return;
     }
 
     try {
       const response = await updateLeadershipRoleApi(roleId, editRole.abbr.trim(), editRole.leadership_role.trim());
       if (response.success) {
-        showToast.success('Leadership role updated successfully');
+        toast.success('Leadership role updated successfully');
       } else {
-        showToast.error(response.message || 'Failed to update leadership role');
+        toast.error(response.message || 'Failed to update leadership role');
       }
       setEditRole({ abbr: '', leadership_role: '' });
       setEditingId(null);
       onRefresh();
     } catch (error: any) {
-      showToast.error(error.message || 'Failed to update leadership role');
+      toast.error(error.message || 'Failed to update leadership role');
     }
   };
 
@@ -99,13 +99,13 @@ const LeadershipRolesTable: React.FC<LeadershipRolesTableProps> = ({ leadershipR
     try {
       const response = await deleteLeadershipRoleApi(roleToDelete);
       if (response.success) {
-        showToast.success('Leadership role deleted successfully');
+        toast.success('Leadership role deleted successfully');
       } else {
-        showToast.error(response.message || 'Failed to delete leadership role');
+        toast.error(response.message || 'Failed to delete leadership role');
       }
       onRefresh();
     } catch (error: any) {
-      showToast.error(error.message || 'Failed to delete leadership role');
+      toast.error(error.message || 'Failed to delete leadership role');
     } finally {
       setShowDeleteModal(false);
       setRoleToDelete(null);

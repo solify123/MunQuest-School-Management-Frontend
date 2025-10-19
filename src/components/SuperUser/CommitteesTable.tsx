@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { createCommitteeApi, updateCommitteeApi, deleteCommitteeApi } from '../../apis/Committees';
-import { showToast } from '../../utils/toast';
 import saveIcon from '../../assets/save_icon.svg';
 import ConfirmationModal from '../ui/ConfirmationModal';
+import { toast } from 'sonner';
 
 interface CommitteesTableProps {
   committees: any[];
@@ -45,43 +45,42 @@ const CommitteesTable: React.FC<CommitteesTableProps> = ({ committees, onRefresh
 
   const handleSaveNewCommittee = async () => {
     if (!newCommittee.abbr.trim() || !newCommittee.committee.trim()) {
-      showToast.error('Please fill in all fields');
       return;
     }
 
     try {
       const response = await createCommitteeApi(newCommittee.abbr.trim(), newCommittee.committee.trim(), committeeType);
       if (response.success) {
-        showToast.success('Committee created successfully');
+        toast.success('Committee created successfully');
       } else {
-        showToast.error(response.message || 'Failed to create committee');
+        toast.error(response.message || 'Failed to create committee');
       }
       setNewCommittee({ abbr: '', committee: '' });
       setIsAdding(false);
       onRefresh();
     } catch (error: any) {
-      showToast.error(error.message || 'Failed to create committee');
+      toast.error(error.message || 'Failed to create committee');
     }
   };
 
   const handleSave = async (committeeId: string) => {
     if (!editCommittee.abbr.trim() || !editCommittee.committee.trim()) {
-      showToast.error('Please fill in all fields');
+      toast.error('Please fill in all fields');
       return;
     }
 
     try {
       const response = await updateCommitteeApi(committeeId, editCommittee.abbr.trim(), editCommittee.committee.trim(), committeeType);
       if (response.success) {
-        showToast.success('Committee updated successfully');
+        toast.success('Committee updated successfully');
       } else {
-        showToast.error(response.message || 'Failed to update committee');
+        toast.error(response.message || 'Failed to update committee');
       }
       setEditCommittee({ abbr: '', committee: '' });
       setEditingId(null);
       onRefresh();
     } catch (error: any) {
-      showToast.error(error.message || 'Failed to update committee');
+      toast.error(error.message || 'Failed to update committee');
     }
   };
 
@@ -97,13 +96,13 @@ const CommitteesTable: React.FC<CommitteesTableProps> = ({ committees, onRefresh
     try {
       const response = await deleteCommitteeApi(committeeToDelete);
       if (response.success) {
-        showToast.success('Committee deleted successfully');
+        toast.success('Committee deleted successfully');
       } else {
-        showToast.error(response.message || 'Failed to delete committee');
+        toast.error(response.message || 'Failed to delete committee');
       }
       onRefresh();
     } catch (error: any) {
-      showToast.error(error.message || 'Failed to delete committee');
+      toast.error(error.message || 'Failed to delete committee');
     } finally {
       setShowDeleteModal(false);
       setCommitteeToDelete(null);

@@ -505,12 +505,12 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
                         return (
                             <div key={school?.id || Math.random()} className={`flex gap-2 mb-2 ${isEditing ? 'edit-row-container' : ''}`}>
                                 {/* School ID */}
-                                <div className="w-24 bg-white px-3 py-2 text-sm font-medium text-gray-900 rounded-md border border-gray-200">
+                                <div className="w-24 bg-white px-3 py-2 text-sm font-medium text-gray-900 rounded-md border border-gray-200 break-words">
                                     {school?.id ? String(school.id).split('-')[0] : 'N/A'}
                                 </div>
 
                                 {/* School Code */}
-                                <div className="w-32 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+                                <div className="w-32 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200 break-words">
                                     {isEditing ? (
                                         <div>
                                             <input
@@ -528,7 +528,7 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
                                 </div>
 
                                 {/* School Name */}
-                                <div className="flex-1 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+                                <div className="flex-1 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200 break-words">
                                     {isEditing ? (
                                         <div>
                                             <input
@@ -548,7 +548,7 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
                                 </div>
 
                                 {/* Locality */}
-                                <div className="w-28 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+                                <div className="w-28 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200 break-words">
                                     {isEditing ? (
                                         <div>
                                             <select
@@ -584,7 +584,7 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
                                 </div>
 
                                 {/* Area */}
-                                <div className="w-28 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+                                <div className="w-28 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200 break-words">
                                     {isEditing ? (
                                         <div>
                                             <select
@@ -613,7 +613,7 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
                                 </div>
 
                                 {/* Status */}
-                                <div className="w-24 bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
+                                <div className="w-24 bg-white px-3 py-2 text-sm rounded-md border border-gray-200 break-words">
                                     {updatingSchoolId === school?.id ? (
                                         <div className="flex items-center space-x-2">
                                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>

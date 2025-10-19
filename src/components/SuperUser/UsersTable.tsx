@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { showToast } from '../../utils/toast';
+import { toast } from 'sonner';
 import saveIcon from '../../assets/save_icon.svg';
 interface UsersTableProps {
   users: any[];
@@ -61,7 +61,7 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, onRefresh, userType }) =
 
   const handleSave = async (userId: string) => {
     if (!editUser.username.trim() || !editUser.fullname.trim() || !editUser.email.trim()) {
-      showToast.error('Please fill in all required fields');
+      toast.error('Please fill in all required fields');
       return;
     }
 
@@ -86,7 +86,7 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, onRefresh, userType }) =
       setEditingId(null);
       onRefresh();
     } catch (error: any) {
-      showToast.error(error.message || 'Failed to update user');
+      toast.error(error.message || 'Failed to update user');
     }
   };
 
@@ -101,7 +101,7 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, onRefresh, userType }) =
       // }
       onRefresh();
     } catch (error: any) {
-      showToast.error(error.message || 'Failed to delete user');
+      toast.error(error.message || 'Failed to delete user');
     }
   };
 
@@ -116,7 +116,7 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, onRefresh, userType }) =
       // }
       onRefresh();
     } catch (error: any) {
-      showToast.error(error.message || 'Failed to block user');
+      toast.error(error.message || 'Failed to block user');
     }
   };
 
@@ -131,7 +131,7 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, onRefresh, userType }) =
       // }
       onRefresh();
     } catch (error: any) {
-      showToast.error(error.message || 'Failed to unblock user');
+      toast.error(error.message || 'Failed to unblock user');
     }
   };
 

@@ -3,6 +3,7 @@ import { Toaster } from 'sonner';
 import PrivateRoute from './components/PrivateRoute';
 import { AppProvider } from './contexts/AppContext';
 import { SupabaseAuthProvider } from './contexts/SupabaseAuthContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 import SignUp from './pages/SignUp';
 import Login from './pages/Login';
 import EmailVerification from './pages/EmailVerification';
@@ -35,9 +36,10 @@ function App() {
   return (
     <SupabaseAuthProvider>
       <AppProvider>
-        <Router>
-          <div className="App">
-            <Routes>
+        <NotificationProvider>
+          <Router>
+            <div className="App">
+              <Routes>
               {/* Public Routes - No authentication required */}
               <Route path="/" element={<Navigate to="/login" replace />} />
               <Route path="/signup" element={<SignUp />} />
@@ -73,10 +75,11 @@ function App() {
               <Route path="/teacher-registration/:eventId" element={<PrivateRoute><TeacherRegistration /></PrivateRoute>} />
               <Route path="/teacher-registration-success/:eventId" element={<PrivateRoute><TeacherRegistrationSuccess /></PrivateRoute>} />
               <Route path="/teacher-delegate-page/:eventId" element={<PrivateRoute><TeacherDelegatePage /></PrivateRoute>} />
-            </Routes>
-            <Toaster position="bottom-right" richColors />
-          </div>
-        </Router>
+              </Routes>
+              <Toaster position="bottom-right" richColors />
+            </div>
+          </Router>
+        </NotificationProvider>
       </AppProvider>
     </SupabaseAuthProvider>
   );
