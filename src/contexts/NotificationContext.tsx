@@ -10,12 +10,14 @@ interface NotificationContextType {
 interface NotificationData {
   id: string;
   message: string;
-  eventName: string;
+  eventName?: string;
   eventDescription?: string;
   startDate?: string;
   endDate?: string;
   eventId?: string;
   status?: string;
+  userName?: string;
+  userEmail?: string;
   timestamp: string;
   read: boolean;
 }
@@ -38,6 +40,16 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     socket.on('connect', () => {
       setIsConnected(true);
       console.log('✅ Socket connected successfully');
+      
+      // Join user to their personal room for targeted notifications
+      const userId = localStorage.getItem('userId');
+      if (userId) {
+        socket.emit('join_user_room', userId);
+        console.log(`🔗 Emitting join_user_room for user: ${userId}`);
+        console.log(`🔗 Socket ID: ${socket.id}`);
+      } else {
+        console.log('⚠️ No userId found in localStorage - cannot join user room');
+      }
     });
 
     socket.on('disconnect', () => {
@@ -104,6 +116,21 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       console.log('✅ Event updated notification processed');
     });
 
+    // Listen for user-specific notifications
+    socket.on('user_status_updated', (data: Omit<NotificationData, 'id' | 'read'>) => {
+      console.log('🔔 User status notification received:', data);
+      const newNotification: NotificationData = {
+        id: Date.now().toString(),
+        ...data,
+        read: false
+      };
+
+      // Add to notifications list
+      setNotifications(prev => [newNotification, ...prev]);
+
+      console.log('✅ User status notification processed');
+    });
+
     // Cleanup on unmount
     return () => {
       socket.off('connect');
@@ -112,6 +139,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       socket.off('event_status_updated');
       socket.off('event_deleted');
       socket.off('event_updated');
+      socket.off('user_status_updated');
     };
   }, []);
 
