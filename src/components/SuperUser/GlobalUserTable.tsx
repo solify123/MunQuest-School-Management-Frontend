@@ -94,7 +94,6 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
     }
   }, [searchTerm, users, isSuperUser]);
 
-  console.log('filteredUsers', filteredUsers);
   // Handle clicking outside dropdown to close it
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

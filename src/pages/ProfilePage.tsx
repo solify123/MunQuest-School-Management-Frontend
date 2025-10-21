@@ -89,7 +89,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
         fullname: user.data.fullname || '',
         birthday: user.data.birthday || '',
         gender: user.data.gender || '',
-        locality: user.data.school.code || '',
+        locality: user.data.school.locality.name || '',
         schoolName: user.data.school.name || '',
         school_id: user.data.school.id || '',
         grade: user.data.grade || '',
@@ -100,6 +100,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
       };
 
       // Update profileData
+      console.log("userData", userData);
       setProfileData(userData);
 
       // Update individual useState variables
@@ -120,6 +121,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
     };
     getUserById();
   }, [userType]);
+
   // Profile data state
   const [profileData, setProfileData] = useState<ProfileData>({
     username: initialData?.username || '',
@@ -184,6 +186,11 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
 
   // Delete confirmation modal state
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
+  
+  // Loading states for buttons
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [isChangingPassword, setIsChangingPassword] = useState<boolean>(false);
 
   // Function to generate phone_e164 format
   const generatePhoneE164 = (phone: string, countryCode: string): string => {
@@ -409,6 +416,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
     }
 
     try {
+      setIsChangingPassword(true);
       const response = await updatePassword(newPassword);
       if (response.success) {
         toast.success(response.message);
@@ -420,6 +428,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
       }
     } catch (error: any) {
       toast.error('Failed to update password: ' + (error.message || 'Unknown error'));
+    } finally {
+      setIsChangingPassword(false);
     }
   };
 
@@ -431,6 +441,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
 
   const deleteAccount = async () => {
     try {
+      setIsDeleting(true);
       const response = await deleteAccountApi();
       if (response.success) {
         toast.success(response.message);
@@ -442,6 +453,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
       }
     } catch (error: any) {
       toast.error(error.message);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -1102,6 +1115,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
 
   const profileDataHandlerEdit = async () => {
     try {
+      setIsSaving(true);
+      
       // Validate custom fields when "Other" is selected
       if (locality === 'Other') {
         if (!customLocality.trim()) {
@@ -1162,6 +1177,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
       }
     } catch (error: any) {
       toast.error('Failed to update profile: ' + error.data.message);
+    } finally {
+      setIsSaving(false);
     }
   }
 
@@ -1349,9 +1366,21 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
                   <div className="flex space-x-2">
                     <button
                       onClick={handlePasswordChange}
-                      className="px-4 py-2 bg-[#D9C7A1] text-white rounded-lg text-sm hover:bg-[#C2A46D] transition-colors"
+                      disabled={isChangingPassword}
+                      className={`px-4 py-2 text-white rounded-lg text-sm transition-colors ${
+                        isChangingPassword 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-[#D9C7A1] hover:bg-[#C2A46D]'
+                      }`}
                     >
-                      Save Password
+                      {isChangingPassword ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2 inline-block"></div>
+                          Saving...
+                        </>
+                      ) : (
+                        'Save Password'
+                      )}
                     </button>
                     <button
                       onClick={() => {
@@ -1359,7 +1388,12 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
                         setNewPassword('');
                         setConfirmPassword('');
                       }}
-                      className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-400 transition-colors"
+                      disabled={isChangingPassword}
+                      className={`px-4 py-2 rounded-lg text-sm transition-colors ${
+                        isChangingPassword 
+                          ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
+                          : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
+                      }`}
                     >
                       Cancel
                     </button>
@@ -1372,9 +1406,12 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
             <div className="mb-6">
               <button
                 onClick={handleDeleteAccountClick}
-                className="mb-2 underline cursor-pointer"
+                disabled={isDeleting}
+                className={`mb-2 underline ${
+                  isDeleting ? 'cursor-not-allowed text-gray-400' : 'cursor-pointer'
+                }`}
                 style={{
-                  color: '#000',
+                  color: isDeleting ? '#9CA3AF' : '#000',
                   fontSize: '16px',
                   fontStyle: 'normal',
                   fontWeight: 700,
@@ -1383,7 +1420,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
                   display: 'block'
                 }}
               >
-                Delete Account
+                {isDeleting ? 'Deleting Account...' : 'Delete Account'}
               </button>
             </div>
 
@@ -1392,8 +1429,12 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
                 onClick={() => {
                   profileDataHandlerEdit();
                 }}
-                className={`text-white bg-[#D9C7A1] font-medium transition-all ${newPassword ? 'hover:bg-[#C2A46D]' : 'bg-[#D9C7A1]  hover:bg-[#C2A46D]'
-                  }`}
+                disabled={isSaving}
+                className={`text-white font-medium transition-all ${
+                  isSaving 
+                    ? 'bg-gray-400 cursor-not-allowed' 
+                    : 'bg-[#D9C7A1] hover:bg-[#C2A46D]'
+                }`}
                 style={{
                   display: 'flex',
                   width: '120px',
@@ -1404,7 +1445,14 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
                   borderRadius: '30px'
                 }}
               >
-                Save
+                {isSaving ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Saving...
+                  </>
+                ) : (
+                  'Save'
+                )}
               </button>
             </div>
 
@@ -1418,7 +1466,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
         onConfirm={handleDeleteConfirm}
         title="Confirm Delete"
         message="Deleting your account will remove all information. This cannot be undone."
-        confirmText="Yes"
+        confirmText={isDeleting ? "Deleting..." : "Yes"}
         cancelText="No"
         confirmButtonColor="text-red-600"
       />
