@@ -38,8 +38,14 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
   const [inviteEmail, setInviteEmail] = useState<string>('');
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const { refreshUserData, allOrganisers } = useApp();
+  const [showNameDropdown, setShowNameDropdown] = useState<boolean>(false);
+  const [showEmailDropdown, setShowEmailDropdown] = useState<boolean>(false);
+  const [filteredUsersForName, setFilteredUsersForName] = useState<any[]>([]);
+  const [filteredUsersForEmail, setFilteredUsersForEmail] = useState<any[]>([]);
+  const { refreshUserData, allOrganisers, allUsers } = useApp();
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const nameDropdownRef = useRef<HTMLDivElement>(null);
+  const emailDropdownRef = useRef<HTMLDivElement>(null);
 
   // Helper function to check if user is an organizer
   const isUserOrganiser = (userId: string) => {
@@ -100,19 +106,109 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setActiveDropdown(null);
       }
+      if (nameDropdownRef.current && !nameDropdownRef.current.contains(event.target as Node)) {
+        setShowNameDropdown(false);
+      }
+      if (emailDropdownRef.current && !emailDropdownRef.current.contains(event.target as Node)) {
+        setShowEmailDropdown(false);
+      }
     };
 
-    if (activeDropdown) {
+    if (activeDropdown || showNameDropdown || showEmailDropdown) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [activeDropdown]);
+  }, [activeDropdown, showNameDropdown, showEmailDropdown]);
 
   const handleDropdownToggle = (userId: string) => {
     setActiveDropdown(activeDropdown === userId ? null : userId);
+  };
+
+  // Filter users for name dropdown
+  const filterUsersForName = (searchTerm: string) => {
+    if (!searchTerm.trim()) {
+      setFilteredUsersForName([]);
+      return;
+    }
+    
+    const filtered = allUsers.filter((user: any) => {
+      // Exclude users who are already superusers
+      if (user?.global_role === 'superuser') {
+        return false;
+      }
+      
+      const searchLower = searchTerm.toLowerCase();
+      const username = user?.username || '';
+      const fullname = user?.fullname || '';
+      
+      return (
+        username.toLowerCase().includes(searchLower) ||
+        fullname.toLowerCase().includes(searchLower)
+      );
+    });
+    
+    setFilteredUsersForName(filtered.slice(0, 5)); // Limit to 5 suggestions
+  };
+
+  // Filter users for email dropdown
+  const filterUsersForEmail = (searchTerm: string) => {
+    if (!searchTerm.trim()) {
+      setFilteredUsersForEmail([]);
+      return;
+    }
+    
+    const filtered = allUsers.filter((user: any) => {
+      // Exclude users who are already superusers
+      if (user?.global_role === 'superuser') {
+        return false;
+      }
+      
+      const searchLower = searchTerm.toLowerCase();
+      const email = user?.email || '';
+      const username = user?.username || '';
+      
+      return (
+        email.toLowerCase().includes(searchLower) ||
+        username.toLowerCase().includes(searchLower)
+      );
+    });
+    
+    setFilteredUsersForEmail(filtered.slice(0, 5)); // Limit to 5 suggestions
+  };
+
+  // Handle name input change
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setInviteName(value);
+    filterUsersForName(value);
+    setShowNameDropdown(value.trim().length > 0);
+  };
+
+  // Handle email input change
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setInviteEmail(value);
+    filterUsersForEmail(value);
+    setShowEmailDropdown(value.trim().length > 0);
+  };
+
+  // Handle user selection from name dropdown
+  const handleNameSelect = (user: any) => {
+    setInviteName(user.fullname || user.username);
+    setInviteEmail(user.email || '');
+    setShowNameDropdown(false);
+    setFilteredUsersForName([]);
+  };
+
+  // Handle user selection from email dropdown
+  const handleEmailSelect = (user: any) => {
+    setInviteEmail(user.email || user.username);
+    setInviteName(user.fullname || user.username);
+    setShowEmailDropdown(false);
+    setFilteredUsersForEmail([]);
   };
 
   // Delete confirmation handlers
@@ -560,7 +656,7 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
             <div className="mt-6 p-6 max-w-md flex items-end justify-between">
               <div>
                 {/* Name Field */}
-                <div className="mb-4">
+                <div className="mb-4 relative" ref={nameDropdownRef}>
                   <label htmlFor="invite-name" className="block text-sm font-semibold text-gray-900 mb-2">
                     Name
                   </label>
@@ -568,14 +664,35 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
                     id="invite-name"
                     type="text"
                     value={inviteName}
-                    onChange={(e) => setInviteName(e.target.value)}
+                    onChange={handleNameChange}
                     placeholder="E.g. Ivy Grace Turner"
                     className="w-full px-4 py-2 border border-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-[#C4A35A] focus:border-transparent text-gray-700"
                   />
+                  
+                  {/* Name Dropdown */}
+                  {showNameDropdown && filteredUsersForName.length > 0 && (
+                    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-hidden">
+                      <div className="max-h-48 overflow-y-auto">
+                        {filteredUsersForName.map((user: any) => (
+                          <div
+                            key={user.id}
+                            className="px-3 py-2 text-sm text-gray-900 cursor-pointer hover:bg-gray-100 flex items-center justify-between"
+                            onClick={() => handleNameSelect(user)}
+                          >
+                            <div>
+                              <div className="font-medium">{user.fullname || user.username}</div>
+                              <div className="text-xs text-gray-500">@{user.username}</div>
+                            </div>
+                            <div className="text-xs text-gray-400">{user.email}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Email Field */}
-                <div>
+                <div className="relative" ref={emailDropdownRef}>
                   <label htmlFor="invite-email" className="block text-sm font-semibold text-gray-900 mb-2">
                     Email
                   </label>
@@ -583,10 +700,31 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
                     id="invite-email"
                     type="email"
                     value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
+                    onChange={handleEmailChange}
                     placeholder="E.g. ivy.grace@example.com"
                     className="w-full px-4 py-2 border border-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-[#C4A35A] focus:border-transparent text-gray-700"
                   />
+                  
+                  {/* Email Dropdown */}
+                  {showEmailDropdown && filteredUsersForEmail.length > 0 && (
+                    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-hidden">
+                      <div className="max-h-48 overflow-y-auto">
+                        {filteredUsersForEmail.map((user: any) => (
+                          <div
+                            key={user.id}
+                            className="px-3 py-2 text-sm text-gray-900 cursor-pointer hover:bg-gray-100 flex items-center justify-between"
+                            onClick={() => handleEmailSelect(user)}
+                          >
+                            <div>
+                              <div className="font-medium">{user.email}</div>
+                              <div className="text-xs text-gray-500">{user.fullname || user.username}</div>
+                            </div>
+                            <div className="text-xs text-gray-400">@{user.username}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               <div>
