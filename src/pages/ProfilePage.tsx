@@ -81,6 +81,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
   useEffect(() => {
     const getUserById = async () => {
       const user = await getUserByIdApi();
+
+      console.log('user', user);
       const userData = {
         ...user.data,
         // Map API fields to UI fields
@@ -1087,7 +1089,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
             disabled={!isEditingThisField || !currentGradeType}
             className={`w-[400px] px-4 py-4 pr-10 border rounded-lg text-sm bg-white focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 appearance-none ${!isEditingThisField || !currentGradeType ? 'bg-gray-100 cursor-not-allowed' : 'border-gray-300'}`}
           >
-            <option value="">Select {currentGradeType || 'option'}</option>
+            <option value="">{isEditingThisField ? `Select ${currentGradeType || 'option'}` : currentGrade}</option>
             {getCurrentOptions().map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
@@ -1100,7 +1102,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
   };
 
   const profileDataHandlerEdit = async () => {
-    console.log(userType);
     try {
       // Validate custom fields when "Other" is selected
       if (locality === 'Other') {

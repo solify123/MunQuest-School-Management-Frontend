@@ -249,6 +249,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
 
   const handleDeleteConfirm = async () => {
     if (!organiserToDelete) return;
+    setShowDeleteModal(false);
 
     setUpdatingOrganiserId(organiserToDelete);
     try {
@@ -260,12 +261,11 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
       } else {
         toast.error(response.message);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log('Error deleting organiser:', error);
-      toast.error('Failed to delete organiser');
+      toast.error(error.message);
     } finally {
       setUpdatingOrganiserId(null);
-      setShowDeleteModal(false);
       setOrganiserToDelete(null);
     }
   };
