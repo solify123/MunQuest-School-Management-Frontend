@@ -62,16 +62,23 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
     }
   };
 
-  // Filter users based on search term
+  // Filter users based on search term and superuser role
   useEffect(() => {
+    let filteredByRole = users;
+    
+    // If this is the superuser tab, only show users with global_role "superuser"
+    if (isSuperUser) {
+      filteredByRole = users.filter((user: any) => user?.global_role === 'superuser');
+    }
+    
     if (!searchTerm.trim()) {
-      setFilteredUsers(users);
+      setFilteredUsers(filteredByRole);
     } else {
-      const filtered = users.filter((user: any) => {
+      const filtered = filteredByRole.filter((user: any) => {
         const searchLower = searchTerm.toLowerCase();
         const username = user?.username || '';
         const fullname = user?.fullname || '';
-        const schoolLocation = user?.school.code || '';
+        const schoolLocation = user?.school?.code || '';
         const schoolName = user?.school?.name || '';
         const role = user?.global_role || '';
 
@@ -85,8 +92,9 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
       });
       setFilteredUsers(filtered);
     }
-  }, [searchTerm, users]);
+  }, [searchTerm, users, isSuperUser]);
 
+  console.log('filteredUsers', filteredUsers);
   // Handle clicking outside dropdown to close it
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
