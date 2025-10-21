@@ -70,7 +70,6 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, userType }) => {
 
     setUpdatingUserId(userId);
     try {
-      console.log('Saving user:', userId);
       const response = await updateUserBySuperUserApi(userId, {
         username: editUser.username.trim(),
         fullname: editUser.fullname.trim(),
@@ -99,7 +98,6 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, userType }) => {
   const handleDelete = async (userId: string) => {
     setUpdatingUserId(userId);
     try {
-      console.log('Deleting user:', userId);
       const response = await deleteUserBySuperUserApi(userId);
       if (response.success) {
         toast.success('User deleted successfully');
