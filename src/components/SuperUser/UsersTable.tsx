@@ -117,7 +117,6 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, userType }) => {
   const handleBlock = async (userId: string) => {
     setUpdatingUserId(userId);
     try {
-      console.log('Blocking user:', userId);
       const response = await updateUserStatusApi(userId, 'blocked');
       if (response.success) {
         toast.success('User blocked successfully');
@@ -135,7 +134,6 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, userType }) => {
   const handleUnblock = async (userId: string) => {
     setUpdatingUserId(userId);
     try {
-      console.log('Unblocking user:', userId);
       const response = await updateUserStatusApi(userId, 'active');
       if (response.success) {
         toast.success('User unblocked successfully');
@@ -153,7 +151,6 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, userType }) => {
   const handleFlag = async (userId: string) => {
     setUpdatingUserId(userId);
     try {
-      console.log('Flagging user:', userId);
       const response = await updateUserStatusApi(userId, 'flagged');
       if (response.success) {
         toast.success('User flagged successfully');
@@ -171,7 +168,6 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, userType }) => {
   const handleAssignOrganiser = async (userId: string) => {
     setUpdatingUserId(userId);
     try {
-      console.log('Assigning organiser role to user:', userId);
       const response = await updateUserBySuperUserApi(userId, { globalRole: 'Organiser' });
       if (response.success) {
         toast.success('User assigned organiser role successfully');
