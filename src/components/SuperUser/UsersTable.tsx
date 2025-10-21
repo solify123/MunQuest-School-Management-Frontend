@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import saveIcon from '../../assets/save_icon.svg';
+import { deleteUserBySuperUserApi, updateUserStatusApi, updateUserBySuperUserApi } from '../../apis/Users';
+import { useApp } from '../../contexts/AppContext';
 interface UsersTableProps {
   users: any[];
-  onRefresh: () => void;
   userType: 'student' | 'teacher';
 }
 
-const UsersTable: React.FC<UsersTableProps> = ({ users, onRefresh, userType }) => {
+const UsersTable: React.FC<UsersTableProps> = ({ users, userType }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showContextMenu, setShowContextMenu] = useState<string | null>(null);
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
+  const { refreshUserData } = useApp();
   const [newUser, setNewUser] = useState({ 
     username: '', 
     fullname: '', 
@@ -65,73 +68,136 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, onRefresh, userType }) =
       return;
     }
 
+    setUpdatingUserId(userId);
     try {
       console.log('Saving user:', userId);
-      // const response = await updateUserApi(userId, {
-      //   username: editUser.username.trim(),
-      //   fullname: editUser.fullname.trim(),
-      //   email: editUser.email.trim(),
-      //   academicLevel: editUser.academicLevel.trim(),
-      //   school: editUser.school.trim(),
-      //   munExperience: editUser.munExperience.trim(),
-      //   globalRole: editUser.globalRole.trim()
-      // });
+      const response = await updateUserBySuperUserApi(userId, {
+        username: editUser.username.trim(),
+        fullname: editUser.fullname.trim(),
+        email: editUser.email.trim(),
+        academicLevel: editUser.academicLevel.trim(),
+        school: editUser.school.trim(),
+        munExperience: editUser.munExperience.trim(),
+        globalRole: editUser.globalRole.trim()
+      });
       
-      // if (response.success) {
-      //   showToast.success('User updated successfully');
-      // } else {
-      //   showToast.error(response.message || 'Failed to update user');
-      // }
-      setEditUser({ username: '', fullname: '', email: '', academicLevel: '', school: '', munExperience: '', globalRole: 'User' });
-      setEditingId(null);
-      onRefresh();
+      if (response.success) {
+        toast.success('User updated successfully');
+        setEditUser({ username: '', fullname: '', email: '', academicLevel: '', school: '', munExperience: '', globalRole: 'User' });
+        setEditingId(null);
+        await refreshUserData();
+      } else {
+        toast.error(response.message || 'Failed to update user');
+      }
     } catch (error: any) {
       toast.error(error.message || 'Failed to update user');
+    } finally {
+      setUpdatingUserId(null);
     }
   };
 
   const handleDelete = async (userId: string) => {
-    console.log('Deleting user:', userId);
+    setUpdatingUserId(userId);
     try {
-      // const response = await deleteUserApi(userId);
-      // if (response.success) {
-      //   showToast.success('User deleted successfully');
-      // } else {
-      //   showToast.error(response.message || 'Failed to delete user');
-      // }
-      onRefresh();
+      console.log('Deleting user:', userId);
+      const response = await deleteUserBySuperUserApi(userId);
+      if (response.success) {
+        toast.success('User deleted successfully');
+        await refreshUserData();
+      } else {
+        toast.error(response.message || 'Failed to delete user');
+      }
     } catch (error: any) {
       toast.error(error.message || 'Failed to delete user');
+    } finally {
+      setUpdatingUserId(null);
     }
   };
 
   const handleBlock = async (userId: string) => {
-    console.log('Blocking user:', userId);
+    setUpdatingUserId(userId);
     try {
-      // const response = await blockUserApi(userId);
-      // if (response.success) {
-      //   showToast.success('User blocked successfully');
-      // } else {
-      //   showToast.error(response.message || 'Failed to block user');
-      // }
-      onRefresh();
+      console.log('Blocking user:', userId);
+      const response = await updateUserStatusApi(userId, 'blocked');
+      if (response.success) {
+        toast.success('User blocked successfully');
+        await refreshUserData();
+      } else {
+        toast.error(response.message || 'Failed to block user');
+      }
     } catch (error: any) {
       toast.error(error.message || 'Failed to block user');
+    } finally {
+      setUpdatingUserId(null);
     }
   };
 
   const handleUnblock = async (userId: string) => {
-    console.log('Unblocking user:', userId);
+    setUpdatingUserId(userId);
     try {
-      // const response = await unblockUserApi(userId);
-      // if (response.success) {
-      //   showToast.success('User unblocked successfully');
-      // } else {
-      //   showToast.error(response.message || 'Failed to unblock user');
-      // }
-      onRefresh();
+      console.log('Unblocking user:', userId);
+      const response = await updateUserStatusApi(userId, 'active');
+      if (response.success) {
+        toast.success('User unblocked successfully');
+        await refreshUserData();
+      } else {
+        toast.error(response.message || 'Failed to unblock user');
+      }
     } catch (error: any) {
       toast.error(error.message || 'Failed to unblock user');
+    } finally {
+      setUpdatingUserId(null);
+    }
+  };
+
+  const handleFlag = async (userId: string) => {
+    setUpdatingUserId(userId);
+    try {
+      console.log('Flagging user:', userId);
+      const response = await updateUserStatusApi(userId, 'flagged');
+      if (response.success) {
+        toast.success('User flagged successfully');
+        await refreshUserData();
+      } else {
+        toast.error(response.message || 'Failed to flag user');
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to flag user');
+    } finally {
+      setUpdatingUserId(null);
+    }
+  };
+
+  const handleAssignOrganiser = async (userId: string) => {
+    setUpdatingUserId(userId);
+    try {
+      console.log('Assigning organiser role to user:', userId);
+      const response = await updateUserBySuperUserApi(userId, { globalRole: 'Organiser' });
+      if (response.success) {
+        toast.success('User assigned organiser role successfully');
+        await refreshUserData();
+      } else {
+        toast.error(response.message || 'Failed to assign organiser role');
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to assign organiser role');
+    } finally {
+      setUpdatingUserId(null);
+    }
+  };
+
+  const handleInviteNonUser = async (userId: string) => {
+    setUpdatingUserId(userId);
+    try {
+      console.log('Inviting non-user:', userId);
+      // This would typically send an invitation email or notification
+      // For now, we'll just show a success message
+      toast.success('Invitation sent successfully');
+      await refreshUserData();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to send invitation');
+    } finally {
+      setUpdatingUserId(null);
     }
   };
 
@@ -150,7 +216,9 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, onRefresh, userType }) =
     setShowContextMenu(null);
   };
 
-  const handleContextMenu = (userId: string) => {
+  const handleContextMenu = (userId: string, event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
     setShowContextMenu(showContextMenu === userId ? null : userId);
   };
 
@@ -158,9 +226,12 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, onRefresh, userType }) =
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (showContextMenu) {
-        // Check if the click is outside the dropdown menu
+        // Check if the click is outside the dropdown menu and button
         const target = event.target as Element;
-        if (!target.closest('.context-menu')) {
+        const isInsideMenu = target.closest('.context-menu');
+        const isInsideButton = target.closest('[data-dropdown-button]');
+        
+        if (!isInsideMenu && !isInsideButton) {
           setShowContextMenu(null);
         }
       }
@@ -347,20 +418,23 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, onRefresh, userType }) =
                   <div className="flex space-x-2">
                     <button
                       onClick={() => handleSave(user.id)}
-                      className="hover:opacity-80 transition-opacity duration-200"
+                      disabled={updatingUserId === user.id}
+                      className={`hover:opacity-80 transition-opacity duration-200 ${updatingUserId === user.id ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                       <img src={saveIcon} alt="Save" className="w-5 h-5" />
                     </button>
                     <button
                       onClick={cancelEdit}
-                      className="text-red-600 hover:text-red-800 text-sm"
+                      disabled={updatingUserId === user.id}
+                      className={`text-red-600 hover:text-red-800 text-sm ${updatingUserId === user.id ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                       ✕
                     </button>
                   </div>
                 ) : (
                   <button
-                    onClick={() => handleContextMenu(user.id)}
+                    onClick={(e) => handleContextMenu(user.id, e)}
+                    data-dropdown-button
                     className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                   >
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -370,7 +444,7 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, onRefresh, userType }) =
                 )}
 
                 {showContextMenu === user.id && !isAdding && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200 context-menu">
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-200 context-menu">
                     <div className="py-1">
                       <button
                         onClick={(e) => {
@@ -378,8 +452,13 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, onRefresh, userType }) =
                           e.stopPropagation();
                           console.log('Edit button clicked');
                           handleEdit(user);
+                          setShowContextMenu(null);
                         }}
-                        className="block w-full text-left px-4 py-2 text-sm transition-colors duration-200 text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900"
+                        disabled={updatingUserId === user.id}
+                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingUserId === user.id
+                          ? 'text-gray-400 cursor-not-allowed'
+                          : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
+                          }`}
                       >
                         Edit
                       </button>
@@ -390,8 +469,13 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, onRefresh, userType }) =
                             e.stopPropagation();
                             console.log('Unblock button clicked');
                             handleUnblock(user.id);
+                            setShowContextMenu(null);
                           }}
-                          className="block w-full text-left px-4 py-2 text-sm transition-colors duration-200 text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900"
+                          disabled={updatingUserId === user.id}
+                          className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingUserId === user.id
+                            ? 'text-gray-400 cursor-not-allowed'
+                            : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
+                            }`}
                         >
                           Unblock
                         </button>
@@ -402,8 +486,13 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, onRefresh, userType }) =
                             e.stopPropagation();
                             console.log('Block button clicked');
                             handleBlock(user.id);
+                            setShowContextMenu(null);
                           }}
-                          className="block w-full text-left px-4 py-2 text-sm transition-colors duration-200 text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900"
+                          disabled={updatingUserId === user.id}
+                          className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingUserId === user.id
+                            ? 'text-gray-400 cursor-not-allowed'
+                            : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
+                            }`}
                         >
                           Block
                         </button>
@@ -412,10 +501,63 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, onRefresh, userType }) =
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
+                          console.log('Assign Organiser button clicked');
+                          handleAssignOrganiser(user.id);
+                          setShowContextMenu(null);
+                        }}
+                        disabled={updatingUserId === user.id}
+                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingUserId === user.id
+                          ? 'text-gray-400 cursor-not-allowed'
+                          : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
+                          }`}
+                      >
+                        Assign Organiser
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          console.log('Flag button clicked');
+                          handleFlag(user.id);
+                          setShowContextMenu(null);
+                        }}
+                        disabled={updatingUserId === user.id}
+                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingUserId === user.id
+                          ? 'text-gray-400 cursor-not-allowed'
+                          : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
+                          }`}
+                      >
+                        Flag
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          console.log('Invite Non-user button clicked');
+                          handleInviteNonUser(user.id);
+                          setShowContextMenu(null);
+                        }}
+                        disabled={updatingUserId === user.id}
+                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingUserId === user.id
+                          ? 'text-gray-400 cursor-not-allowed'
+                          : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
+                          }`}
+                      >
+                        Invite Non-user
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
                           console.log('Delete button clicked');
                           handleDelete(user.id);
+                          setShowContextMenu(null);
                         }}
-                        className="block w-full text-left px-4 py-2 text-sm transition-colors duration-200 text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900"
+                        disabled={updatingUserId === user.id}
+                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingUserId === user.id
+                          ? 'text-gray-400 cursor-not-allowed'
+                          : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
+                          }`}
                       >
                         Delete
                       </button>

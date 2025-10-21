@@ -1,12 +1,29 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNotifications } from '../contexts/NotificationContext';
 
+interface NotificationData {
+  id: string;
+  message: string;
+  eventName?: string;
+  eventDescription?: string;
+  startDate?: string;
+  endDate?: string;
+  eventId?: string;
+  read: boolean;
+  timestamp: string;
+}
+
 const NotificationBell: React.FC = () => {
   const { notifications, isConnected } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
   const notificationBellRef = useRef<HTMLDivElement>(null);
+  const [allNotifications, setAllNotifications] = useState<NotificationData[]>([]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
+
+  const clearAllNotifications = () => {
+    setAllNotifications([]);
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -19,6 +36,10 @@ const NotificationBell: React.FC = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    setAllNotifications(notifications);
+  }, [notifications]);
 
   return (
     <div className="relative">
@@ -42,9 +63,9 @@ const NotificationBell: React.FC = () => {
               d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
             />
           </svg>
-          {unreadCount > 0 && (
+          {allNotifications.filter(n => !n.read).length > 0 && (
             <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-              {unreadCount}
+              {allNotifications.filter(n => !n.read).length}
             </span>
           )}
           {!isConnected && (
@@ -65,12 +86,12 @@ const NotificationBell: React.FC = () => {
           </div>
 
           <div className="max-h-96 overflow-y-auto">
-            {notifications.length === 0 ? (
+            {allNotifications.length === 0 ? (
               <div className="p-4 text-center text-gray-500">
                 No notifications yet
               </div>
             ) : (
-              notifications.map((notification) => (
+              allNotifications.map((notification) => (
                 <div
                   key={notification.id}
                   className={`p-4 border-b border-gray-100 hover:bg-gray-50 ${!notification.read ? 'bg-blue-50' : ''
@@ -99,11 +120,11 @@ const NotificationBell: React.FC = () => {
             )}
           </div>
 
-          {notifications.length > 0 && (
+          {allNotifications.length > 0 && (
             <div className="p-3 border-t border-gray-200">
               <button
                 onClick={() => {
-                  // Mark all as read logic can be added here
+                  clearAllNotifications();
                   setIsOpen(false);
                 }}
                 className="w-full text-center text-sm text-blue-600 hover:text-blue-800"

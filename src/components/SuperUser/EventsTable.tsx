@@ -129,37 +129,37 @@ const EventsTable: React.FC<EventsTableProps> = ({ events, onAction }) => {
         events.map((event) => (
           <div key={event?.id || Math.random()} className="grid grid-cols-8 gap-2 mb-2">
             {/* Event ID */}
-            <div className="bg-white px-3 py-2 text-sm font-medium text-gray-900 rounded-md border border-gray-200">
+            <div className="bg-white px-3 py-2 text-sm font-medium text-gray-900 rounded-md border border-gray-200 flex items-center justify-center">
               {event?.id.split('-')[0] || 'N/A'}
             </div>
 
             {/* Event Name */}
-            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200 flex items-center justify-center">
               {event?.name || 'N/A'}
             </div>
 
             {/* Locality */}
-            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200 flex items-center justify-center">
               {event?.locality?.name || 'N/A'}
             </div>
 
             {/* Date */}
-            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200 flex items-center justify-center">
               {event?.start_date + ' - ' + event?.end_date || 'N/A'}
             </div>
 
             {/* Fees */}
-            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200 flex items-center justify-center">
               {event?.fees_per_delegate || 'N/A'}
             </div>
 
             {/* Event Phase */}
-            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+            <div className="bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200 flex items-center justify-center">
               {event?.event_phase || 'N/A'}
             </div>
 
             {/* Event Status */}
-            <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
+            <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200 flex items-center justify-center">
               {updatingEventId === event?.id ? (
                 <div className="flex items-center space-x-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>

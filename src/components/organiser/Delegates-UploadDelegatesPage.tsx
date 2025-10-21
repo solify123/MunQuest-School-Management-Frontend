@@ -313,13 +313,13 @@ const DelegatesUploadPage: React.FC = () => {
                 <div className="max-w-[85rem] mx-auto px-6 py-8" style={{ paddingLeft: '10.5rem' }}>
                     {/* Breadcrumb Navigation */}
                     <div className="flex items-center space-x-2 text-sm text-[#C2A46D] mb-6">
-                        <span>Organiser</span>
-                        <span>&gt;</span>
-                        <span>Delegates</span>
-                        <span>&gt;</span>
-                        <span>Key Info</span>
-                        <span>&gt;</span>
-                        <span className="text-[#C2A46D] font-medium">Upload Delegates</span>
+                        <span className='text-2xl font-medium text-[#C2A46D]'>Organiser</span>
+                        <span className='text-2xl font-medium text-[#C2A46D]'>&gt;</span>
+                        <span className='text-2xl font-medium text-[#C2A46D]'>Delegates</span>
+                        <span className='text-2xl font-medium text-[#C2A46D]'>&gt;</span>
+                        <span className='text-2xl font-medium text-[#C2A46D]'>Key Info</span>
+                        <span className='text-2xl font-medium text-[#C2A46D]'>&gt;</span>
+                        <span className="text-2xl font-medium text-[#C2A46D]">Upload Delegates</span>
                     </div>
 
                     {/* Main Title */}

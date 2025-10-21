@@ -209,7 +209,7 @@ const MasterlistsNavigation: React.FC<MasterlistsNavigationProps> = ({
                 <button
                   key={section.id}
                   onClick={() => {
-                    onSectionChange(section.id === 'users-related' ? 'users' : section.id === 'schools-related' ? 'schools' : section.id);
+                    onSectionChange(section.id === 'events-related' ? 'events' : section.id === 'users-related' ? 'users' : section.id === 'schools-related' ? 'schools' : section.id);
                   }}
                   className={`w-[160px] h-[58px] px-[5px] py-[5px] text-sm rounded-[20px] ${getButtonStyle(isSubSectionActive(section.id), false, isSubSectionParent(section.id), 2)}`}
                 >

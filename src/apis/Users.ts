@@ -268,6 +268,28 @@ export const updateUserStatusApi = async (userId: string, status: string) => {
     }
 }
 
+export const updateUserBySuperUserApi = async (userId: string, userData: {
+    username?: string;
+    fullname?: string;
+    email?: string;
+    academicLevel?: string;
+    school?: string;
+    munExperience?: string;
+    globalRole?: string;
+}) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.patch(`${backendUrl}/api/v1/users/update-user-by-super-user/${userId}`, userData, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+}
+
 export const updateTeacherProfileAndCustomLocalityApi = async (fullname: string, username: string, birthday: string,
     gender: string, custom_locality_name: string, custom_school_name: string, yearsOfExperience: string, phone: string,
     email: string, avatar?: string, phone_e164?: string) => {

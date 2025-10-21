@@ -65,7 +65,6 @@ const UsersPage: React.FC<UsersPageProps> = ({ userType }) => {
     <div className="space-y-6">
       <UsersTable 
         users={users} 
-        onRefresh={handleRefresh} 
         userType={userType}
       />
     </div>
