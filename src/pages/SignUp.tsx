@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button, Input, PasswordInput, Logo } from '../components/ui';
 import type { AuthFormData } from '../types';
+import { supabaseSignUp } from '../apis/SupabaseAuth';
 import { toast } from 'sonner';
 import { signupApi } from '../apis/Users';
 
@@ -57,17 +58,19 @@ const SignUp: React.FC = () => {
         return;
       }
 
-      // Single request to backend that handles both Supabase signup and user registration
-      const signupResponse = await signupApi(email, password, role);
-      
+      const signupResponse = await supabaseSignUp(email, password, role);
       if (!signupResponse.success) {
         throw new Error(signupResponse.message);
       } else {
+        const signupUserTableResponse = await signupApi(email, role);
+        if (!signupUserTableResponse.success) {
+          throw new Error(signupUserTableResponse.message);
+        }
         toast.success('Account created successfully!');
         navigate('/email-verification', { state: { email } });
       }
     } catch (error: any) {
-      toast.warning(error.message);
+      toast.error(error.message);
     } finally {
       setIsLoading(false);
     }

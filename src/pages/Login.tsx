@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button, Input, PasswordInput, Logo } from '../components/ui';
 import type { AuthFormData } from '../types';
 import { loginApiHandler } from '../apis/Users';
+import { supabaseSignIn } from '../apis/SupabaseAuth';
 import { toast } from 'sonner';
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -47,14 +48,14 @@ const Login: React.FC = () => {
         setIsLoading(false);
         return;
       }
-      console.time("login");
+      console.time("login");  
+      const supabaseLoginResponse = await supabaseSignIn(email, password);
       const loginResponse = await loginApiHandler(email, password);
-      console.log(loginResponse)
       console.timeEnd("login")
 
       if (loginResponse.success) {
         toast.success(loginResponse.message);
-        localStorage.setItem('token', loginResponse.data.token);
+        localStorage.setItem('token', supabaseLoginResponse.data?.session?.access_token || '');
         localStorage.setItem('userId', loginResponse.data.userId);
         localStorage.setItem('userRole', loginResponse.data.userRole);
         localStorage.setItem('global_role', loginResponse.data.global_role);
