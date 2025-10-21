@@ -49,6 +49,7 @@ const Login: React.FC = () => {
       }
       console.time("login");
       const loginResponse = await loginApiHandler(email, password);
+      console.log(loginResponse)
       console.timeEnd("login")
 
       if (loginResponse.success) {
