@@ -62,13 +62,7 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   const handleHomeClick = () => {
-    // Check if user is an organiser
-    // const organiserId = localStorage.getItem('organiserId');
-    // if (organiserId) {
-    //   navigate('/organiser');
-    // } else {
     navigate('/home');
-    // }
   };
 
   const handleOrganiserClick = () => {

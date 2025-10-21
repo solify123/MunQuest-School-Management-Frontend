@@ -7,55 +7,55 @@
     "@supabase/supabase-js": {
       "src": "../../node_modules/@supabase/supabase-js/dist/module/index.js",
       "file": "@supabase_supabase-js.js",
-      "fileHash": "a5aabd6f",
+      "fileHash": "c949ae82",
       "needsInterop": false
     },
     "axios": {
       "src": "../../node_modules/axios/index.js",
       "file": "axios.js",
-      "fileHash": "2b28cdb0",
+      "fileHash": "72378f55",
       "needsInterop": false
     },
     "jwt-decode": {
       "src": "../../node_modules/jwt-decode/build/esm/index.js",
       "file": "jwt-decode.js",
-      "fileHash": "d420c499",
+      "fileHash": "7e99f298",
       "needsInterop": false
     },
     "react": {
       "src": "../../node_modules/react/index.js",
       "file": "react.js",
-      "fileHash": "5b32042c",
+      "fileHash": "ab32c229",
       "needsInterop": true
     },
     "react-dom/client": {
       "src": "../../node_modules/react-dom/client.js",
       "file": "react-dom_client.js",
-      "fileHash": "e0865bd7",
+      "fileHash": "0d5ea6a9",
       "needsInterop": true
     },
     "react-router-dom": {
       "src": "../../node_modules/react-router-dom/dist/index.mjs",
       "file": "react-router-dom.js",
-      "fileHash": "1ded8044",
+      "fileHash": "d8d852b0",
       "needsInterop": false
     },
     "socket.io-client": {
       "src": "../../node_modules/socket.io-client/build/esm/index.js",
       "file": "socket__io-client.js",
-      "fileHash": "d5cbcc1a",
+      "fileHash": "c2bc40af",
       "needsInterop": false
     },
     "sonner": {
       "src": "../../node_modules/sonner/dist/index.mjs",
       "file": "sonner.js",
-      "fileHash": "26963b75",
+      "fileHash": "71748202",
       "needsInterop": false
     },
     "uuid": {
       "src": "../../node_modules/uuid/dist/index.js",
       "file": "uuid.js",
-      "fileHash": "6f5d6a2d",
+      "fileHash": "ebfb2690",
       "needsInterop": false
     }
   },

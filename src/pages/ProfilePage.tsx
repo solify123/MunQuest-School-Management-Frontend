@@ -12,8 +12,8 @@ import { clearUserAvatar } from '../utils/avatarUtils';
 import PageLoader from '../components/PageLoader';
 
 // Import default avatars
-import StudentAvatar from '../assets/student.png';
-import TeacherAvatar from '../assets/teacher.png';
+import StudentAvatar from '../assets/default_student.png';
+import TeacherAvatar from '../assets/default_teacher.png';
 import { useApp } from '../contexts/AppContext';
 
 interface ProfileData {
@@ -82,7 +82,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
     const getUserById = async () => {
       const user = await getUserByIdApi();
 
-      console.log('user', user);
       const userData = {
         ...user.data,
         // Map API fields to UI fields
