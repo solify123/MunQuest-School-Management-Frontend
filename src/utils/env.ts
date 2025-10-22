@@ -6,12 +6,17 @@ export const getFrontendUrl = (): string => {
     return envUrl;
   }
   
-  // Fallback to window.location.origin for development
+  // For Vercel deployment, use the Vercel URL
   if (typeof window !== 'undefined') {
-    return window.location.origin;
+    const origin = window.location.origin;
+    // Check if we're on Vercel (vercel.app domain)
+    if (origin.includes('vercel.app') || origin.includes('munquest.com')) {
+      return origin;
+    }
+    return origin;
   }
   
-  // Default fallback
+  // Default fallback for development
   return 'http://localhost:5173';
 };
 
