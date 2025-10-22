@@ -80,13 +80,13 @@ const Login: React.FC = () => {
           if (hasProfile) {
             navigate('/home');
           } else {
-            navigate('/profile');
+            navigate('/student-profile-page');
           }
         } else {
           if (hasProfile) {
             navigate('/home');
           } else {
-            navigate('/profile');
+            navigate('/teacher-profile-page');
           }
         }
       }

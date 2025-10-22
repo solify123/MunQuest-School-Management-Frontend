@@ -186,7 +186,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
 
   // Delete confirmation modal state
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
-  
+
   // Loading states for buttons
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
@@ -562,30 +562,36 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
             type="text"
             value={displayValue}
             onChange={(e) => handleFieldChange(field, e.target.value)}
-            disabled={!isEditingThisField}
+            disabled={!isEditingThisField || !!displayValue}
             className={`w-[400px] px-4 py-3 border rounded-lg text-sm bg-white focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${isEditingThisField ? 'border-[#1E395D]' : 'border-gray-300 bg-gray-50'
               }`}
             placeholder={`Enter ${label.toLowerCase()}`}
           />
-          {!isEditingThisField && (
-            <button
-              onClick={() => handleEditField(field, value)}
-              className="absolute top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              style={{ right: '36.75rem' }}
-            >
-              <img src={EditIcon} alt="Edit" className="w-4 h-4" />
-            </button>
-          )}
-          {isEditingThisField && (
-            <div className="absolute top-1/2 transform -translate-y-1/2 flex space-x-2" style={{ right: '35rem' }}>
-              <button
-                onClick={handleCancelEdit}
-                className="text-red-600 hover:text-red-800 text-sm font-medium mr-2"
-              >
-                ✕
-              </button>
-            </div>
-          )}
+          {
+            !displayValue && (
+              <>
+                {!isEditingThisField && (
+                  <button
+                    onClick={() => handleEditField(field, value)}
+                    className="absolute top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    style={{ right: '36.75rem' }}
+                  >
+                    <img src={EditIcon} alt="Edit" className="w-4 h-4" />
+                  </button>
+                )}
+                {isEditingThisField && (
+                  <div className="absolute top-1/2 transform -translate-y-1/2 flex space-x-2" style={{ right: '35rem' }}>
+                    <button
+                      onClick={handleCancelEdit}
+                      className="text-red-600 hover:text-red-800 text-sm font-medium mr-2"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
+              </>
+            )
+          }
         </div>
 
         {isEditingThisField && tempValue && (
@@ -1116,7 +1122,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
   const profileDataHandlerEdit = async () => {
     try {
       setIsSaving(true);
-      
+
       // Validate custom fields when "Other" is selected
       if (locality === 'Other') {
         if (!customLocality.trim()) {
@@ -1367,11 +1373,10 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
                     <button
                       onClick={handlePasswordChange}
                       disabled={isChangingPassword}
-                      className={`px-4 py-2 text-white rounded-lg text-sm transition-colors ${
-                        isChangingPassword 
-                          ? 'bg-gray-400 cursor-not-allowed' 
-                          : 'bg-[#D9C7A1] hover:bg-[#C2A46D]'
-                      }`}
+                      className={`px-4 py-2 text-white rounded-lg text-sm transition-colors ${isChangingPassword
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-[#D9C7A1] hover:bg-[#C2A46D]'
+                        }`}
                     >
                       {isChangingPassword ? (
                         <>
@@ -1389,11 +1394,10 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
                         setConfirmPassword('');
                       }}
                       disabled={isChangingPassword}
-                      className={`px-4 py-2 rounded-lg text-sm transition-colors ${
-                        isChangingPassword 
-                          ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
-                          : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
-                      }`}
+                      className={`px-4 py-2 rounded-lg text-sm transition-colors ${isChangingPassword
+                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                        : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
+                        }`}
                     >
                       Cancel
                     </button>
@@ -1407,9 +1411,8 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
               <button
                 onClick={handleDeleteAccountClick}
                 disabled={isDeleting}
-                className={`mb-2 underline ${
-                  isDeleting ? 'cursor-not-allowed text-gray-400' : 'cursor-pointer'
-                }`}
+                className={`mb-2 underline ${isDeleting ? 'cursor-not-allowed text-gray-400' : 'cursor-pointer'
+                  }`}
                 style={{
                   color: isDeleting ? '#9CA3AF' : '#000',
                   fontSize: '16px',
@@ -1430,11 +1433,10 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
                   profileDataHandlerEdit();
                 }}
                 disabled={isSaving}
-                className={`text-white font-medium transition-all ${
-                  isSaving 
-                    ? 'bg-gray-400 cursor-not-allowed' 
-                    : 'bg-[#D9C7A1] hover:bg-[#C2A46D]'
-                }`}
+                className={`text-white font-medium transition-all ${isSaving
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-[#D9C7A1] hover:bg-[#C2A46D]'
+                  }`}
                 style={{
                   display: 'flex',
                   width: '120px',
