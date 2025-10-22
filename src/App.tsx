@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import PrivateRoute from './components/PrivateRoute';
 import { AppProvider } from './contexts/AppContext';
@@ -8,6 +8,7 @@ import SignUp from './pages/SignUp';
 import Login from './pages/Login';
 import EmailVerification from './pages/EmailVerification';
 import EmailConfirmationRedirect from './pages/EmailConfirmationRedirect';
+import RootRedirect from './pages/RootRedirect';
 import TestEmailConfirmation from './pages/TestEmailConfirmation';
 import HomePage from './pages/HomePage';
 import Dashboard from './pages/Dashboard';
@@ -43,7 +44,7 @@ function App() {
             <div className="App">
               <Routes>
               {/* Public Routes - No authentication required */}
-              <Route path="/" element={<Navigate to="/login" replace />} />
+              <Route path="/" element={<RootRedirect />} />
               <Route path="/signup" element={<SignUp />} />
               <Route path="/login" element={<Login />} />
               <Route path="/email-verification" element={<EmailVerification />} />

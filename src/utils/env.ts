@@ -4,12 +4,21 @@ export const getBackendUrl = (): string => {
 
 // Email confirmation redirect URL
 export const getEmailConfirmationUrl = (): string => {
-  let url =
-    process?.env?.VITE_FRONTEND_URL ?? // Set this to your site URL in production env.
-    'https://www.munquest.com/email-confirmation/'
-  // Make sure to include `https://` when not localhost.
-  url = url.startsWith('http') ? url : `https://${url}`
-  // Make sure to include a trailing `/`.
-  url = url.endsWith('/') ? url : `${url}/`
-  return url
+  // Check for environment variable first
+  const envUrl = import.meta.env.VITE_FRONTEND_URL;
+  
+  if (envUrl) {
+    // If environment variable is set, use it
+    const url = envUrl.endsWith('/') ? envUrl.slice(0, -1) : envUrl;
+    return `${url}/email-confirmation`;
+  }
+  
+  // For development, detect the current URL
+  if (typeof window !== 'undefined') {
+    const origin = window.location.origin;
+    return `${origin}/email-confirmation`;
+  }
+  
+  // Fallback for production
+  return 'https://www.munquest.com/email-confirmation';
 };
