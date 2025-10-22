@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { getEmailConfirmationUrl } from '../utils/env';
 
 export const supabaseSignUp = async (email: string, password: string, role: string) => {
   try {
@@ -6,7 +7,7 @@ export const supabaseSignUp = async (email: string, password: string, role: stri
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/email-confirmation`,
+        emailRedirectTo: getEmailConfirmationUrl(),
         data: {
           role: role
         }

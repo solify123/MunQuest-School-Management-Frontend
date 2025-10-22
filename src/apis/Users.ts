@@ -1,5 +1,7 @@
 import axios from 'axios';
-const backendUrl = import.meta.env.VITE_BACKEND_URL;
+import { getBackendUrl } from '../utils/env';
+
+const backendUrl = getBackendUrl();
 
 export const signupApi = async (email: string, role: string) => {
     try {
