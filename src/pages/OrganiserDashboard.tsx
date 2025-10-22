@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Header, UnsavedChangesModal } from '../components/ui';
 import { toast } from 'sonner';
 import { eventImagefileUploadApi, getEventByIdApi, updateEventApi } from '../apis/Events';
+import { getAllEventCommitteesApi } from '../apis/Event_committes';
+import { useApp } from '../contexts/AppContext';
 import PageLoader from '../components/PageLoader';
 import {
   DashboardPage,
@@ -40,6 +42,42 @@ const OrganiserDashboard: React.FC = () => {
   const [totalRevenue, setTotalRevenue] = useState('');
   const [isUploadingCoverImage, setIsUploadingCoverImage] = useState<boolean>(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  
+  // Committee and registration data for dashboard
+  const [committees, setCommittees] = useState<any[]>([]);
+  const [registrations, setRegistrations] = useState<any[]>([]);
+  const { allRegistrations, refreshRegistrationsData } = useApp();
+  
+  // Fetch committee and registration data for dashboard
+  const fetchDashboardData = async () => {
+    if (!eventId) return;
+    
+    try {
+      // Fetch committees
+      const committeesResponse = await getAllEventCommitteesApi(eventId);
+      if (committeesResponse.success) {
+        const normalizedCommittees = committeesResponse.data.map((item: any) => {
+          const master = item && typeof item.committee === 'object' ? item.committee : null;
+          return {
+            id: String(item.id),
+            committee: master ? (master.committee ?? master.name ?? '') : (item.committee ?? ''),
+            abbr: master ? (master.abbr ?? item.abbr ?? '') : (item.abbr ?? ''),
+            category: master ? master.category : item.category || 'country',
+            seatsTotal: String(item.seats ?? item.seatsTotal ?? '0'),
+            committeeId: master ? master.id : (item.committee_id ?? item.committeeId ?? undefined)
+          };
+        });
+        setCommittees(normalizedCommittees);
+      }
+      
+      // Fetch registrations using the context
+      await refreshRegistrationsData(eventId);
+    } catch (error: any) {
+      console.log('Error fetching dashboard data:', error);
+      toast.error('Failed to load dashboard data');
+    }
+  };
+  
   // Editing states
   const [editingField, setEditingField] = useState<string | null>(null);
   const [tempValue, setTempValue] = useState<string>('');
@@ -120,6 +158,16 @@ const OrganiserDashboard: React.FC = () => {
     };
     getCurrentEvents();
   }, [eventId, navigate]);
+
+  // Fetch dashboard data when eventId changes
+  useEffect(() => {
+    fetchDashboardData();
+  }, [eventId]);
+
+  // Update registrations when allRegistrations changes
+  useEffect(() => {
+    setRegistrations(allRegistrations || []);
+  }, [allRegistrations]);
 
   const handleStepChange = (step: string) => {
     // Check if there are unsaved changes and we're not already on the event-details page
@@ -407,6 +455,8 @@ const OrganiserDashboard: React.FC = () => {
         feesPerDelegate={feesPerDelegate}
         numberOfSeats={numberOfSeats}
         totalRevenue={totalRevenue}
+        committees={committees}
+        registrations={registrations}
       />
     );
   };

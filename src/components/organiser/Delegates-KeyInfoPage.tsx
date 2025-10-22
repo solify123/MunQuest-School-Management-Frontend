@@ -50,7 +50,6 @@ const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange, onAct
     const { eventId } = useParams();
     const navigate = useNavigate();
     const { allRegistrations, refreshRegistrationsData, allCommittees, allCountries } = useApp();
-
     // Handle committee assignment update
     const handleCommitteeAssignment = async (delegateId: number, committeeId: string, committeeName: string) => {
         try {
