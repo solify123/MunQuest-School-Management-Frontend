@@ -66,11 +66,13 @@ const Login: React.FC = () => {
         localStorage.setItem('userId', loginResponse.data.userId);
         localStorage.setItem('userRole', loginResponse.data.userRole);
         localStorage.setItem('global_role', loginResponse.data.global_role);
+        localStorage.setItem('organiserId', loginResponse.data.organiserId || '');
       } else {
         toast.error(loginResponse.message);
       }
 
       const { userRole, global_role, organiserId, hasProfile } = loginResponse.data;
+      console.log("loginResponse.data", loginResponse.data);
       if (global_role === 'superuser') {
         navigate('/super-user');
       } else {

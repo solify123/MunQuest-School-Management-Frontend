@@ -743,6 +743,7 @@ const DelegatesAllocationPage: React.FC<DelegatesAllocationPageProps> = ({onActi
     // Sub-tab abbreviations by committee type
     const committeeAbbreviations = useMemo(() => {
         const filtered = allCommitteesData.filter(c => c.category === activeCommitteeType);
+        let totalAssigned = 0;
         // Calculate assigned counts for each committee
         const committeesWithCounts = filtered.map(committee => {
             const assignedCount = delegates.filter(delegate => {
@@ -750,7 +751,7 @@ const DelegatesAllocationPage: React.FC<DelegatesAllocationPageProps> = ({onActi
                 const committeeAbbr = allCommittees.find(c => c.id === delegate.assignedCommittees)?.abbr;
                 return committeeAbbr === committee.abbr;
             }).length;
-            
+            totalAssigned += assignedCount;
             return {
                 ...committee,
                 assignedCount
@@ -758,7 +759,7 @@ const DelegatesAllocationPage: React.FC<DelegatesAllocationPageProps> = ({onActi
         });
         
         // Add FULL LIST option
-        const totalAssigned = delegates.filter(d => d.assignedCommittees).length;
+        // const totalAssigned = delegates.filter(d => d.assignedCommittees).length;
         return [
             ...committeesWithCounts,
             {
@@ -766,7 +767,7 @@ const DelegatesAllocationPage: React.FC<DelegatesAllocationPageProps> = ({onActi
                 abbr: 'FULL',
                 committee: 'Full',
                 category: activeCommitteeType,
-                seats: delegates.length,
+                seats: filtered.reduce((sum, committee) => sum + parseInt(committee.seats || '0'), 0),
                 assignedCount: totalAssigned
             }
         ];
