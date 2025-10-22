@@ -38,6 +38,7 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
   const [inviteEmail, setInviteEmail] = useState<string>('');
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isSendingInvite, setIsSendingInvite] = useState<boolean>(false);
   const [showNameDropdown, setShowNameDropdown] = useState<boolean>(false);
   const [showEmailDropdown, setShowEmailDropdown] = useState<boolean>(false);
   const [filteredUsersForName, setFilteredUsersForName] = useState<any[]>([]);
@@ -181,6 +182,7 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
 
   // Handle name input change
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (isSendingInvite) return;
     const value = e.target.value;
     setInviteName(value);
     filterUsersForName(value);
@@ -189,6 +191,7 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
 
   // Handle email input change
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (isSendingInvite) return;
     const value = e.target.value;
     setInviteEmail(value);
     filterUsersForEmail(value);
@@ -252,20 +255,23 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
       return;
     }
 
+    setIsSendingInvite(true);
     try {
       const response = await sendSuperUserInviteApi(inviteName, inviteEmail);
       if (response.success) {
         toast.success(response.message);
         await refreshUserData();
+        setInviteName('');
+        setInviteEmail('');
+        setShowInviteForm(false);
       } else {
         toast.error(response.message);
       }
-      setInviteName('');
-      setInviteEmail('');
-      setShowInviteForm(false);
     } catch (error) {
       console.log('Error sending invite:', error);
       toast.error('Failed to send invitation');
+    } finally {
+      setIsSendingInvite(false);
     }
   };
 
@@ -645,7 +651,15 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
       {isSuperUser && (
         <div className="mt-6">
           <button
-            onClick={() => setShowInviteForm(!showInviteForm)}
+            onClick={() => {
+              setShowInviteForm(!showInviteForm);
+              if (!showInviteForm) {
+                // Reset form when opening
+                setInviteName('');
+                setInviteEmail('');
+                setIsSendingInvite(false);
+              }
+            }}
             className="px-6 py-3 bg-[#C4A35A] hover:bg-[#B8973F] text-white font-medium rounded-[20px] transition-colors duration-200 shadow-md"
           >
             Invite a Superuser
@@ -666,11 +680,14 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
                     value={inviteName}
                     onChange={handleNameChange}
                     placeholder="E.g. Ivy Grace Turner"
-                    className="w-full px-4 py-2 border border-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-[#C4A35A] focus:border-transparent text-gray-700"
+                    disabled={isSendingInvite}
+                    className={`w-full px-4 py-2 border border-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-[#C4A35A] focus:border-transparent text-gray-700 ${
+                      isSendingInvite ? 'bg-gray-100 cursor-not-allowed' : ''
+                    }`}
                   />
                   
                   {/* Name Dropdown */}
-                  {showNameDropdown && filteredUsersForName.length > 0 && (
+                  {showNameDropdown && filteredUsersForName.length > 0 && !isSendingInvite && (
                     <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-hidden">
                       <div className="max-h-48 overflow-y-auto">
                         {filteredUsersForName.map((user: any) => (
@@ -702,11 +719,14 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
                     value={inviteEmail}
                     onChange={handleEmailChange}
                     placeholder="E.g. ivy.grace@example.com"
-                    className="w-full px-4 py-2 border border-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-[#C4A35A] focus:border-transparent text-gray-700"
+                    disabled={isSendingInvite}
+                    className={`w-full px-4 py-2 border border-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-[#C4A35A] focus:border-transparent text-gray-700 ${
+                      isSendingInvite ? 'bg-gray-100 cursor-not-allowed' : ''
+                    }`}
                   />
                   
                   {/* Email Dropdown */}
-                  {showEmailDropdown && filteredUsersForEmail.length > 0 && (
+                  {showEmailDropdown && filteredUsersForEmail.length > 0 && !isSendingInvite && (
                     <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-hidden">
                       <div className="max-h-48 overflow-y-auto">
                         {filteredUsersForEmail.map((user: any) => (
@@ -731,9 +751,21 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
                 {/* Send Invite Button */}
                 <button
                   onClick={handleSendInvite}
-                  className="w-[150px] px-6 py-3 bg-[#7FB539] hover:bg-[#6FA329] text-white font-semibold rounded-[20px]"
+                  disabled={isSendingInvite}
+                  className={`w-[150px] px-6 py-3 text-white font-semibold rounded-[20px] transition-colors duration-200 ${
+                    isSendingInvite 
+                      ? 'bg-gray-400 cursor-not-allowed' 
+                      : 'bg-[#7FB539] hover:bg-[#6FA329]'
+                  }`}
                 >
-                  Send Invite
+                  {isSendingInvite ? (
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Sending...
+                    </div>
+                  ) : (
+                    'Send Invite'
+                  )}
                 </button>
               </div>
             </div>
