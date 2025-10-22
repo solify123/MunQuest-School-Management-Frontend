@@ -28,6 +28,15 @@ export const getUserIdByEmailApi = async (email: string) => {
     }
 };
 
+export const getUserDataByEmailApi = async (email: string) => {
+    try {
+        const response = await axios.post(`${backendUrl}/api/v1/users/get-userid-by-email`, { email });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+};
+
 export const loginApi = async (email: string, password: string) => {
     try {
         const response = await axios.post(`${backendUrl}/api/v1/users/login`, { email, password });
