@@ -19,8 +19,6 @@ const NotificationBell: React.FC = () => {
   const notificationBellRef = useRef<HTMLDivElement>(null);
   const [allNotifications, setAllNotifications] = useState<NotificationData[]>([]);
 
-  const unreadCount = notifications.filter(n => !n.read).length;
-
   const clearAllNotifications = () => {
     setAllNotifications([]);
   };
