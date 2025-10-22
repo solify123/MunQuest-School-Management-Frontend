@@ -63,7 +63,6 @@ const TeachersPage: React.FC = () => {
     <div className="space-y-6">
       <UsersTable 
         users={users} 
-        onRefresh={handleRefresh} 
         userType="teacher"
       />
     </div>

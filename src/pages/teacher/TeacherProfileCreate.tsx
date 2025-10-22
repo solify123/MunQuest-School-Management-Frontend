@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Logo } from '../../components/ui';
 import { toast } from 'sonner';
 import { teacherProfileApi, updateTeacherProfileAndCustomLocalityApi, updateTeacherProfileCustomSchoolNameApi } from '../../apis/Users';
 import { useNavigate } from 'react-router-dom';

@@ -17,7 +17,7 @@ const TestEmailConfirmation: React.FC = () => {
       setResult(response);
     } catch (error) {
       console.error('API Error:', error);
-      setResult({ error: error.message });
+      setResult({ error: (error as Error).message });
     } finally {
       setLoading(false);
     }
