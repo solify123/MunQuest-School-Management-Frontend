@@ -409,10 +409,10 @@ export const updateStudentProfileCustomSchoolNameApi = async (
     }
 }
 
-export const sendSuperUserInviteApi = async (userame: string, email: string) => {
+export const sendSuperUserInviteApi = async (username: string, email: string) => {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.patch(`${backendUrl}/api/v1/users/send-superuser-invite`, { userame, email }, {
+        const response = await axios.patch(`${backendUrl}/api/v1/users/send-superuser-invite`, { username, email }, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
