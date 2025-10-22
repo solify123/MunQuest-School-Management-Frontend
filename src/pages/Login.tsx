@@ -71,15 +71,15 @@ const Login: React.FC = () => {
           navigate('/organiser');
         } else if (userRole === 'student') {
           if (hasProfile) {
-            navigate('/student-home');
+            navigate('/home');
           } else {
-            navigate('/student-profile');
+            navigate('/profile');
           }
         } else {
           if (hasProfile) {
-            navigate('/teacher-home');
+            navigate('/home');
           } else {
-            navigate('/teacher-profile');
+            navigate('/profile');
           }
         }
       }
