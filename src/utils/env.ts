@@ -6,7 +6,7 @@ export const getBackendUrl = (): string => {
 export const getEmailConfirmationUrl = (): string => {
   let url =
     process?.env?.VITE_FRONTEND_URL ?? // Set this to your site URL in production env.
-    'http://localhost:5173/'
+    'https://www.munquest.com/email-confirmation'
   // Make sure to include `https://` when not localhost.
   url = url.startsWith('http') ? url : `https://${url}`
   // Make sure to include a trailing `/`.
