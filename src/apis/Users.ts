@@ -10,7 +10,25 @@ export const signupApi = async (email: string, role: string) => {
     }
 };
 
+export const loginApiHandler = async (email: string, password: string) => {
+    try {
+        const response = await axios.post(`${backendUrl}/api/v1/users/login`, { email, password });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+};
+
 export const getUserIdByEmailApi = async (email: string) => {
+    try {
+        const response = await axios.post(`${backendUrl}/api/v1/users/get-userid-by-email`, { email });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+};
+
+export const getUserDataByEmailApi = async (email: string) => {
     try {
         const response = await axios.post(`${backendUrl}/api/v1/users/get-userid-by-email`, { email });
         return response.data;
@@ -400,10 +418,10 @@ export const updateStudentProfileCustomSchoolNameApi = async (
     }
 }
 
-export const sendSuperUserInviteApi = async (userame: string, email: string) => {
+export const sendSuperUserInviteApi = async (username: string, email: string) => {
     try {
         const token = localStorage.getItem('token');
-        const response = await axios.patch(`${backendUrl}/api/v1/users/send-superuser-invite`, { userame, email }, {
+        const response = await axios.patch(`${backendUrl}/api/v1/users/send-superuser-invite`, { username, email }, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }

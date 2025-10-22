@@ -2,11 +2,9 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button, Input, PasswordInput, Logo } from '../components/ui';
 import type { AuthFormData } from '../types';
-import { toast } from 'sonner';
+import { loginApiHandler } from '../apis/Users';
 import { supabaseSignIn } from '../apis/SupabaseAuth';
-import { checkUserProfileExists } from '../utils/profileCheck';
-import { getUserIdByEmailApi } from '../apis/Users';
-import { verifyOrganiserApi } from '../apis/Organisers';
+import { toast } from 'sonner';
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -50,40 +48,22 @@ const Login: React.FC = () => {
         setIsLoading(false);
         return;
       }
+      console.time("login");  
+      const supabaseLoginResponse = await supabaseSignIn(email, password);
+      const loginResponse = await loginApiHandler(email, password);
+      console.timeEnd("login")
 
-      const loginResponse = await supabaseSignIn(email, password);
-
-      if (!loginResponse.success) {
-        throw new Error(loginResponse.message);
-      }
-      const getUserIdByEmailResponse = await getUserIdByEmailApi(email);
-      if (getUserIdByEmailResponse.success) {
-        localStorage.setItem('userId', getUserIdByEmailResponse.user.id);
-        localStorage.setItem('userRole', getUserIdByEmailResponse.user.role);
-        localStorage.setItem('global_role', getUserIdByEmailResponse.user.global_role);
-        const organiserResponse = await verifyOrganiserApi();
-        console.log(organiserResponse)
-        if (organiserResponse.success) {
-          localStorage.setItem('organiserId', organiserResponse.data.id);
-        }
-      }
-      else {
-        throw new Error(getUserIdByEmailResponse.message);
-      }
-      toast.success('Login successful');
-      // Store Supabase JWT token in localStorage
-      if (loginResponse.data?.session?.access_token) {
-        localStorage.setItem('token', loginResponse.data.session.access_token);
+      if (loginResponse.success) {
+        toast.success(loginResponse.message);
+        localStorage.setItem('token', supabaseLoginResponse.data?.session?.access_token || '');
+        localStorage.setItem('userId', loginResponse.data.userId);
+        localStorage.setItem('userRole', loginResponse.data.userRole);
+        localStorage.setItem('global_role', loginResponse.data.global_role);
       } else {
-        throw new Error(loginResponse.message);
+        toast.error(loginResponse.message);
       }
 
-      const userRole = localStorage.getItem('userRole') || 'student';
-      const organiserId = localStorage.getItem('organiserId');
-      const global_role = localStorage.getItem('global_role');
-      const hasProfile = await checkUserProfileExists();
-
-      // Check if user is an organiser first
+      const { userRole, global_role, organiserId, hasProfile } = loginResponse.data;
       if (global_role === 'superuser') {
         navigate('/super-user');
       } else {

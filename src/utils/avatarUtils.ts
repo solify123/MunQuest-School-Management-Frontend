@@ -1,10 +1,8 @@
-import { jwtDecode } from 'jwt-decode';
-import type { CustomJwtPayload } from '../types';
 import { getUserByIdApi } from '../apis/Users';
 
 // Import default avatars
-import StudentAvatar from '../assets/student.png';
-import TeacherAvatar from '../assets/teacher.png';
+import StudentAvatar from '../assets/default_student.png';
+import TeacherAvatar from '../assets/default_teacher.png';
 
 export const getDefaultAvatar = (userType: string): string => {
   return userType === 'student' ? StudentAvatar : TeacherAvatar;
@@ -40,11 +38,10 @@ export const getUserAvatar = async (): Promise<string> => {
       return userResponse.data.avatar;
     }
 
-    // If no avatar from API, get user type and return default
-    const token = localStorage.getItem('token');
-    if (token) {
-      const decodedToken = jwtDecode<CustomJwtPayload>(token);
-      return getDefaultAvatar(decodedToken.role);
+    // If no avatar from API, get user type from localStorage and return default
+    const userRole = localStorage.getItem('userRole');
+    if (userRole) {
+      return getDefaultAvatar(userRole);
     }
 
     // Fallback to student avatar

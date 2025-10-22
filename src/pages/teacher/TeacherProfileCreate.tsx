@@ -5,6 +5,7 @@ import { teacherProfileApi, updateTeacherProfileAndCustomLocalityApi, updateTeac
 import { useNavigate } from 'react-router-dom';
 import { generateUsername } from '../../utils/usernameGenerator';
 import PageLoader from '../../components/PageLoader';
+import Header from '../../components/Header';
 import { useApp } from '../../contexts/AppContext';
 
 type Step = 'personal' | 'school' | 'contact' | 'success';
@@ -575,11 +576,7 @@ const TeacherProfile: React.FC = () => {
     <PageLoader loadingText="Loading Teacher Profile...">
       <div className="min-h-screen" style={{ backgroundColor: '#F8F8F8' }}>
         {/* Header */}
-        <div className="shadow-sm">
-          <div className="max-w-4xl px-6 py-4">
-            <Logo size="medium" />
-          </div>
-        </div>
+        <Header />
 
         {/* Main Content */}
         <div className="max-w-4xl mx-auto px-6 py-8">

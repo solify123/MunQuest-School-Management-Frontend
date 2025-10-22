@@ -6,6 +6,7 @@ export const supabaseSignUp = async (email: string, password: string, role: stri
       email,
       password,
       options: {
+        emailRedirectTo: `${window.location.origin}/email-confirmation`,
         data: {
           role: role
         }

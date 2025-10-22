@@ -7,6 +7,8 @@ import { NotificationProvider } from './contexts/NotificationContext';
 import SignUp from './pages/SignUp';
 import Login from './pages/Login';
 import EmailVerification from './pages/EmailVerification';
+import EmailConfirmationRedirect from './pages/EmailConfirmationRedirect';
+import TestEmailConfirmation from './pages/TestEmailConfirmation';
 import HomePage from './pages/HomePage';
 import Dashboard from './pages/Dashboard';
 import RequestApproval from './pages/RequestApproval';
@@ -45,6 +47,8 @@ function App() {
               <Route path="/signup" element={<SignUp />} />
               <Route path="/login" element={<Login />} />
               <Route path="/email-verification" element={<EmailVerification />} />
+              <Route path="/email-confirmation" element={<EmailConfirmationRedirect />} />
+              <Route path="/test-email-confirmation" element={<TestEmailConfirmation />} />
               <Route path="/profile-page" element={<PrivateRoute><ProfilePage userType="student" /></PrivateRoute>} />
 
               {/* Protected Routes - Authentication required */}

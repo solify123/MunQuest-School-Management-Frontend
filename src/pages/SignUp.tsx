@@ -59,7 +59,6 @@ const SignUp: React.FC = () => {
       }
 
       const signupResponse = await supabaseSignUp(email, password, role);
-
       if (!signupResponse.success) {
         throw new Error(signupResponse.message);
       } else {

@@ -24,12 +24,19 @@ const Avatar: React.FC<AvatarProps> = ({
     try {
       setIsLoading(true);
       const avatar = await getUserAvatar();
-      setAvatarUrl(avatar);
+      if (avatar) {
+        setAvatarUrl(avatar);
+      } else {
+        // If no avatar returned, get default based on user type
+        const userType = localStorage.getItem('userRole') || 'student';
+        setAvatarUrl(getDefaultAvatar(userType));
+      }
       setLastAvatarCheck(Date.now());
     } catch (error) {
+      console.log('Error loading avatar:', error);
       // Fallback to default avatar
-      const userType = localStorage.getItem('userRole');
-      setAvatarUrl(getDefaultAvatar(userType || 'student'));
+      const userType = localStorage.getItem('userRole') || 'student';
+      setAvatarUrl(getDefaultAvatar(userType));
       setLastAvatarCheck(Date.now());
     } finally {
       setIsLoading(false);
@@ -115,7 +122,7 @@ const Avatar: React.FC<AvatarProps> = ({
       onClick={onClick}
     >
       <img
-        src={avatarUrl}
+        src={avatarUrl || getDefaultAvatar(localStorage.getItem('userRole') || 'student')}
         alt="User Avatar"
         className="w-full h-full rounded-full object-cover"
         onError={(e) => {
