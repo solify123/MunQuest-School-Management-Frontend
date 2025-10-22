@@ -21,8 +21,8 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
   const globalRole = (localStorage.getItem('global_role') || '').toLowerCase(); // 'superuser' | 'user'
 
   const roleHome = (role: string) => {
-    if (role === 'student') return '/student-home';
-    if (role === 'teacher') return '/teacher-home';
+    if (role === 'student') return '/home';
+    if (role === 'teacher') return '/home';
     if (role === 'organizer') return '/organiser';
     return '/home';
   };
