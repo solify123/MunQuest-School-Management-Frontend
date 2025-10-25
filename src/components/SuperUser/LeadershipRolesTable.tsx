@@ -44,7 +44,7 @@ const LeadershipRolesTable: React.FC<LeadershipRolesTableProps> = ({ leadershipR
       setFilteredRoles(filtered);
     }
   }, [searchTerm, leadershipRoles]);
-
+  
   const handleSaveNewRole = async () => {
     if (!newRole.abbr.trim() || !newRole.leadership_role.trim()) {
       toast.error('Please fill in all fields');
@@ -274,7 +274,6 @@ const LeadershipRolesTable: React.FC<LeadershipRolesTableProps> = ({ leadershipR
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          console.log('Edit button clicked');
                           handleEdit(role);
                         }}
                         className="block w-full text-left px-4 py-2 text-sm transition-colors duration-200 text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900"

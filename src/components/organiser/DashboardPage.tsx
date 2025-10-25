@@ -112,13 +112,6 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
   // Calculate allocation status data for individual committees
   const calculateAllocationStatus = () => {
-    console.log('📊 Allocation Status Debug:', {
-      committees: committees,
-      registrations: registrations,
-      sampleCommittee: committees,
-      sampleRegistration: registrations
-    });
-    
     return committees.map(committee => {
       // Count assigned delegates for this specific committee
       const assignedCount = registrations.filter(reg => {

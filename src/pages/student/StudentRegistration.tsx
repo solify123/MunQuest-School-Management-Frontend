@@ -4,7 +4,7 @@ import { Header, Avatar } from '../../components/ui';
 import { toast } from 'sonner';
 import { getUserByIdApi } from '../../apis/Users';
 import PageLoader from '../../components/PageLoader';
-import { eventRegistratStudentApi } from '../../apis/Registerations.ts';
+import { eventRegistratStudentApi } from '../../apis/Registerations';
 import { useApp } from '../../contexts/AppContext';
 import { getAllEventCommitteesApi } from '../../apis/Event_committes';
 type Step = 'personal' | 'mun' | 'food' | 'emergency';

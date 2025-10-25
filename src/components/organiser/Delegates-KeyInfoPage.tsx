@@ -140,11 +140,11 @@ const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange, onAct
             const mockDelegates: DelegateItem[] = allRegistrations
                 .map((registration: any) => ({
                     id: registration.id || 0,
-                    uniqueId: registration.user_id.slice(0, 6) || '',
-                    registrationId: registration.id.slice(0, 6) || '',
-                    name: registration.user.fullname || '',
-                    academicLevel: registration.user.grade || 'N/A',
-                    school: registration.user.school.name || '',
+                    uniqueId: registration.user_id?.slice(0, 6) || '',
+                    registrationId: String(registration.id || '').slice(0, 6) || '',
+                    name: registration.user?.fullname || 'Unknown',
+                    academicLevel: registration.user?.grade || 'N/A',
+                    school: registration.user?.school?.name || 'N/A',
                     munExperience: registration.mun_experience || 0,
 					preferredCommittees: [
 						registration.pref_committee_1?.abbr,
@@ -155,7 +155,8 @@ const DelegatesPage: React.FC<DelegatesPageProps> = ({ onSubSectionChange, onAct
                     assignedCountry: registration.assigned_country || null,
                     flag: registration.flag || null,
                     isLocked: true
-                }));
+                }))
+                .filter(delegate => delegate.name !== 'Unknown');
             setDelegates(mockDelegates);
         } else {
             setDelegates([]);

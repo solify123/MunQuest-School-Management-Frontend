@@ -4,7 +4,7 @@ import { useApp } from '../../contexts/AppContext';
 import { removeSuperUserInviteApi, sendSuperUserInviteApi, updateUserStatusApi } from '../../apis/Users';
 import { ConfirmationModal } from '../ui';
 import OrganiserIcon from '../../assets/organiser_icon.svg';
-import { assignOrganiserToSchoolApi } from '../../apis/Organisers';
+import { assignOrganiserToSchoolApi, removeOrganiserFromSchoolApi } from '../../apis/Organisers';
 
 interface GlobalUser {
   id: string;
@@ -72,12 +72,12 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
   // Filter users based on search term and superuser role
   useEffect(() => {
     let filteredByRole = users;
-    
+
     // If this is the superuser tab, only show users with global_role "superuser"
     if (isSuperUser) {
       filteredByRole = users.filter((user: any) => user?.global_role === 'superuser');
     }
-    
+
     if (!searchTerm.trim()) {
       setFilteredUsers(filteredByRole);
     } else {
@@ -134,23 +134,23 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
       setFilteredUsersForName([]);
       return;
     }
-    
+
     const filtered = allUsers.filter((user: any) => {
       // Exclude users who are already superusers
       if (user?.global_role === 'superuser') {
         return false;
       }
-      
+
       const searchLower = searchTerm.toLowerCase();
       const username = user?.username || '';
       const fullname = user?.fullname || '';
-      
+
       return (
         username.toLowerCase().includes(searchLower) ||
         fullname.toLowerCase().includes(searchLower)
       );
     });
-    
+
     setFilteredUsersForName(filtered.slice(0, 5)); // Limit to 5 suggestions
   };
 
@@ -160,23 +160,23 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
       setFilteredUsersForEmail([]);
       return;
     }
-    
+
     const filtered = allUsers.filter((user: any) => {
       // Exclude users who are already superusers
       if (user?.global_role === 'superuser') {
         return false;
       }
-      
+
       const searchLower = searchTerm.toLowerCase();
       const email = user?.email || '';
       const username = user?.username || '';
-      
+
       return (
         email.toLowerCase().includes(searchLower) ||
         username.toLowerCase().includes(searchLower)
       );
     });
-    
+
     setFilteredUsersForEmail(filtered.slice(0, 5)); // Limit to 5 suggestions
   };
 
@@ -360,8 +360,9 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
           { label: 'Student ID', span: 'col-span-1' },
           { label: 'Username', span: 'col-span-1' },
           { label: 'Name', span: 'col-span-1' },
+          { label: 'Email', span: 'col-span-1' },
           { label: 'Academic Level', span: 'col-span-1' },
-          { label: 'School', span: 'col-span-2' },
+          { label: 'School', span: 'col-span-1' },
           { label: 'MUN Experience', span: 'col-span-1' },
           { label: 'Global Role', span: 'col-span-1' },
           { label: 'User Status', span: 'col-span-1' },
@@ -373,13 +374,13 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
           ) : (
             <div
               key={header.label}
-              className={`${header.span} px-3 py-2 text-xs font-medium text-gray-900 uppercase tracking-wider rounded-md ${index < (isSuperUser ? 4 : 7)
+              className={`${header.span} px-3 py-2 text-xs font-medium text-gray-900 uppercase tracking-wider rounded-md ${index < (isSuperUser ? 4 : 8)
                 ? 'bg-[#C6DAF4] border border-[#4A5F7A] flex items-center justify-between'
                 : 'bg-[#C6DAF4] border border-[#4A5F7A] flex items-center'
                 }`}
             >
               <span>{header.label}</span>
-              {index < (isSuperUser ? 4 : 7) && (
+              {index < (isSuperUser ? 4 : 8) && (
                 <svg className="w-3 h-3 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
@@ -444,13 +445,18 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
                   {user?.fullname || 'N/A'}
                 </div>
 
+                {/* Email */}
+                <div className="col-span-1 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200 break-words">
+                  {user?.email || 'N/A'}
+                </div>
+
                 {/* Academic Level */}
                 <div className="col-span-1 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
                   {user?.academic_level || user?.grade || 'N/A'}
                 </div>
 
                 {/* School */}
-                <div className="col-span-2 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+                <div className="col-span-1 bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200 break-words">
                   {user?.school?.name || 'N/A'}
                 </div>
 
@@ -481,133 +487,35 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
                 </div>
               </div>
             ) : (
-            <div className="col-span-1 px-3 py-2 text-sm font-medium relative" >
-              <div className="relative flex items-center justify-left">
-                {isUserOrganiser(user?.id) && (
-                  <div className="ml-2">
-                    <img
-                      src={OrganiserIcon}
-                      alt="Organiser"
-                      className="w-5 h-5"
-                      title="This user is an organizer"
-                    />
-                  </div>
-                )}
-                <button
-                  onClick={() => handleDropdownToggle(user?.id || '')}
-                  className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                  </svg>
-                </button>
+              <div className="col-span-1 px-3 py-2 text-sm font-medium relative" >
+                <div className="relative flex items-center justify-left">
+                  {isUserOrganiser(user?.id) && (
+                    <div className="ml-2">
+                      <img
+                        src={OrganiserIcon}
+                        alt="Organiser"
+                        className="w-5 h-5"
+                        title="This user is an organizer"
+                      />
+                    </div>
+                  )}
+                  <button
+                    onClick={() => handleDropdownToggle(user?.id || '')}
+                    className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                    </svg>
+                  </button>
 
-                {activeDropdown === user?.id && (
-                  <div ref={dropdownRef} className="absolute top-full right-0 mt-1 w-48 bg-white rounded-md shadow-lg z-50 border-2">
-                    <div className="py-1">
-                      {isSuperUser ? (
-                        // Superusers section menu options
-                        <button
-                          onClick={() => {
-                            setActiveDropdown(null); // Close dropdown when delete modal is triggered
-                            setUserToDelete({ username: user?.username || '', email: user?.email || '' });
-                            setShowDeleteModal(true);
-                          }}
-                          disabled={updatingUserId === user?.id}
-                          className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingUserId === user?.id
-                            ? 'text-gray-400 cursor-not-allowed'
-                            : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
-                            }`}
-                        >
-                          Remove Super User
-                        </button>
-                      ) : (
-                        // Regular Users section menu options - dynamic based on current status
-                        <>
-                          <button
-                            onClick={async () => {
-                              setActiveDropdown(null);
-                              setIsLoading(true);
-                              setLoadingId(user?.id);
-                              const response = await assignOrganiserToSchoolApi(user?.id);
-                              if (response.success) {
-                                toast.success(response.message);
-                                await refreshUserData();
-                                onAction('assign-organiser', user?.id, user?.email);
-                                await refreshUserData();
-                              } else {
-                                toast.error(response.message);
-                              }
-                            }}
-                            disabled={updatingUserId === user?.id}
-                            className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingUserId === user?.id
-                              ? 'text-gray-400 cursor-not-allowed'
-                              : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
-                              }`}
-                          >
-                            Assign Organiser
-                          </button>
-
-                          {/* Show Active option if user is flagged or blocked */}
-                          {(user?.user_status?.toLowerCase() === 'flagged' || user?.user_status?.toLowerCase() === 'blocked') && (
-                            <button
-                              onClick={() => {
-                                setActiveDropdown(null);
-                                setIsLoading(true);
-                                setLoadingId(user?.id);
-                                handleUserSectionAction('active', user?.id, user?.email);
-                              }}
-                              disabled={updatingUserId === user?.id}
-                              className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingUserId === user?.id
-                                ? 'text-gray-400 cursor-not-allowed'
-                                : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
-                                }`}
-                            >
-                              Active
-                            </button>
-                          )}
-
-                          {/* Show Flag option if user is not already flagged */}
-                          {user?.user_status?.toLowerCase() !== 'flagged' && (
-                            <button
-                              onClick={() => {
-                                setActiveDropdown(null);
-                                setIsLoading(true);
-                                setLoadingId(user?.id);
-                                handleUserSectionAction('flagged', user?.id, user?.email);
-                              }}
-                              disabled={updatingUserId === user?.id}
-                              className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingUserId === user?.id
-                                ? 'text-gray-400 cursor-not-allowed'
-                                : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
-                                }`}
-                            >
-                              Flag
-                            </button>
-                          )}
-
-                          {/* Show Block option if user is not already blocked */}
-                          {user?.user_status?.toLowerCase() !== 'blocked' && (
-                            <button
-                              onClick={() => {
-                                setActiveDropdown(null);
-                                setIsLoading(true);
-                                setLoadingId(user?.id);
-                                handleUserSectionAction('blocked', user?.id, user?.email);
-                              }}
-                              disabled={updatingUserId === user?.id}
-                              className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingUserId === user?.id
-                                ? 'text-gray-400 cursor-not-allowed'
-                                : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
-                                }`}
-                            >
-                              Block
-                            </button>
-                          )}
-
+                  {activeDropdown === user?.id && (
+                    <div ref={dropdownRef} className="absolute top-full right-0 mt-1 w-48 bg-white rounded-md shadow-lg z-50 border-2">
+                      <div className="py-1">
+                        {isSuperUser ? (
+                          // Superusers section menu options
                           <button
                             onClick={() => {
-                              setActiveDropdown(null);
+                              setActiveDropdown(null); // Close dropdown when delete modal is triggered
                               setUserToDelete({ username: user?.username || '', email: user?.email || '' });
                               setShowDeleteModal(true);
                             }}
@@ -617,31 +525,165 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
                               : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
                               }`}
                           >
-                            Delete
+                            Remove Super User
                           </button>
-                          <button
-                            onClick={() => {
-                              setActiveDropdown(null);
-                              setIsLoading(true);
-                              setLoadingId(user?.id);
-                              handleUserSectionAction('invite', user?.id, user?.email);
-                              console.log('Invite non-user:', user?.id);
-                            }}
-                            disabled={updatingUserId === user?.id}
-                            className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingUserId === user?.id
-                              ? 'text-gray-400 cursor-not-allowed'
-                              : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
-                              }`}
-                          >
-                            Invite Non-user
-                          </button>
-                        </>
-                      )}
+                        ) : (
+                          // Regular Users section menu options - dynamic based on current status
+                          <>
+                            {
+                              !isUserOrganiser(user?.id) ? (
+                                <button
+                                  onClick={async () => {
+                                    setActiveDropdown(null);
+                                    setIsLoading(true);
+                                    setLoadingId(user?.id);
+                                    const response = await assignOrganiserToSchoolApi(user?.id);
+                                    if (response.success) {
+                                      onAction('assign-organiser', user?.id, user?.email);
+                                      toast.success(response.message);
+                                      setLoadingId(null);
+                                      setIsLoading(false)
+                                      await refreshUserData();
+                                      await refreshUserData();
+                                    } else {
+                                      toast.error(response.message);
+                                      setLoadingId(null);
+                                      setIsLoading(false)
+                                    }
+                                  }}
+                                  disabled={updatingUserId === user?.id}
+                                  className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingUserId === user?.id
+                                    ? 'text-gray-400 cursor-not-allowed'
+                                    : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
+                                    }`}
+                                >
+                                  Assign Organiser
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={async () => {
+                                    setActiveDropdown(null);
+                                    setIsLoading(true);
+                                    setLoadingId(user?.id);
+                                    const response = await removeOrganiserFromSchoolApi(user?.id);
+                                    if (response.success) {
+                                      toast.success(response.message);
+                                      setLoadingId(null);
+                                      setIsLoading(false)
+                                      await refreshUserData();
+                                      onAction('remove-organiser', user?.id, user?.email);
+                                      await refreshUserData();
+                                    } else {
+                                      toast.error(response.message);
+                                      setLoadingId(null);
+                                      setIsLoading(false)
+                                    }
+                                  }}
+                                  disabled={updatingUserId === user?.id}
+                                  className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingUserId === user?.id
+                                    ? 'text-gray-400 cursor-not-allowed'
+                                    : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
+                                    }`}
+                                >
+                                  Remove Organiser
+                                </button>
+                              )
+                            }
+
+                            {/* Show Active option if user is flagged or blocked */}
+                            {(user?.user_status?.toLowerCase() === 'flagged' || user?.user_status?.toLowerCase() === 'blocked') && (
+                              <button
+                                onClick={() => {
+                                  setActiveDropdown(null);
+                                  setIsLoading(true);
+                                  setLoadingId(user?.id);
+                                  handleUserSectionAction('active', user?.id, user?.email);
+                                }}
+                                disabled={updatingUserId === user?.id}
+                                className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingUserId === user?.id
+                                  ? 'text-gray-400 cursor-not-allowed'
+                                  : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
+                                  }`}
+                              >
+                                Active
+                              </button>
+                            )}
+
+                            {/* Show Flag option if user is not already flagged */}
+                            {user?.user_status?.toLowerCase() !== 'flagged' && (
+                              <button
+                                onClick={() => {
+                                  setActiveDropdown(null);
+                                  setIsLoading(true);
+                                  setLoadingId(user?.id);
+                                  handleUserSectionAction('flagged', user?.id, user?.email);
+                                }}
+                                disabled={updatingUserId === user?.id}
+                                className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingUserId === user?.id
+                                  ? 'text-gray-400 cursor-not-allowed'
+                                  : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
+                                  }`}
+                              >
+                                Flag
+                              </button>
+                            )}
+
+                            {/* Show Block option if user is not already blocked */}
+                            {user?.user_status?.toLowerCase() !== 'blocked' && (
+                              <button
+                                onClick={() => {
+                                  setActiveDropdown(null);
+                                  setIsLoading(true);
+                                  setLoadingId(user?.id);
+                                  handleUserSectionAction('blocked', user?.id, user?.email);
+                                }}
+                                disabled={updatingUserId === user?.id}
+                                className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingUserId === user?.id
+                                  ? 'text-gray-400 cursor-not-allowed'
+                                  : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
+                                  }`}
+                              >
+                                Block
+                              </button>
+                            )}
+
+                            <button
+                              onClick={() => {
+                                setActiveDropdown(null);
+                                setUserToDelete({ username: user?.username || '', email: user?.email || '' });
+                                setShowDeleteModal(true);
+                              }}
+                              disabled={updatingUserId === user?.id}
+                              className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingUserId === user?.id
+                                ? 'text-gray-400 cursor-not-allowed'
+                                : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
+                                }`}
+                            >
+                              Delete
+                            </button>
+                            <button
+                              onClick={() => {
+                                setActiveDropdown(null);
+                                setIsLoading(true);
+                                setLoadingId(user?.id);
+                                handleUserSectionAction('invite', user?.id, user?.email);
+                                console.log('Invite non-user:', user?.id);
+                              }}
+                              disabled={updatingUserId === user?.id}
+                              className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingUserId === user?.id
+                                ? 'text-gray-400 cursor-not-allowed'
+                                : 'text-gray-700 hover:bg-[#C6DAF4] hover:text-gray-900'
+                                }`}
+                            >
+                              Invite Non-user
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
             )}
           </div>
         ))
@@ -681,11 +723,10 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
                     onChange={handleNameChange}
                     placeholder="E.g. Ivy Grace Turner"
                     disabled={isSendingInvite}
-                    className={`w-full px-4 py-2 border border-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-[#C4A35A] focus:border-transparent text-gray-700 ${
-                      isSendingInvite ? 'bg-gray-100 cursor-not-allowed' : ''
-                    }`}
+                    className={`w-full px-4 py-2 border border-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-[#C4A35A] focus:border-transparent text-gray-700 ${isSendingInvite ? 'bg-gray-100 cursor-not-allowed' : ''
+                      }`}
                   />
-                  
+
                   {/* Name Dropdown */}
                   {showNameDropdown && filteredUsersForName.length > 0 && !isSendingInvite && (
                     <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-hidden">
@@ -720,11 +761,10 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
                     onChange={handleEmailChange}
                     placeholder="E.g. ivy.grace@example.com"
                     disabled={isSendingInvite}
-                    className={`w-full px-4 py-2 border border-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-[#C4A35A] focus:border-transparent text-gray-700 ${
-                      isSendingInvite ? 'bg-gray-100 cursor-not-allowed' : ''
-                    }`}
+                    className={`w-full px-4 py-2 border border-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-[#C4A35A] focus:border-transparent text-gray-700 ${isSendingInvite ? 'bg-gray-100 cursor-not-allowed' : ''
+                      }`}
                   />
-                  
+
                   {/* Email Dropdown */}
                   {showEmailDropdown && filteredUsersForEmail.length > 0 && !isSendingInvite && (
                     <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-hidden">
@@ -752,11 +792,10 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
                 <button
                   onClick={handleSendInvite}
                   disabled={isSendingInvite}
-                  className={`w-[150px] px-6 py-3 text-white font-semibold rounded-[20px] transition-colors duration-200 ${
-                    isSendingInvite 
-                      ? 'bg-gray-400 cursor-not-allowed' 
-                      : 'bg-[#7FB539] hover:bg-[#6FA329]'
-                  }`}
+                  className={`w-[150px] px-6 py-3 text-white font-semibold rounded-[20px] transition-colors duration-200 ${isSendingInvite
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-[#7FB539] hover:bg-[#6FA329]'
+                    }`}
                 >
                   {isSendingInvite ? (
                     <div className="flex items-center justify-center">

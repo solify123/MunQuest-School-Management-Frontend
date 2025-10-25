@@ -31,7 +31,6 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('session', session);
       setSession(session);
       setUser(session?.user ?? null);
       // Store token in localStorage when session is available
@@ -47,7 +46,6 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth state change:', event, session);
       setSession(session);
       setUser(session?.user ?? null);
      
@@ -55,8 +53,7 @@ export const SupabaseAuthProvider: React.FC<SupabaseAuthProviderProps> = ({ chil
         localStorage.setItem('token', session.access_token);
       } else if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
         // Only remove token on explicit sign out or token refresh failure
-        console.log('Removing token due to auth event:', event);
-        localStorage.removeItem('token');
+        localStorage.clear();
       }
       
       setLoading(false);

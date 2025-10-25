@@ -30,7 +30,7 @@ export const logout = async () => {
     }
 
     // Clear local storage
-    localStorage.removeItem('token');
+    localStorage.clear()
     
     toast.success('Logged out successfully');
     return { success: true };
