@@ -29,6 +29,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [updatingOrganiserId, setUpdatingOrganiserId] = useState<string | null>(null);
   const [isAddingNew, setIsAddingNew] = useState<boolean>(false);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [filteredOrganisers, setFilteredOrganisers] = useState<any[]>([]);
   const [newOrganiser, setNewOrganiser] = useState<any>(null);
@@ -40,7 +41,6 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
   const usernameDropdownRef = useRef<HTMLDivElement>(null);
   const dropdownRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const { refreshUserData, allUsers } = useApp();
-
   // Handle click outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -197,6 +197,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
         return;
       }
 
+      setIsSaving(true);
       const actioned_by_user_id = localStorage.getItem('userId');
       const response = await addOrganiserBySuperUserApi(
         newOrganiser.user_id || '',
@@ -238,6 +239,8 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
     } catch (error: any) {
       console.log('Error saving new organiser:', error);
       toast.error(error.message || 'Failed to save new organiser');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -361,28 +364,28 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
         </div>
       ) : filteredOrganisers.length > 0 ? (
         filteredOrganisers.map((organiser: any) => (
-          <div key={organiser?.id || Math.random()} className="grid grid-cols-12 gap-2 mb-2">
+          <div key={organiser?.id || Math.random()} className={`grid grid-cols-12 gap-2 mb-2 ${updatingOrganiserId === organiser?.id ? 'opacity-60 pointer-events-none' : ''}`}>
             {/* User ID */}
-            <div className="bg-white px-3 py-2 text-sm font-medium text-gray-900 rounded-md border border-gray-200">
+            <div className="bg-white px-3 py-2 text-sm font-medium text-gray-900 rounded-md border border-gray-200 flex items-center justify-center">
               {organiser?.users.id.split('-')[0] || 'N/A'}
             </div>
             {/* Organiser ID */}
-            <div className="bg-white px-3 py-2 text-sm font-medium text-gray-900 rounded-md border border-gray-200">
+            <div className="bg-white px-3 py-2 text-sm font-medium text-gray-900 rounded-md border border-gray-200 flex items-center justify-center">
               {organiser?.id.split('-')[0] || 'N/A'}
             </div>
 
             {/* Username */}
-            <div className="w-full break-words bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+            <div className="w-full break-words bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200 flex items-center justify-center">
               {organiser?.users.username || 'N/A'}
             </div>
 
             {/* Name */}
-            <div className="w-full break-words bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+            <div className="w-full break-words bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200 flex items-center justify-center">
               {organiser?.users.fullname || 'N/A'}
             </div>
 
             {/* Academic Level/Teaching Experience */}
-            <div className="w-full break-words bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+            <div className="w-full break-words bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200 flex items-center justify-center">
               {organiserType === 'students'
                 ? (organiser?.users?.grade || 'N/A')
                 : (organiser?.users?.years_of_experience || 'N/A')
@@ -390,17 +393,17 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
             </div>
 
             {/* School */}
-            <div className="w-full break-words bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+            <div className="w-full break-words bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200 flex items-center justify-center">
               {organiser?.school?.name || organiser?.school || 'N/A'}
             </div>
 
             {/* Role in Event */}
-            <div className="w-full break-words bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+            <div className="w-full break-words bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200 flex items-center justify-center">
               {organiser?.role || 'N/A'}
             </div>
 
             {/* Evidence */}
-            <div className="w-full break-words bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+            <div className="w-full break-words bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200 flex items-center justify-center">
               {organiser?.evidence ? (
                 typeof organiser.evidence === 'object' && organiser.evidence.file_url ? (
                   <div className="flex items-center justify-center">
@@ -412,6 +415,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
                           onClick={() => window.open(organiser.evidence.file_url, '_blank')}
                           className="flex flex-wrap items-center justify-center p-1 rounded hover:bg-gray-100 transition-colors duration-200"
                           title="Click to open document"
+                          disabled={updatingOrganiserId === organiser?.id}
                         >
                           Document
                           <svg className="w-5 h-5 text-blue-600 hover:text-blue-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -430,21 +434,21 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
             </div>
 
             {/* Date Received */}
-            <div className="w-full break-words bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+            <div className="w-full break-words bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200 flex items-center justify-center">
               {organiser?.created_at?.split('T')[0] || 'N/A'}
             </div>
 
             {/* Date Actioned */}
-            <div className="w-full break-words bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200">
+            <div className="w-full break-words bg-white px-3 py-2 text-sm text-gray-900 rounded-md border border-gray-200 flex items-center justify-center">
               {organiser?.actioned_at?.split('T')[0] || 'N/A'}
             </div>
 
             {/* Status */}
-            <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
+            <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200 flex items-center justify-center">
               {updatingOrganiserId === organiser?.id ? (
                 <div className="flex items-center space-x-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
-                  <span className="text-gray-500">Updating</span>
+                  <span className="text-gray-500">Deleting...</span>
                 </div>
               ) : (
                 <span className={`font-medium ${getStatusColor(organiser?.status)}`}>
@@ -456,100 +460,108 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
             {/* Actions */}
             <div ref={(el) => { dropdownRefs.current[organiser?.id || ''] = el; }} className="px-3 py-2 text-sm font-medium relative">
               <div className="relative">
-                <button
-                  onClick={() => handleDropdownToggle(organiser?.id || '')}
-                  className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                  </svg>
-                </button>
-
-                {activeDropdown === organiser?.id && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
-                    <div className="py-1">
-                      {/* Show Approve button only if status is not approved */}
-                      {organiser?.status?.toLowerCase() !== 'approved' && (
-                        <button
-                          onClick={() => handleAction('approved', organiser?.id || '')}
-                          disabled={updatingOrganiserId === organiser?.id}
-                          className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingOrganiserId === organiser?.id
-                            ? 'text-gray-400 cursor-not-allowed'
-                            : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
-                            }`}
-                        >
-                          Approve
-                        </button>
-                      )}
-
-                      {/* Show Reject button only if status is not rejected */}
-                      {organiser?.status?.toLowerCase() !== 'rejected' && (
-                        <button
-                          onClick={() => handleAction('rejected', organiser?.id || '')}
-                          disabled={updatingOrganiserId === organiser?.id}
-                          className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingOrganiserId === organiser?.id
-                            ? 'text-gray-400 cursor-not-allowed'
-                            : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
-                            }`}
-                        >
-                          Reject
-                        </button>
-                      )}
-
-                      {/* Show Flag button only if status is not flagged */}
-                      {organiser?.status?.toLowerCase() !== 'flagged' && (
-                        <button
-                          onClick={() => handleAction('flagged', organiser?.id || '')}
-                          disabled={updatingOrganiserId === organiser?.id}
-                          className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingOrganiserId === organiser?.id
-                            ? 'text-gray-400 cursor-not-allowed'
-                            : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
-                            }`}
-                        >
-                          Flag
-                        </button>
-                      )}
-
-                      {/* Show Block button only if status is not blocked */}
-                      {organiser?.status?.toLowerCase() !== 'blocked' && (
-                        <button
-                          onClick={() => handleAction('blocked', organiser?.id || '')}
-                          disabled={updatingOrganiserId === organiser?.id}
-                          className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingOrganiserId === organiser?.id
-                            ? 'text-gray-400 cursor-not-allowed'
-                            : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
-                            }`}
-                        >
-                          Block
-                        </button>
-                      )}
-
-                      {/* Show Activate button if status is flagged or blocked */}
-                      {(organiser?.status?.toLowerCase() === 'flagged' || organiser?.status?.toLowerCase() === 'blocked') && (
-                        <button
-                          onClick={() => handleAction('approved', organiser?.id || '')}
-                          disabled={updatingOrganiserId === organiser?.id}
-                          className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingOrganiserId === organiser?.id
-                            ? 'text-gray-400 cursor-not-allowed'
-                            : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
-                            }`}
-                        >
-                          Activate
-                        </button>
-                      )}
-
-                      <button
-                        onClick={() => handleDeleteClick(organiser?.id || '')}
-                        disabled={updatingOrganiserId === organiser?.id}
-                        className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingOrganiserId === organiser?.id
-                          ? 'text-gray-400 cursor-not-allowed'
-                          : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
-                          }`}
-                      >
-                        Delete
-                      </button>
-                    </div>
+                {updatingOrganiserId === organiser?.id ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-900"></div>
                   </div>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => handleDropdownToggle(organiser?.id || '')}
+                      className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                      </svg>
+                    </button>
+
+                    {activeDropdown === organiser?.id && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+                        <div className="py-1">
+                          {/* Show Approve button only if status is not approved */}
+                          {organiser?.status?.toLowerCase() !== 'approved' && (
+                            <button
+                              onClick={() => handleAction('approved', organiser?.id || '')}
+                              disabled={updatingOrganiserId === organiser?.id}
+                              className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingOrganiserId === organiser?.id
+                                ? 'text-gray-400 cursor-not-allowed'
+                                : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
+                                }`}
+                            >
+                              Approve
+                            </button>
+                          )}
+
+                          {/* Show Reject button only if status is not rejected */}
+                          {organiser?.status?.toLowerCase() !== 'rejected' && (
+                            <button
+                              onClick={() => handleAction('rejected', organiser?.id || '')}
+                              disabled={updatingOrganiserId === organiser?.id}
+                              className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingOrganiserId === organiser?.id
+                                ? 'text-gray-400 cursor-not-allowed'
+                                : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
+                                }`}
+                            >
+                              Reject
+                            </button>
+                          )}
+
+                          {/* Show Flag button only if status is not flagged */}
+                          {organiser?.status?.toLowerCase() !== 'flagged' && (
+                            <button
+                              onClick={() => handleAction('flagged', organiser?.id || '')}
+                              disabled={updatingOrganiserId === organiser?.id}
+                              className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingOrganiserId === organiser?.id
+                                ? 'text-gray-400 cursor-not-allowed'
+                                : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
+                                }`}
+                            >
+                              Flag
+                            </button>
+                          )}
+
+                          {/* Show Block button only if status is not blocked */}
+                          {organiser?.status?.toLowerCase() !== 'blocked' && (
+                            <button
+                              onClick={() => handleAction('blocked', organiser?.id || '')}
+                              disabled={updatingOrganiserId === organiser?.id}
+                              className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingOrganiserId === organiser?.id
+                                ? 'text-gray-400 cursor-not-allowed'
+                                : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
+                                }`}
+                            >
+                              Block
+                            </button>
+                          )}
+
+                          {/* Show Activate button if status is flagged or blocked */}
+                          {(organiser?.status?.toLowerCase() === 'flagged' || organiser?.status?.toLowerCase() === 'blocked') && (
+                            <button
+                              onClick={() => handleAction('approved', organiser?.id || '')}
+                              disabled={updatingOrganiserId === organiser?.id}
+                              className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingOrganiserId === organiser?.id
+                                ? 'text-gray-400 cursor-not-allowed'
+                                : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
+                                }`}
+                            >
+                              Activate
+                            </button>
+                          )}
+
+                          <button
+                            onClick={() => handleDeleteClick(organiser?.id || '')}
+                            disabled={updatingOrganiserId === organiser?.id}
+                            className={`block w-full text-left px-4 py-2 text-sm transition-colors duration-200 ${updatingOrganiserId === organiser?.id
+                              ? 'text-gray-400 cursor-not-allowed'
+                              : 'text-gray-700 hover:bg-[#D9C7A1] hover:text-gray-900'
+                              }`}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -559,7 +571,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
 
       {/* New Organiser Input Row */}
       {isAddingNew && (
-        <div className="grid grid-cols-12 gap-2 mb-2">
+        <div className={`grid grid-cols-12 gap-2 mb-2 ${isSaving ? 'opacity-60 pointer-events-none' : ''}`}>
           {/*User ID */}
           <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
             <input
@@ -603,6 +615,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
                 placeholder="Enter username to populate fields"
                 className="w-full border-none outline-none text-sm bg-transparent"
                 autoComplete="off"
+                disabled={isSaving}
               />
               {userFound === true && (
                 <svg className="w-4 h-4 text-green-600 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -617,7 +630,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
             </div>
 
             {/* Username Dropdown */}
-            {showUsernameDropdown && filteredUsers.length > 0 && (
+            {showUsernameDropdown && filteredUsers.length > 0 && !isSaving && (
               <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
                 {filteredUsers.map((user, index) => (
                   <div
@@ -635,7 +648,7 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
               </div>
             )}
 
-            {showUsernameDropdown && filteredUsers.length === 0 && newOrganiser.username.trim() && (
+            {showUsernameDropdown && filteredUsers.length === 0 && newOrganiser.username.trim() && !isSaving && (
               <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50">
                 <div className="px-3 py-2 text-sm text-gray-500">
                   No available users found
@@ -721,14 +734,27 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
 
           {/* Status */}
           <div className="bg-white px-3 py-2 text-sm rounded-md border border-gray-200">
-            <span className="font-medium text-orange-500">Pending</span>
+            {isSaving ? (
+              <div className="flex items-center space-x-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
+                <span className="text-gray-500">Saving...</span>
+              </div>
+            ) : (
+              <span className="font-medium text-orange-500">Pending</span>
+            )}
           </div>
 
           {/* Actions */}
           <div className="px-3 py-2 text-sm font-medium relative">
-            <div className="flex space-x-2">
-              <img src={saveIcon} alt="Save" className="w-4 h-4" />
-            </div>
+            {isSaving ? (
+              <div className="flex items-center justify-center">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
+              </div>
+            ) : (
+              <div className="flex space-x-2">
+                <img src={saveIcon} alt="Save" className="w-4 h-4" />
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -737,8 +763,8 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
       <div className="flex justify-start space-x-4 mt-6">
         <button
           onClick={handleAddNew}
-          disabled={isAddingNew}
-          className={`bg-[#C2A46D] text-white font-medium rounded-[30px] w-[105px] h-[44px] px-[10px] py-[10px] mr-[10px] transition-colors duration-200 ${isAddingNew
+          disabled={isAddingNew || isSaving}
+          className={`bg-[#C2A46D] text-white font-medium rounded-[30px] w-[105px] h-[44px] px-[10px] py-[10px] mr-[10px] transition-colors duration-200 ${isAddingNew || isSaving
             ? 'opacity-50 cursor-not-allowed'
             : 'hover:bg-[#9a7849]'
             }`}
@@ -747,13 +773,20 @@ const OrganisersTable: React.FC<OrganisersTableProps> = ({ organisers, onAction,
         </button>
         <button
           onClick={handleSaveNew}
-          disabled={!isAddingNew}
-          className={`bg-[#C2A46D] text-white font-medium rounded-[30px] w-[105px] h-[44px] px-[10px] py-[10px] transition-colors duration-200 ${!isAddingNew
+          disabled={!isAddingNew || isSaving}
+          className={`bg-[#C2A46D] text-white font-medium rounded-[30px] w-[105px] h-[44px] px-[10px] py-[10px] transition-colors duration-200 flex items-center justify-center ${!isAddingNew || isSaving
             ? 'opacity-50 cursor-not-allowed'
             : 'hover:bg-[#b89a6a]'
             }`}
         >
-          Save
+          {isSaving ? (
+            <>
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+              <span>Saving...</span>
+            </>
+          ) : (
+            'Save'
+          )}
         </button>
       </div>
 

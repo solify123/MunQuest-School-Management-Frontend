@@ -7,7 +7,6 @@ class SocketService {
   constructor() {
     this.backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:1000';
     console.log('🌐 Backend URL configured:', this.backendUrl);
-    console.log('🔧 Environment VITE_BACKEND_URL:', import.meta.env.VITE_BACKEND_URL);
   }
 
   connect(): Socket {

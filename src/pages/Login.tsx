@@ -55,11 +55,8 @@ const Login: React.FC = () => {
         setIsLoading(false);
         return;
       }
-      console.time("login");  
       const supabaseLoginResponse = await supabaseSignIn(email, password);
       const loginResponse = await loginApiHandler(email, password);
-      console.timeEnd("login")
-
       if (loginResponse.success && supabaseLoginResponse.success) {
         toast.success(loginResponse.message);
         localStorage.setItem('token', supabaseLoginResponse.data?.session?.access_token || '');

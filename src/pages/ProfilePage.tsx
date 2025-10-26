@@ -81,7 +81,11 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
   useEffect(() => {
     const getUserById = async () => {
       const user = await getUserByIdApi();
-
+      if (user.data.username) {
+        setIsUsernameAvailable(true);
+      } else {
+        setIsUsernameAvailable(false);
+      }
       const userData = {
         ...user.data,
         // Map API fields to UI fields
@@ -100,7 +104,6 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
       };
 
       // Update profileData
-      console.log("userData", userData);
       setProfileData(userData);
 
       // Update individual useState variables
@@ -181,9 +184,9 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
   const [phone_e164, setPhone_e164] = useState<string>('');
   const [countryCode, setCountryCode] = useState<string>('+971');
   const [email, setEmail] = useState<string>('');
+  const [isUsernameAvailable, setIsUsernameAvailable] = useState<boolean>(true);
   // Avatar state removed - now using Avatar component which manages its own state
   const [isUploadingAvatar, setIsUploadingAvatar] = useState<boolean>(false);
-
   // Delete confirmation modal state
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
 
@@ -282,9 +285,11 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
     switch (field) {
       case 'fullname':
         setFullname(value);
-        // Generate new username when fullname changes
-        const newUsername = generateUsername(value);
-        setUsername(newUsername);
+        if (!isUsernameAvailable) {
+          // Generate new username when fullname changes
+          const newUsername = generateUsername(value);
+          setUsername(newUsername);
+        }
         break;
       case 'username':
         setUsername(value);
@@ -561,36 +566,33 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
             type="text"
             value={displayValue}
             onChange={(e) => handleFieldChange(field, e.target.value)}
-            disabled={!isEditingThisField || !!displayValue}
+            disabled={!isEditingThisField}
             className={`w-[400px] px-4 py-3 border rounded-lg text-sm bg-white focus:outline-none focus:border-[#1E395D] focus:ring-2 focus:ring-[#1E395D] focus:ring-opacity-20 transition-all duration-200 ${isEditingThisField ? 'border-[#1E395D]' : 'border-gray-300 bg-gray-50'
               }`}
             placeholder={`Enter ${label.toLowerCase()}`}
           />
-          {
-            !displayValue && (
-              <>
-                {!isEditingThisField && (
-                  <button
-                    onClick={() => handleEditField(field, value)}
-                    className="absolute top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    style={{ right: '36.75rem' }}
-                  >
-                    <img src={EditIcon} alt="Edit" className="w-4 h-4" />
-                  </button>
-                )}
-                {isEditingThisField && (
-                  <div className="absolute top-1/2 transform -translate-y-1/2 flex space-x-2" style={{ right: '35rem' }}>
-                    <button
-                      onClick={handleCancelEdit}
-                      className="text-red-600 hover:text-red-800 text-sm font-medium mr-2"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                )}
-              </>
-            )
-          }
+
+          <>
+            {!isEditingThisField && (
+              <button
+                onClick={() => handleEditField(field, value)}
+                className="absolute top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                style={{ right: '36.75rem' }}
+              >
+                <img src={EditIcon} alt="Edit" className="w-4 h-4" />
+              </button>
+            )}
+            {isEditingThisField && (
+              <div className="absolute top-1/2 transform -translate-y-1/2 flex space-x-2" style={{ right: '35rem' }}>
+                <button
+                  onClick={handleCancelEdit}
+                  className="text-red-600 hover:text-red-800 text-sm font-medium mr-2"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+          </>
         </div>
 
         {isEditingThisField && tempValue && (

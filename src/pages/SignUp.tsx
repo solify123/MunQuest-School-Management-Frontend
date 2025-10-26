@@ -65,10 +65,11 @@ const SignUp: React.FC = () => {
       }
 
       const signupResponse = await supabaseSignUp(email, password);
+      const auth_id = signupResponse.data?.user?.id;
       if (!signupResponse.success) {
         throw new Error(signupResponse.message);
       } else {
-        const signupUserTableResponse = await signupApi(email, role);
+        const signupUserTableResponse = await signupApi(email, role, auth_id || '');
         if (!signupUserTableResponse.success) {
           throw new Error(signupUserTableResponse.message);
         }
