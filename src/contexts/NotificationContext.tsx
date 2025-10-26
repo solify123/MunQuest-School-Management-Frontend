@@ -34,7 +34,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     
     // Update connection status
     setIsConnected(socket.connected);
-    console.log('🔌 Initial socket connection status:', socket.connected);
 
     // Listen for connection events
     socket.on('connect', () => {
@@ -42,7 +41,9 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       console.log('✅ Socket connected successfully');
       
       // Join user to their personal room for targeted notifications
+      const token = localStorage.getItem('token');
       const userId = localStorage.getItem('userId');
+      if (!token) return;
       if (userId) {
         socket.emit('join_user_room', userId);
         console.log(`🔗 Emitting join_user_room for user: ${userId}`);

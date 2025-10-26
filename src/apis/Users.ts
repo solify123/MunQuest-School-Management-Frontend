@@ -3,9 +3,9 @@ import { getBackendUrl } from '../utils/env';
 
 const backendUrl = getBackendUrl();
 
-export const signupApi = async (email: string, role: string) => {
+export const signupApi = async (email: string, role: string, auth_id: string | null) => {
     try {
-        const response = await axios.post(`${backendUrl}/api/v1/users/register`, { email, role });
+        const response = await axios.post(`${backendUrl}/api/v1/users/register`, { email, role, auth_id });
         return response.data;
     } catch (error: any) {
         throw new Error(error.response.data.message);

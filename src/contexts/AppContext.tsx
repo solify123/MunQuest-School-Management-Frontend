@@ -304,7 +304,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
   // Initialize user data when Supabase auth state changes
   useEffect(() => {
-    if (!authLoading) {
+    const token = localStorage.getItem('token');
+    if (!authLoading && token) {
       refreshUserData();
       refreshEventsData();
       refreshLeadershipRolesData();

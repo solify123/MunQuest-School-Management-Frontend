@@ -59,6 +59,10 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
     const [lockedRows, setLockedRows] = useState<string[]>([]);
     const [showMergeMessage, setShowMergeMessage] = useState<string>('');
 
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState<number>(1);
+    const [itemsPerPage] = useState<number>(7);
+
     const { refreshSchoolsData, allLocalities, allAreas, refreshLocalitiesData, refreshAreasData } = useApp();
     const dropdownRef = useRef<HTMLDivElement>(null);
     // Fetch localities and areas data when component mounts
@@ -147,7 +151,34 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
             });
             setFilteredSchools(filtered);
         }
+        // Reset to first page when search changes
+        setCurrentPage(1);
     }, [searchTerm, schools]);
+
+    // Calculate pagination values
+    const totalPages = Math.ceil(filteredSchools.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const currentSchools = filteredSchools.slice(startIndex, endIndex);
+
+    // Pagination handlers
+    const handlePageChange = (page: number) => {
+        if (page >= 1 && page <= totalPages) {
+            setCurrentPage(page);
+        }
+    };
+
+    const handlePreviousPage = () => {
+        if (currentPage > 1) {
+            setCurrentPage(currentPage - 1);
+        }
+    };
+
+    const handleNextPage = () => {
+        if (currentPage < totalPages) {
+            setCurrentPage(currentPage + 1);
+        }
+    };
 
     // Handle clicking outside dropdown to close it
     useEffect(() => {
@@ -445,7 +476,7 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
                 />
             </div>
 
-            <div className={`flex gap-2 mb-2 w-[${filteredSchools.length > 7 ? '98.5%' : '100%'}]`}>
+            <div className="flex gap-2 mb-2 w-full">
                 <div className="w-24 px-3 py-2 text-xs font-medium text-gray-900 uppercase tracking-wider rounded-md bg-[#F0F7FF] border border-[#4A5F7A] flex items-center justify-between">
                     <span>School ID</span>
                     <svg className="w-3 h-3 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -496,10 +527,10 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
                     </div>
                 )}
             </div>
-            <div className="w-full max-h-[320px] overflow-auto">
+            <div className="w-full">
                 {/* Data Rows */}
-                {filteredSchools.length > 0 ? (
-                    filteredSchools.map((school: any) => {
+                {currentSchools.length > 0 ? (
+                    currentSchools.map((school: any) => {
                         const isEditing = editingSchoolId === school?.id;
 
                         return (
@@ -907,6 +938,72 @@ const SchoolsTable: React.FC<SchoolsTableProps> = ({ schools, onAction }) => {
                             -
                         </div>
                     )}
+                </div>
+            )}
+
+            {/* Pagination Controls */}
+            {filteredSchools.length > 0 && (
+                <div className="flex items-center justify-between mt-6 px-4">
+                    <div className="text-sm text-gray-600">
+                        Showing {startIndex + 1} to {Math.min(endIndex, filteredSchools.length)} of {filteredSchools.length} schools
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <button
+                            onClick={handlePreviousPage}
+                            disabled={currentPage === 1}
+                            className={`px-3 py-1 rounded-md border ${
+                                currentPage === 1
+                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                    : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
+                            }`}
+                        >
+                            Previous
+                        </button>
+                        
+                        {/* Page Numbers */}
+                        <div className="flex items-center space-x-1">
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                                // Show first page, last page, current page, and pages around current
+                                if (
+                                    page === 1 ||
+                                    page === totalPages ||
+                                    (page >= currentPage - 1 && page <= currentPage + 1)
+                                ) {
+                                    return (
+                                        <button
+                                            key={page}
+                                            onClick={() => handlePageChange(page)}
+                                            className={`px-3 py-1 rounded-md border ${
+                                                currentPage === page
+                                                    ? 'bg-[#C2A46D] text-white border-[#C2A46D]'
+                                                    : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
+                                            }`}
+                                        >
+                                            {page}
+                                        </button>
+                                    );
+                                } else if (
+                                    (page === currentPage - 2 && page > 1) ||
+                                    (page === currentPage + 2 && page < totalPages)
+                                ) {
+                                    return <span key={page} className="px-2 text-gray-400">...</span>;
+                                }
+                                return null;
+                            })}
+                        </div>
+
+                        <button
+                            onClick={handleNextPage}
+                            disabled={currentPage === totalPages}
+                            className={`px-3 py-1 rounded-md border ${
+                                currentPage === totalPages
+                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                    : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
+                            }`}
+                        >
+                            Next
+                        </button>
+                    </div>
                 </div>
             )}
 

@@ -170,3 +170,18 @@ export const deleteEventApi = async (eventId: string) => {
         throw new Error(error.response.data.message);
     }
 }
+
+export const checkRegistrationStatusApi = async (userId: string) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${backendUrl}/api/v1/events/check-registration-status/${userId}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+}

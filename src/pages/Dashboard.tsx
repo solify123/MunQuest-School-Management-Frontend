@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LoadingSpinner, Header } from '../components/ui';
-import { getCurrentEventsApi } from '../apis/Events';
+import { checkRegistrationStatusApi, getCurrentEventsApi } from '../apis/Events';
 import PageLoader from '../components/PageLoader';
 import { useApp } from '../contexts/AppContext';
+import { toast } from 'sonner';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('Upcoming');
   const [isLoading, setIsLoading] = useState(true);
   const [allEvents, setAllEvents] = useState<any[]>([]);
+  const [buttonLoading, setButtonLoading] = useState(false);
+
   const { allRegistrations } = useApp();
   useEffect(() => {
     const checkEvents = async () => {
@@ -33,10 +36,27 @@ const Dashboard: React.FC = () => {
     checkEvents();
   }, [navigate]);
 
-
-  const handleCreateEvent = () => {
-    navigate('/request-approval');
-  };
+  const checkRegistrationStatus = async () => {
+    try {
+      setButtonLoading(true);
+      const userId = localStorage.getItem('userId');
+      if (!userId) return false;
+      const response = await checkRegistrationStatusApi(userId as string);
+      if (response.success && response.data) {
+        toast.success(`The status is ${response.data}`);
+        return true;
+      } else {
+        toast.warning('You are not registered as an organiser');
+        navigate('/request-approval');
+        return false;
+      }
+    } catch (error) {
+      console.log('Error checking registration status:', error);
+      return false;
+    } finally {
+      setButtonLoading(false);
+    }
+  };  
 
   const handleRegister = async (eventId: number) => {
     const userType = localStorage.getItem('userRole');
@@ -111,7 +131,8 @@ const Dashboard: React.FC = () => {
           <div className="max-w-7xl mx-auto px-6 py-4">
             <div className="mt-6 flex justify-end">
               <button
-                onClick={handleCreateEvent}
+                onClick={() => checkRegistrationStatus()}
+                disabled={buttonLoading}
                 className="bg-[#1E395D] text-white font-medium flex items-center transition-colors duration-200"
                 style={{
                   width: 160,
@@ -125,7 +146,7 @@ const Dashboard: React.FC = () => {
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
-                Create Event
+                {buttonLoading ? 'Checking...' : 'Create Event'}
               </button>
             </div>
           </div>
