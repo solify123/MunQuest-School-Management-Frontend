@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { LoadingSpinner, Header } from '../components/ui';
 import { checkRegistrationStatusApi, getCurrentEventsApi } from '../apis/Events';
 import PageLoader from '../components/PageLoader';
-import { useApp } from '../contexts/AppContext';
 import { toast } from 'sonner';
 
 const Dashboard: React.FC = () => {
