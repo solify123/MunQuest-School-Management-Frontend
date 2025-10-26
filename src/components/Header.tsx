@@ -84,12 +84,7 @@ const Header: React.FC<HeaderProps> = ({
 
   const handleLogout = async () => {
     setIsDropdownOpen(false);
-    localStorage.removeItem('token');
-    localStorage.removeItem('userAvatar');
-    localStorage.removeItem('userId');
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('organiserId');
-    localStorage.removeItem('global_role')
+    localStorage.clear()
     navigate('/login');
     setIsOrganiser(false); // Update organiser status
     await supabaseSignOut();

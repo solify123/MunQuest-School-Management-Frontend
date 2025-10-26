@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../../contexts/AppContext';
-import { getAllRegistrationsByEventIdApi } from '../../apis/Registerations.ts';
+import { getAllRegistrationsByEventIdApi } from '../../apis/Registerations';
 import { saveLeadershipRoleByEventIdApi, getLeadershipRolesByEventIdApi, updateLeadershipRoleByEventIdApi, deleteLeadershipRoleByEventIdApi, updateLeadershipRoleRankingByEventIdApi } from '../../apis/Event_leaders';
 import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -364,7 +364,7 @@ const LeadershipRolesPage: React.FC = () => {
     
     try {
       setIsSavingNew(true);
-      
+      console.log(newRoleData)
       if (!newRoleData.role || !newRoleData.username || !newRoleData.selectedUserId) {
         toast.error('Please fill in all required fields');
         return;

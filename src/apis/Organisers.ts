@@ -134,3 +134,17 @@ export const assignOrganiserToSchoolApi = async (userId: string) => {
         throw new Error(error.response.data.message);
     }
 }
+
+export const removeOrganiserFromSchoolApi = async (userId: string) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.delete(`${backendUrl}/api/v1/organisers/remove-organiser-from-school/${userId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response.data.message);
+    }
+}

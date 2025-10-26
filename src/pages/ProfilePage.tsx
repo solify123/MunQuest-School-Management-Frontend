@@ -445,8 +445,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
       const response = await deleteAccountApi();
       if (response.success) {
         toast.success(response.message);
-        localStorage.removeItem('token');
-        localStorage.removeItem('userAvatar');
+        localStorage.clear()
         navigate('/login');
       } else {
         toast.error(response.message);

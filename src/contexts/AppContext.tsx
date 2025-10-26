@@ -10,7 +10,7 @@ import { getAllLeadershipRolesApi } from '../apis/LeadershipRoles.ts';
 import { useSupabaseAuth } from './SupabaseAuthContext';
 import { toast } from 'sonner';
 import { getAllCommitteesApi } from '../apis/Committees.ts';
-import { getAllRegistrationsByEventIdApi } from '../apis/Registerations.ts';
+import { getAllRegistrationsByEventIdApi } from '../apis/Registerations';
 import { getAllCountriesApi } from '../apis/Countries.ts';
 
 // Define the context type

@@ -179,3 +179,22 @@ export const mergeDelegatesApi = async (selectedDelegates: number[]) => {
         throw new Error(error.response?.data?.message || 'Failed to merge delegates');
     }
 }
+
+export const uploadDelegatesApi = async (file: File, eventId: string) => {
+    try {
+        const token = localStorage.getItem('token');
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('eventId', eventId);
+
+        const response = await axios.post(`${backendUrl}/api/v1/registerations/upload-delegates`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (error: any) {
+        throw new Error(error.response?.data?.message || 'Failed to upload delegates');
+    }
+}

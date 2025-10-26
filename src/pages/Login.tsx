@@ -60,7 +60,7 @@ const Login: React.FC = () => {
       const loginResponse = await loginApiHandler(email, password);
       console.timeEnd("login")
 
-      if (loginResponse.success) {
+      if (loginResponse.success && supabaseLoginResponse.success) {
         toast.success(loginResponse.message);
         localStorage.setItem('token', supabaseLoginResponse.data?.session?.access_token || '');
         localStorage.setItem('userId', loginResponse.data.userId);
@@ -72,7 +72,6 @@ const Login: React.FC = () => {
       }
 
       const { userRole, global_role, organiserId, hasProfile } = loginResponse.data;
-      console.log("loginResponse.data", loginResponse.data);
       if (global_role === 'superuser') {
         navigate('/super-user');
       } else {
