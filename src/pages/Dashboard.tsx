@@ -13,7 +13,6 @@ const Dashboard: React.FC = () => {
   const [allEvents, setAllEvents] = useState<any[]>([]);
   const [buttonLoading, setButtonLoading] = useState(false);
 
-  const { allRegistrations } = useApp();
   useEffect(() => {
     const checkEvents = async () => {
       try {
@@ -72,26 +71,17 @@ const Dashboard: React.FC = () => {
     const today = new Date();
     const userId = localStorage.getItem('userId');
 
-    const isRegisteredFor = (eventId: string | number) => {
-      console.log("allRegistrations", allRegistrations);
-      console.log("reg.event_id", eventId);
-      console.log("user_id", userId);
-      if (!userId || !Array.isArray(allRegistrations)) return false;
-      const eventIdStr = String(eventId);
-      return allRegistrations.some((reg: any) => String(reg.event_id) === eventIdStr && String(reg.user_id) === String(userId));
-    };
-
     const toDate = (value: any) => (value ? new Date(value) : null);
 
     switch (activeTab) {
       case 'Upcoming': {
         return allEvents.filter((event: any) => {
           const endDate = toDate(event.end_date) || toDate(event.start_date);
-          return endDate && endDate >= today && event.status !== 'cancelled';
+          return endDate && endDate >= today && event.status !== 'cancelled' && event.organiser.userid !== userId;
         });
       }
       case 'Registered': {
-        return allEvents.filter((event: any) => isRegisteredFor(event.id) && event.status !== 'cancelled');
+        return allEvents.filter((event: any) => event.organiser.userid === userId);
       }
       case 'Past': {
         return allEvents.filter((event: any) => {
