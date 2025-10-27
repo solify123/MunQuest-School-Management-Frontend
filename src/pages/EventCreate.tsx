@@ -44,11 +44,11 @@ const EventCreate: React.FC = () => {
   useEffect(() => {
     async function getUserById() {
       const user = await getUserByIdApi();
-      setSchool(user.data.school.name);
-      setLocality(user.data.school.code);
-      setLocality_id(user.data.school.locality_id);
-      setSchool_id(user.data.school.id);
-      setArea_id(user.data.school.area_id);
+      setSchool(user.data?.school?.name || '');
+      setLocality(user.data?.school?.code || '');
+      setLocality_id(user.data?.school?.locality_id || '');
+      setSchool_id(user.data?.school?.id || '');
+      setArea_id(user.data?.school?.area_id || '');
     }
     getUserById();
   }, []);

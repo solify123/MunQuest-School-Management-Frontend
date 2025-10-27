@@ -81,7 +81,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
   useEffect(() => {
     const getUserById = async () => {
       const user = await getUserByIdApi();
-      if (user.data.username) {
+      if (user.data?.username) {
         setIsUsernameAvailable(true);
       } else {
         setIsUsernameAvailable(false);
@@ -89,18 +89,18 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userType, initialData }) => {
       const userData = {
         ...user.data,
         // Map API fields to UI fields
-        username: user.data.username || '',
-        fullname: user.data.fullname || '',
-        birthday: user.data.birthday || '',
-        gender: user.data.gender || '',
-        locality: user.data.school.locality.name || '',
-        schoolName: user.data.school.name || '',
-        school_id: user.data.school.id || '',
-        grade: user.data.grade || '',
-        year_of_work_experience: user.data.year_of_work_experience || '',
-        phone_number: user.data.phone_number || '',
-        email: user.data.email || '',
-        avatar: user.data.avatar || (userType === 'student' ? StudentAvatar : TeacherAvatar)
+        username: user.data?.username || '',
+        fullname: user.data?.fullname || '',
+        birthday: user.data?.birthday || '',
+        gender: user.data?.gender || '',
+        locality: user.data?.school?.locality?.name || '',
+        schoolName: user.data?.school?.name || '',
+        school_id: user.data?.school?.id || '',
+        grade: user.data?.grade || '',
+        year_of_work_experience: user.data?.year_of_work_experience || '',
+        phone_number: user.data?.phone_number || '',
+        email: user.data?.email || '',
+        avatar: user.data?.avatar || (userType === 'student' ? StudentAvatar : TeacherAvatar)
       };
 
       // Update profileData

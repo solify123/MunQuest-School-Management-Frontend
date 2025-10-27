@@ -38,7 +38,8 @@ const AgendaPage: React.FC = () => {
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
-  const [isUploadingDocument, setIsUploadingDocument] = useState<boolean>(false);
+  const [isUploadingFile, setIsUploadingFile] = useState<boolean>(false); // For file upload (cloud button)
+  const [isSavingDocument, setIsSavingDocument] = useState<boolean>(false); // For document save (Upload Document button)
   const [documentUrl, setDocumentUrl] = useState<string>('');
   const [documentName, setDocumentName] = useState<string>('');
   // Refs for detecting clicks outside menus
@@ -233,6 +234,7 @@ const AgendaPage: React.FC = () => {
     try {
       const file = event.target.files?.[0];
       if (file) {
+        setIsUploadingFile(true); // Set loading state for file upload only
         const currentCommittee = filteredCommittees.find(committee => committee.abbr === activeCommittee);
         const committeeId = currentCommittee?.id;
         const response = await uploadAgendaDocumentApi(eventId || '', committeeId || '', file);
@@ -260,6 +262,8 @@ const AgendaPage: React.FC = () => {
       }
     } catch (error: any) {
       toast.error(error.message);
+    } finally {
+      setIsUploadingFile(false); // Reset file upload loading state
     }
     // Reset the file input
     event.target.value = '';
@@ -472,7 +476,7 @@ const AgendaPage: React.FC = () => {
   };
 
   const handleUploadDocument = async () => {
-    if (isUploadingDocument) return; // Prevent double clicks
+    if (isSavingDocument) return; // Prevent double clicks
 
     // Validate all required data before uploading
     if (!eventId) {
@@ -504,7 +508,7 @@ const AgendaPage: React.FC = () => {
     }
 
     try {
-      setIsUploadingDocument(true);
+      setIsSavingDocument(true); // Set loading state for document save only
       const response = await saveEventCommitteeDocumentApi(eventId, committeeId, activeCommittee, documentName.trim(), documentUrl.trim());
       if (response.success) {
         toast.success('Document uploaded successfully');
@@ -532,7 +536,7 @@ const AgendaPage: React.FC = () => {
       toast.error(error.message || 'Failed to upload document. Please try again.');
       setSubTabLoading(false);
     } finally {
-      setIsUploadingDocument(false);
+      setIsSavingDocument(false); // Reset document save loading state
     }
   };
 
@@ -624,7 +628,7 @@ const AgendaPage: React.FC = () => {
             <div className="text-red-500 font-medium text-sm">None</div>
           ) : (
             filteredAgendas.map((agenda) => (
-              <div key={agenda.id} className="w-[400px] flex items-center space-x-2">
+              <div key={agenda.id} className="w-[400px] flex items-center">
                 <div className="flex-1">
                   {editingAgenda === agenda.id ? (
                     <input
@@ -807,167 +811,180 @@ const AgendaPage: React.FC = () => {
           <div className="space-y-4">
             <h2 className="text-xl font-bold text-gray-900">Committee Documents</h2>
 
-          {/* Existing Documents */}
-          {subTabLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1E395D]"></div>
-              <span className="ml-2 text-gray-600">Loading documents...</span>
-            </div>
-          ) : !Array.isArray(documents) || documents.length === 0 ? (
-            <div className="text-red-500 font-medium text-sm">None</div>
-          ) : (
-            documents.map((document) => (
-              <div key={document.id} className="w-[400px] flex items-center space-x-2">
-                <div className="flex-1">
-                  {editingDocument === document.id ? (
-                    <input
-                      type="text"
-                      value={tempValue}
-                      onChange={(e) => handleDocumentChange(e.target.value)}
-                      className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
-                      placeholder="Enter document name"
-                      autoFocus
-                    />
-                  ) : (
-                    <input
-                      type="text"
-                      value={document.title}
-                      readOnly
-                      className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg text-sm bg-gray-50"
-                    />
-                  )}
-                </div>
-
-                {/* Update and Cancel buttons when editing existing document */}
-                {editingDocument === document.id && (
-                  <>
-                    <button
-                      onClick={handleDocumentSave}
-                      className="text-white font-medium transition-colors hover:opacity-90"
-                      style={{
-                        width: '120px',
-                        height: '44px',
-                        borderRadius: '30px',
-                        padding: '10px',
-                        gap: '10px',
-                        background: '#C2A46D',
-                        cursor: 'pointer',
-                        border: 'none',
-                        boxShadow: 'none',
-                      }}
-                    >
-                      Update
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleDocumentCancel();
-                        setShowDocumentMenu(null);
-                      }}
-                      className="text-white font-medium transition-colors hover:opacity-90"
-                      style={{
-                        width: '120px',
-                        height: '44px',
-                        borderRadius: '30px',
-                        padding: '10px',
-                        gap: '10px',
-                        background: '#84B5F3',
-                        cursor: 'pointer',
-                        border: 'none',
-                        boxShadow: 'none',
-                      }}
-                    >
-                      Cancel
-                    </button>
-                  </>
-                )}
-
-                {/* Three-dot menu */}
-                {editingDocument !== document.id && (
-                  <div className="relative" ref={showDocumentMenu === document.id ? documentMenuRef : null}>
-                    <button
-                      onClick={() => setShowDocumentMenu(showDocumentMenu === document.id ? null : document.id)}
-                      className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
-                    >
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                      </svg>
-                    </button>
-
-                    {showDocumentMenu === document.id && (
-                      <div className="absolute right-0 mt-2 w-36 bg-white rounded-lg shadow-xl z-50 border border-gray-200">
-                        <div className="py-2">
-                          <button
-                            onClick={() => {
-                              setDocumentToDelete(document.id);
-                              setShowDeleteConfirm(true);
-                              setShowDocumentMenu(null);
-                            }}
-                            className="block w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </div>
+          {/* Document List Container */}
+          <div className="space-y-3">
+            {/* Loading State */}
+            {subTabLoading ? (
+              <div className="w-[400px] flex items-center justify-center py-8 bg-gray-50 border border-gray-200 rounded-lg">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#1E395D]"></div>
+                <span className="ml-3 text-gray-600">Loading documents...</span>
+              </div>
+            ) : !Array.isArray(documents) || documents.length === 0 ? (
+              <div className="w-[400px] text-red-500 font-medium text-sm py-3">None</div>
+            ) : (
+              documents.map((document) => (
+                <div key={document.id} className="w-[400px] flex items-center">
+                  <div className="flex-1">
+                    {editingDocument === document.id ? (
+                      <input
+                        type="text"
+                        value={tempValue}
+                        onChange={(e) => handleDocumentChange(e.target.value)}
+                        className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
+                        placeholder="Enter document name"
+                        autoFocus
+                      />
+                    ) : (
+                      <input
+                        type="text"
+                        value={document.title}
+                        readOnly
+                        className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg text-sm bg-gray-50"
+                      />
                     )}
                   </div>
-                )}
-              </div>
-            ))
-          )}
 
-          {/* Upload Document Button */}
-          <div className="flex items-center">
-            <input
-              type="text"
-              placeholder={documentName}
-              className="w-[350px] px-4 py-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
-              readOnly
-            />
-            <label className={`px-4 py-3 rounded-r-lg transition-colors duration-200 ${isUploadingDocument
-              ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-[#C2A46D] text-white cursor-pointer hover:opacity-90'
-              }`}
-              style={{ height: "50px", display: "flex", alignItems: "center", justifyContent: "center" }}
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-              </svg>
-              <input
-                type="file"
-                onChange={handleFileUpload}
-                disabled={isUploadingDocument}
-                className="hidden"
-                accept=".pdf,.doc,.docx,.txt"
-              />
-            </label>
-          </div>
-          <button
-            onClick={handleUploadDocument}
-            className={`text-white font-medium transition-colors ${isUploadingDocument ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'
-              }`}
-            style={{
-              width: 'auto',
-              height: '44px',
-              borderRadius: '30px',
-              paddingLeft: '10px',
-              paddingRight: '10px',
-              gap: '10px',
-              opacity: isUploadingDocument ? 0.5 : 1,
-              background: isUploadingDocument ? '#bdbdbd' : '#C2A46D',
-              cursor: isUploadingDocument ? 'not-allowed' : 'pointer',
-              border: 'none',
-              boxShadow: 'none',
-            }}
-            disabled={isUploadingDocument}
-          >
-            {isUploadingDocument ? (
-              <>
-                Uploading...
-              </>
-            ) : (
-              'Upload Document'
+                  {/* Update and Cancel buttons when editing existing document */}
+                  {editingDocument === document.id && (
+                    <>
+                      <button
+                        onClick={handleDocumentSave}
+                        className="text-white font-medium transition-colors hover:opacity-90"
+                        style={{
+                          width: '120px',
+                          height: '44px',
+                          borderRadius: '30px',
+                          padding: '10px',
+                          gap: '10px',
+                          background: '#C2A46D',
+                          cursor: 'pointer',
+                          border: 'none',
+                          boxShadow: 'none',
+                        }}
+                      >
+                        Update
+                      </button>
+                      <button
+                        onClick={() => {
+                          handleDocumentCancel();
+                          setShowDocumentMenu(null);
+                        }}
+                        className="text-white font-medium transition-colors hover:opacity-90"
+                        style={{
+                          width: '120px',
+                          height: '44px',
+                          borderRadius: '30px',
+                          padding: '10px',
+                          gap: '10px',
+                          background: '#84B5F3',
+                          cursor: 'pointer',
+                          border: 'none',
+                          boxShadow: 'none',
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  )}
+
+                  {/* Three-dot menu */}
+                  {editingDocument !== document.id && (
+                    <div className="relative" ref={showDocumentMenu === document.id ? documentMenuRef : null}>
+                      <button
+                        onClick={() => setShowDocumentMenu(showDocumentMenu === document.id ? null : document.id)}
+                        className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                        </svg>
+                      </button>
+
+                      {showDocumentMenu === document.id && (
+                        <div className="absolute right-0 mt-2 w-36 bg-white rounded-lg shadow-xl z-50 border border-gray-200">
+                          <div className="py-2">
+                            <button
+                              onClick={() => {
+                                setDocumentToDelete(document.id);
+                                setShowDeleteConfirm(true);
+                                setShowDocumentMenu(null);
+                              }}
+                              className="block w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))
             )}
-          </button>
+          </div>
+
+          {/* Upload Document Section */}
+          <div className="space-y-3">
+            <div className="flex items-center">
+              <input
+                type="text"
+                placeholder={documentName}
+                className="w-[350px] px-4 py-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent"
+                readOnly
+              />
+              <label className={`ml-0 px-4 py-3 rounded-r-lg transition-colors duration-200 ${isUploadingFile
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-[#C2A46D] text-white cursor-pointer hover:opacity-90'
+                }`}
+                style={{ height: "50px", display: "flex", alignItems: "center", justifyContent: "center", marginLeft: "0px !important" }}
+              >
+                {isUploadingFile ? (
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                ) : (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                )}
+                <input
+                  type="file"
+                  onChange={handleFileUpload}
+                  disabled={isUploadingFile}
+                  className="hidden"
+                  accept=".pdf,.doc,.docx,.txt"
+                />
+              </label>
+            </div>
+            <button
+              onClick={handleUploadDocument}
+              className={`text-white font-medium transition-colors ${isSavingDocument ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'
+                }`}
+              style={{
+                width: '200px',
+                height: '44px',
+                borderRadius: '30px',
+                paddingLeft: '10px',
+                paddingRight: '10px',
+                gap: '10px',
+                opacity: isSavingDocument ? 0.5 : 1,
+                background: isSavingDocument ? '#bdbdbd' : '#C2A46D',
+                cursor: isSavingDocument ? 'not-allowed' : 'pointer',
+                border: 'none',
+                boxShadow: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              disabled={isSavingDocument}
+            >
+              {isSavingDocument ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Uploading...
+                </>
+              ) : (
+                'Upload Document'
+              )}
+            </button>
+          </div>
           </div>
         )}
       </div>

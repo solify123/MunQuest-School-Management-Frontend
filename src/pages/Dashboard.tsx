@@ -140,24 +140,16 @@ const Dashboard: React.FC = () => {
         {/* Create Event Button */}
         <div className="bg-white">
           <div className="max-w-7xl mx-auto px-6 py-4">
-            <div className="mt-6 flex justify-end">
+            <div className="mt-6 flex justify-end space-x-4">
               <button
-                onClick={() => checkRegistrationStatus()}
+                onClick={checkRegistrationStatus}
                 disabled={buttonLoading}
-                className="bg-[#1E395D] text-white font-medium flex items-center transition-colors duration-200"
-                style={{
-                  width: 160,
-                  height: 40,
-                  borderRadius: 30,
-                  borderWidth: 1,
-                  borderStyle: 'solid',
-                  padding: 10,
-                }}
+                className="bg-[#1E395D] w-[230px] text-white px-6 py-3 rounded-lg font-medium hover:bg-[#1a2f4a] transition-colors duration-200 flex items-center"
               >
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
-                {buttonLoading ? 'Checking...' : 'Create Event'}
+                {buttonLoading ? 'Checking...' : 'Register Organiser'}
               </button>
             </div>
           </div>
