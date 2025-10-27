@@ -63,6 +63,11 @@ const Dashboard: React.FC = () => {
       if (!userId) return false;
       const response = await checkRegistrationStatusApi(userId as string);
       if (response.success && response.data) {
+        if (response.data === 'cancelled') {
+          toast.warning('Your registration has been cancelled by the admin');
+          navigate('/request-approval');
+          return false;
+        }
         toast.success(`The status is ${response.data}`);
         return true;
       } else {
