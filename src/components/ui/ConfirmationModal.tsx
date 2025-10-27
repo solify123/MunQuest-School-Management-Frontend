@@ -9,6 +9,8 @@ interface ConfirmationModalProps {
   confirmText?: string;
   cancelText?: string;
   confirmButtonColor?: string;
+  isLoading?: boolean;
+  loadingText?: string;
 }
 
 const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
@@ -19,7 +21,9 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   message,
   confirmText = 'Yes',
   cancelText = 'No',
-  confirmButtonColor = 'text-red-600'
+  confirmButtonColor = 'text-red-600',
+  isLoading = false,
+  loadingText = 'Deleting...'
 }) => {
   if (!isOpen) return null;
 
@@ -40,13 +44,26 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         <div className="flex justify-center space-x-4">
           <button
             onClick={onConfirm}
-            className={`px-6 py-2 rounded-lg text-sm font-bold ${confirmButtonColor} hover:opacity-80 transition-opacity`}
+            disabled={isLoading}
+            className={`px-6 py-2 rounded-lg text-sm font-bold ${confirmButtonColor} hover:opacity-80 transition-opacity flex items-center justify-center ${
+              isLoading ? 'opacity-60 cursor-not-allowed' : ''
+            }`}
           >
-            {confirmText}
+            {isLoading ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                {loadingText}
+              </>
+            ) : (
+              confirmText
+            )}
           </button>
           <button
             onClick={onClose}
-            className="px-6 py-2 rounded-lg text-sm font-bold text-gray-700 hover:bg-gray-100 transition-colors"
+            disabled={isLoading}
+            className={`px-6 py-2 rounded-lg text-sm font-bold text-gray-700 hover:bg-gray-100 transition-colors ${
+              isLoading ? 'opacity-60 cursor-not-allowed' : ''
+            }`}
           >
             {cancelText}
           </button>

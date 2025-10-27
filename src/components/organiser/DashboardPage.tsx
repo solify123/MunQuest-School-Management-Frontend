@@ -278,8 +278,8 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
             {/* Dynamic Data Rows from Real Committees */}
             {allocationStatusData.length > 0 ? (
-              allocationStatusData.map((committee) => (
-                <React.Fragment key={committee.committeeName}>
+              allocationStatusData.map((committee, index) => (
+                <React.Fragment key={`${committee.committeeName}-${committee.committeeType}-${index}`}>
                   <div className="bg-white px-4 py-3 rounded-[5px] border border-gray-800 flex items-center capitalize">
                     {committee.committeeType}
                   </div>

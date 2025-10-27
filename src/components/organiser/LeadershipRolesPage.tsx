@@ -65,6 +65,7 @@ const LeadershipRolesPage: React.FC = () => {
   // Loading states for save buttons
   const [isSavingNew, setIsSavingNew] = useState<boolean>(false);
   const [isSavingEdit, setIsSavingEdit] = useState<boolean>(false);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
 
   const handleDropdownToggle = (roleId: number) => {
     setActiveDropdown(activeDropdown === roleId ? null : roleId);
@@ -141,6 +142,7 @@ const LeadershipRolesPage: React.FC = () => {
   const handleConfirmDelete = async () => {
     if (roleToDelete) {
       try {
+        setIsDeleting(true);
         console.log("roleToDelete", roleToDelete);
         const response = await deleteLeadershipRoleByEventIdApi(roleToDelete.toString());
 
@@ -157,9 +159,13 @@ const LeadershipRolesPage: React.FC = () => {
             });
             setLeadershipRoles(sortedRoles);
           }
+        } else {
+          toast.error(response.message || 'Failed to delete leadership role');
         }
       } catch (error: any) {
         toast.error(error.message || 'Failed to delete leadership role');
+      } finally {
+        setIsDeleting(false);
       }
     }
 
@@ -1019,6 +1025,8 @@ const LeadershipRolesPage: React.FC = () => {
           confirmText="Yes"
           cancelText="No"
           confirmButtonColor="text-red-600"
+          isLoading={isDeleting}
+          loadingText="Deleting..."
         />
       </div>
     </>

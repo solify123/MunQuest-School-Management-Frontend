@@ -38,6 +38,7 @@ const CommitteesPage: React.FC = () => {
   const [editingCommitteeField, setEditingCommitteeField] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
   const [isUpdateMode, setIsUpdateMode] = useState<boolean>(false);
   const [showContextMenu, setShowContextMenu] = useState<boolean>(false);
@@ -491,6 +492,7 @@ const CommitteesPage: React.FC = () => {
 
   const handleDeleteCommittee = async () => {
     try {
+      setIsDeleting(true);
       if (!contextMenuCommitteeId) return;
       const target = committees.find((c: any) => c.id === contextMenuCommitteeId);
       if (!target) return;
@@ -546,6 +548,7 @@ const CommitteesPage: React.FC = () => {
       console.log('Error deleting committee:', error);
       toast.error(error.message || 'Failed to delete committee');
     } finally {
+      setIsDeleting(false);
       setShowContextMenu(false);
       setContextMenuCommitteeId(null);
     }
@@ -1126,6 +1129,8 @@ const CommitteesPage: React.FC = () => {
         confirmText="Yes"
         cancelText="No"
         confirmButtonColor="text-red-600"
+        isLoading={isDeleting}
+        loadingText="Deleting..."
       />
 
       <div className="w-[925px] flex justify-between">

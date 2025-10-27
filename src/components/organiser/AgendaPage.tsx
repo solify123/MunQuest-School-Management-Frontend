@@ -433,9 +433,10 @@ const AgendaPage: React.FC = () => {
 
 
   const handleDocumentDelete = async () => {
-    if (documentToDelete === null) return;
+    if (documentToDelete === null || isDeleting) return;
 
     try {
+      setIsDeleting(true);
       const response = await deleteEventCommitteeDocumentApi(documentToDelete.toString());
       if (response.success) {
         toast.success('Document deleted successfully');
@@ -464,6 +465,7 @@ const AgendaPage: React.FC = () => {
       toast.error(error.message || 'Failed to delete document');
       setSubTabLoading(false);
     } finally {
+      setIsDeleting(false);
       setShowDeleteConfirm(false);
       setDocumentToDelete(null);
     }
@@ -559,6 +561,8 @@ const AgendaPage: React.FC = () => {
         confirmText="Yes"
         cancelText="No"
         confirmButtonColor="text-red-600"
+        isLoading={isDeleting}
+        loadingText="Deleting..."
       />
 
       <div className="space-y-6">

@@ -97,7 +97,8 @@ const Dashboard: React.FC = () => {
       case 'Upcoming': {
         return allEvents.filter((event: any) => {
           const endDate = toDate(event.end_date) || toDate(event.start_date);
-          return endDate && endDate >= today && event.status !== 'cancelled' && event.organiser.userid !== userId;
+          const registration = allRegistrations.filter(item => item.event_id === event.id && item.user_id === userId);
+          return endDate && endDate >= today && event.status !== 'cancelled' && event.organiser.userid !== userId && registration.length === 0;
         });
       }
       case 'Registered': {

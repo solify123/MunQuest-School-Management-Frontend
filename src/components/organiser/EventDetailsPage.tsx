@@ -287,7 +287,10 @@ const EventDetailsPage: React.FC<EventDetailsPageProps> = ({
         {/* Save Button */}
         <div className="mt-8 flex justify-start">
           <button
-            onClick={onUpdateEvent}
+            onClick={() => {
+              onUpdateEvent();
+              onCancelEdit();
+            }}
             disabled={isSaving}
             className={`text-white font-medium transition-colors`}
             style={{
