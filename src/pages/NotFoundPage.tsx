@@ -73,31 +73,6 @@ const NotFoundPage: React.FC = () => {
           </button>
         </div>
 
-        {/* Additional Help */}
-        <div className="mt-12 p-6 bg-white rounded-xl shadow-sm border border-gray-100 max-w-md mx-auto">
-          <h3 className="text-lg font-semibold text-primary-dark mb-3">
-            Need Help?
-          </h3>
-          <p className="text-gray-600 text-sm mb-4">
-            If you believe this is an error, please contact our support team.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-2 text-sm">
-            <a 
-              href="mailto:support@munquest.com" 
-              className="text-primary-gold hover:text-primary-gold-dark transition-colors duration-200"
-            >
-              📧 support@munquest.com
-            </a>
-            <span className="hidden sm:inline text-gray-300">•</span>
-            <a 
-              href="tel:+1234567890" 
-              className="text-primary-gold hover:text-primary-gold-dark transition-colors duration-200"
-            >
-              📞 +1 (234) 567-890
-            </a>
-          </div>
-        </div>
-
         {/* Decorative Elements */}
         <div className="mt-8 flex justify-center space-x-2">
           <div className="w-2 h-2 bg-primary-gold rounded-full animate-pulse"></div>
