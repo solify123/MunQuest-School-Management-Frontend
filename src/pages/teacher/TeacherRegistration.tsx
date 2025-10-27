@@ -43,8 +43,8 @@ const TeacherRegistration: React.FC = () => {
           setFullname(response.data.fullname || '');
           setDateOfBirth(response.data.birthday || '');
           setGender(response.data.gender || '');
-          setSchoolName(response.data.school.name || '');
-          setSchoolLocalityId(response.data.school.locality_id || '');
+          setSchoolName(response.data?.school?.name || '');
+          setSchoolLocalityId(response.data?.school?.locality_id || '');
           setYearsOfWorkExperience(response.data.years_of_experience || '');
           setEmail(response.data.email || '');
           setMobile(response.data.phone_number || '');

@@ -85,8 +85,8 @@ const StudentRegistration: React.FC = () => {
           setName(response.data.fullname || '');
           setDateOfBirth(response.data.birthday || '');
           setGender(response.data.gender || '');
-          setSchoolName(response.data.school.name || '');
-          setSchoolLocalityId(response.data.school.locality_id || '');
+          setSchoolName(response.data?.school?.name || '');
+          setSchoolLocalityId(response.data?.school?.locality_id || '');
           setGradeOrYear(response.data.grade || '');
           setEmail(response.data.email || '');
           setMobile(response.data.phone_number || '');
