@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { getBackendUrl } from '../utils/env';
+import { checkAuth } from '../utils/checkAuth';
 
 const backendUrl = getBackendUrl();
 
@@ -8,7 +9,10 @@ export const signupApi = async (email: string, role: string, auth_id: string | n
         const response = await axios.post(`${backendUrl}/api/v1/users/register`, { email, role, auth_id });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 };
 
@@ -17,7 +21,10 @@ export const loginApiHandler = async (email: string, password: string) => {
         const response = await axios.post(`${backendUrl}/api/v1/users/login`, { email, password });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 };
 
@@ -26,7 +33,10 @@ export const getUserIdByEmailApi = async (email: string) => {
         const response = await axios.post(`${backendUrl}/api/v1/users/get-userid-by-email`, { email });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 };
 
@@ -35,7 +45,10 @@ export const getUserDataByEmailApi = async (email: string) => {
         const response = await axios.post(`${backendUrl}/api/v1/users/get-userid-by-email`, { email });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 };
 
@@ -44,7 +57,10 @@ export const loginApi = async (email: string, password: string) => {
         const response = await axios.post(`${backendUrl}/api/v1/users/login`, { email, password });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 };
 
@@ -59,7 +75,10 @@ export const deleteAccountApi = async () => {
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 };
 
@@ -92,6 +111,9 @@ export const teacherProfileApi = async (fullname: string, username: string, birt
         });
         return response.data;
     } catch (error: any) {
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
         console.log('Teacher profile API error:', error);
         if (error.response?.data?.message) {
             throw new Error(error.response.data.message);
@@ -132,6 +154,9 @@ export const studentProfileApi = async (fullname: string, username: string, birt
         });
         return response.data;
     } catch (error: any) {
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
         console.log('Student profile API error:', error);
         if (error.response?.data?.message) {
             throw new Error(error.response.data.message);
@@ -154,7 +179,10 @@ export const getUserByIdApi = async () => {
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 };
 
@@ -181,7 +209,10 @@ export const updateStudentProfileApi = async (fullname: string, username: string
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 };
 
@@ -207,7 +238,10 @@ export const updateTeacherProfileApi = async (fullname: string, username: string
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 };
 
@@ -226,7 +260,10 @@ export const uploadAvatarApi = async (avatarFile: File) => {
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 };
 
@@ -241,7 +278,10 @@ export const changePasswordApi = async (newPassword: string) => {
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 };
 
@@ -255,7 +295,10 @@ export const getAllUsersApi = async () => {
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 
 }
@@ -270,7 +313,10 @@ export const deleteUserBySuperUserApi = async (userId: string) => {
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 }
 
@@ -284,7 +330,10 @@ export const updateUserStatusApi = async (userId: string, status: string) => {
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 }
 
@@ -306,7 +355,10 @@ export const updateUserBySuperUserApi = async (userId: string, userData: {
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 }
 
@@ -335,7 +387,10 @@ export const updateTeacherProfileAndCustomLocalityApi = async (fullname: string,
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 }
 
@@ -362,7 +417,10 @@ export const updateTeacherProfileCustomSchoolNameApi = async (
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 }
 
@@ -389,7 +447,10 @@ export const updateStudentProfileAndCustomLocalityApi = async (fullname: string,
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 }
 
@@ -416,7 +477,10 @@ export const updateStudentProfileCustomSchoolNameApi = async (
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 }
 
@@ -430,7 +494,10 @@ export const sendSuperUserInviteApi = async (username: string, email: string) =>
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 }
 
@@ -444,6 +511,9 @@ export const removeSuperUserInviteApi = async (username: string, email: string) 
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 }

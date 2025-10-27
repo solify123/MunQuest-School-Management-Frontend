@@ -1,4 +1,6 @@
 import axios from 'axios';
+import { checkAuth } from '../utils/checkAuth';
+
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
 export const getAllEventCommitteesAgendaApi = async (eventId: string) => {
@@ -11,6 +13,9 @@ export const getAllEventCommitteesAgendaApi = async (eventId: string) => {
         });
         return response.data;
     } catch (error: any) {
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
         throw new Error(error.response?.data?.message || 'Failed to fetch all event committees agendas');
     }
 };
@@ -30,6 +35,9 @@ export const saveEventCommitteesByEventIdAgendaApi = async (eventId: string, eve
         });
         return response.data;
     } catch (error: any) {
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
         throw new Error(error.response?.data?.message || 'Failed to save event committees agenda by event id');
     }
 };
@@ -44,6 +52,9 @@ export const getEventCommitteesByEventIdAgendaApi = async (eventId: string) => {
         });
         return response.data;
     } catch (error: any) {
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
         throw new Error(error.response?.data?.message || 'Failed to fetch event committees agendas by event id');
     }
 };
@@ -60,6 +71,9 @@ export const updateEventCommitteesAgendaByIdApi = async (id: string, agenda_titl
         });
         return response.data;
     } catch (error: any) {
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
         throw new Error(error.response?.data?.message || 'Failed to update event committees agenda by id');
     }
 };
@@ -74,6 +88,9 @@ export const deleteEventCommitteesAgendaByIdApi = async (id: string) => {
         });
         return response.data;
     } catch (error: any) {
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
         throw new Error(error.response?.data?.message || 'Failed to delete event committees agenda by id');
     }
 };
@@ -96,6 +113,9 @@ export const saveEventCommitteeDocumentApi = async (eventId: string, committeeId
         });
         return response.data;
     } catch (error: any) {
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
         throw new Error(error.response?.data?.message || 'Failed to save event committee document');
     }
 };
@@ -115,7 +135,10 @@ export const uploadAgendaDocumentApi = async (eventId: string, committeeId: stri
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'Failed to upload agenda document');
     }
 };
 
@@ -129,6 +152,9 @@ export const getAgendaDocumentsApi = async (eventId: string, committeeId: string
         });
         return response.data;
     } catch (error: any) {
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
         throw new Error(error.response?.data?.message || 'Failed to fetch agenda documents');
     }
 };
@@ -143,6 +169,9 @@ export const deleteEventCommitteeDocumentApi = async (documentId: string) => {
         });
         return response.data;
     } catch (error: any) {
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
         throw new Error(error.response?.data?.message || 'Failed to delete event committee document');
     }
 };
