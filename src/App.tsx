@@ -34,6 +34,7 @@ import SuperUser from './pages/SuperUser';
 import TeacherDelegatePage from './pages/teacher/TeacherDelegatePage';
 import UploadDelegatesPage from './components/organiser/Delegates-UploadDelegatesPage';
 import ViewDelegateProfile from './pages/ViewDelegateProfile';
+import NotFoundPage from './pages/NotFoundPage';
 
 function App() {
   return (
@@ -80,6 +81,9 @@ function App() {
               <Route path="/teacher-registration/:eventId" element={<PrivateRoute><TeacherRegistration /></PrivateRoute>} />
               <Route path="/teacher-registration-success/:eventId" element={<PrivateRoute><TeacherRegistrationSuccess /></PrivateRoute>} />
               <Route path="/teacher-delegate-page/:eventId" element={<PrivateRoute><TeacherDelegatePage /></PrivateRoute>} />
+              
+              {/* 404 Route - Must be last */}
+              <Route path="*" element={<NotFoundPage />} />
               </Routes>
               <Toaster position="bottom-right" richColors />
             </div>
