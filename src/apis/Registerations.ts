@@ -1,4 +1,6 @@
 import axios from 'axios';
+import { checkAuth } from '../utils/checkAuth';
+
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
 export const getAllRegistrationsByEventIdApi = async (eventId: string) => {
@@ -11,7 +13,10 @@ export const getAllRegistrationsByEventIdApi = async (eventId: string) => {
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 }
 
@@ -31,7 +36,10 @@ export const eventRegistratTeacherApi = async (eventId: string, foodPreference: 
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 }
 
@@ -57,7 +65,10 @@ export const eventRegistratStudentApi = async (eventId: string, mun_experience: 
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 }
 
@@ -73,7 +84,10 @@ export const getRegistrationInfoByEventIdAndUserIdApi = async (eventId: string) 
             });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 }
 
@@ -103,7 +117,10 @@ export const deleteDelegateApi = async (delegateId: string) => {
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 }
 

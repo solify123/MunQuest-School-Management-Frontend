@@ -1,4 +1,6 @@
 import axios from 'axios';
+import { checkAuth } from '../utils/checkAuth';
+
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
 export const eventImagefileUploadApi = async (file: File) => {
@@ -14,7 +16,10 @@ export const eventImagefileUploadApi = async (file: File) => {
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 };
 
@@ -45,7 +50,10 @@ export const createEventApi = async (name: string, description: string, start_da
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 };
 
@@ -60,7 +68,10 @@ export const getCurrentEventsApi = async () => {
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 }
 
@@ -76,7 +87,10 @@ export const getEventsByOrganiserApi = async () => {
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 }
 
@@ -91,7 +105,10 @@ export const getEventByIdApi = async (eventId: string) => {
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 }
 
@@ -120,7 +137,10 @@ export const updateEventApi = async (eventId: string, name: string, description:
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 }
 
@@ -153,7 +173,10 @@ export const updateEventStatusApi = async (eventId: string, status: string) => {
             });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 }
 
@@ -167,7 +190,10 @@ export const deleteEventApi = async (eventId: string) => {
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 }
 
@@ -182,6 +208,9 @@ export const checkRegistrationStatusApi = async (userId: string) => {
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 }

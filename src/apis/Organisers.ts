@@ -1,4 +1,6 @@
 import axios from 'axios';
+import { checkAuth } from '../utils/checkAuth';
+
 const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
 export const edviceDocsfileUploadApi = async (file: File) => {
@@ -14,7 +16,10 @@ export const edviceDocsfileUploadApi = async (file: File) => {
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 };
 
@@ -34,7 +39,10 @@ export const requestApprovalApi = async (school_id: string, locality_id: string,
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 }
 
@@ -50,7 +58,10 @@ export const verifyOrganiserApi = async () => {
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 }
 
@@ -65,7 +76,10 @@ export const getAllOrganisersApi = async () => {
 
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 }
 
@@ -80,7 +94,10 @@ export const updateOrganiserStatusApi = async (organiserId: string, status: stri
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 }
 
@@ -94,7 +111,10 @@ export const deleteOrganiserApi = async (organiserId: string) => {
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 }
 
@@ -117,7 +137,10 @@ export const addOrganiserBySuperUserApi = async (user_id: string, school_id: str
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 }
 
@@ -131,7 +154,10 @@ export const assignOrganiserToSchoolApi = async (userId: string) => {
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 }
 
@@ -145,6 +171,9 @@ export const removeOrganiserFromSchoolApi = async (userId: string) => {
         });
         return response.data;
     } catch (error: any) {
-        throw new Error(error.response.data.message);
+        if (checkAuth(error)) {
+            return; // Auth error handled, don't throw
+        }
+        throw new Error(error.response?.data?.message || 'API request failed');
     }
 }
