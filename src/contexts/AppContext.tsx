@@ -134,10 +134,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         const allLeadershipRolesResponse = await getAllLeadershipRolesApi();
         setAllLeadershipRoles(allLeadershipRolesResponse.data);
       }
-    } catch (error) {
+    } catch (error: any) {
       let token = localStorage.getItem('token');
       // Only show JWT expiration toast if user was logged in
-      if (loginStatus && token) {
+      if (loginStatus && token || error?.message?.includes('expired')) {
         localStorage.clear();
         navigate('/login');
         toast.error('JWT token is expired. Please login again.');
@@ -156,10 +156,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       else {
         toast.error(allEventsResponse.message);
       }
-    } catch (error) {
+    } catch (error: any) {
       let token = localStorage.getItem('token');
       // Only show JWT expiration toast if user was logged in
-      if (loginStatus && token) {
+      if (loginStatus && token || error?.message?.includes('expired')) {
         localStorage.clear();
         navigate('/login');
         toast.error('JWT token is expired. Please login again.');
@@ -176,10 +176,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       else {
         toast.error(allLocalitiesResponse.message);
       }
-    } catch (error) {
+    } catch (error: any) {
       let token = localStorage.getItem('token');
       // Only show JWT expiration toast if user was logged in
-      if (loginStatus && token) {
+      if (loginStatus && token || error?.message?.includes('expired')) {
         localStorage.clear();
         navigate('/login');
         toast.error('JWT token is expired. Please login again.');
@@ -196,10 +196,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       else {
         toast.error(allSchoolsResponse.message);
       }
-    } catch (error) {
+    } catch (error: any) {
       let token = localStorage.getItem('token');
       // Only show JWT expiration toast if user was logged in
-      if (loginStatus && token) {
+      if (loginStatus && token || error?.message?.includes('expired')) {
         localStorage.clear();
         navigate('/login');
         toast.error('JWT token is expired. Please login again.');
@@ -216,10 +216,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       else {
         toast.error(allAreasResponse.message);
       }
-    } catch (error) {
+    } catch (error: any) {
       let token = localStorage.getItem('token');
       // Only show JWT expiration toast if user was logged in
-      if (loginStatus && token) {
+      if (loginStatus && token || error?.message?.includes('expired')) {
         localStorage.clear();
         navigate('/login');
         toast.error('JWT token is expired. Please login again.');
@@ -237,10 +237,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         toast.error(allLeadershipRolesResponse.message);
       }
       setAllLeadershipRoles(allLeadershipRolesResponse.data || []);
-    } catch (error) {
+    } catch (error: any) {
       let token = localStorage.getItem('token');
       // Only show JWT expiration toast if user was logged in
-      if (loginStatus && token) {
+      if (loginStatus && token || error?.message?.includes('expired')) {
         localStorage.clear();
         navigate('/login');
         toast.error('JWT token is expired. Please login again.');
@@ -257,10 +257,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       else {
         toast.error(allCommitteesResponse.message);
       }
-    } catch (error) {
+    } catch (error: any) {
       let token = localStorage.getItem('token');
       // Only show JWT expiration toast if user was logged in
-      if (loginStatus && token) {
+      if (loginStatus && token || error?.message?.includes('expired')) {
+        localStorage.clear();
+        navigate('/login');
         toast.error('JWT token is expired. Please login again.');
       }
     }
@@ -279,10 +281,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         console.log('API response not successful:', response.message);
         toast.error(response.message);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log('Error in refreshRegistrationsData:', error);
       let token = localStorage.getItem('token');
-      if (loginStatus && token) {
+      if (loginStatus && token || error?.message?.includes('expired')) {
         localStorage.clear();
         navigate('/login');
         toast.error('JWT token is expired. Please login again.');
@@ -300,10 +302,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       else {
         toast.error(response.message);
       }
-    } catch (error) {
+    } catch (error: any) {
       let token = localStorage.getItem('token');
       // Only show JWT expiration toast if user was logged in
-      if (loginStatus && token) {
+      if (loginStatus && token || error?.message?.includes('expired')) {
         localStorage.clear();
         navigate('/login');
         toast.error('JWT token is expired. Please login again.');
