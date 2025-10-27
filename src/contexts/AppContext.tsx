@@ -75,7 +75,7 @@ interface AppProviderProps {
 
 export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const { user: supabaseUser, session, loading: authLoading } = useSupabaseAuth();
-
+  
   // User state
   const [userType, setUserType] = useState<string | null>(null);
   const [isOrganiser, setIsOrganiser] = useState<boolean>(false);

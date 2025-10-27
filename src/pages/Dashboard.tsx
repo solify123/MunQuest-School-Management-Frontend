@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { LoadingSpinner, Header } from '../components/ui';
 import { checkRegistrationStatusApi, getCurrentEventsApi } from '../apis/Events';
 import PageLoader from '../components/PageLoader';
+import { useApp } from '../contexts/AppContext';
 import { toast } from 'sonner';
 
 const Dashboard: React.FC = () => {
@@ -11,6 +12,27 @@ const Dashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [allEvents, setAllEvents] = useState<any[]>([]);
   const [buttonLoading, setButtonLoading] = useState(false);
+  const [registrationData, setRegistrationData] = useState<any[]>([]);
+  const { allRegistrations, refreshRegistrationsData } = useApp();
+
+  // Log allRegistrations to console
+  useEffect(() => {
+    let userId = localStorage.getItem('userId');
+    let filteredEvents = allEvents.filter(event => {
+      let registrations = allRegistrations.filter(item => item.event_id === event.id && item.user_id === userId);
+      return registrations.length > 0;
+    });
+    setRegistrationData(filteredEvents)
+  }, [allRegistrations,]);
+
+  // Load registrations for all events when component mounts
+  useEffect(() => {
+    if (allEvents.length > 0) {
+      allEvents.forEach(event => {
+        refreshRegistrationsData(event.id.toString());
+      });
+    }
+  }, [allEvents, refreshRegistrationsData]);
 
   useEffect(() => {
     const checkEvents = async () => {
@@ -54,7 +76,7 @@ const Dashboard: React.FC = () => {
     } finally {
       setButtonLoading(false);
     }
-  };  
+  };
 
   const handleRegister = async (eventId: number) => {
     const userType = localStorage.getItem('userRole');
@@ -69,7 +91,6 @@ const Dashboard: React.FC = () => {
   const getFilteredEvents = () => {
     const today = new Date();
     const userId = localStorage.getItem('userId');
-
     const toDate = (value: any) => (value ? new Date(value) : null);
 
     switch (activeTab) {
@@ -80,7 +101,7 @@ const Dashboard: React.FC = () => {
         });
       }
       case 'Registered': {
-        return allEvents.filter((event: any) => event.organiser.userid === userId);
+        return registrationData;
       }
       case 'Past': {
         return allEvents.filter((event: any) => {
