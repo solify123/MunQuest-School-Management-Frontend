@@ -330,7 +330,11 @@ const OrganiserDashboard: React.FC = () => {
       calculateTotalRevenue(numberOfSeats, feesPerDelegate);
       const response = await updateEventApi(eventId || '', eventName, eventDescription, eventStartDate, eventEndDate, coverImage, locality_id, school_id, area_id, numberOfSeats, feesPerDelegate, totalRevenue, website, instagram);
       if (response.success) {
-        toast.success(response.message);
+        // Show success message with notification info
+        const notificationInfo = response.registeredUsersNotified > 0 
+          ? ` Notifications sent to ${response.registeredUsersNotified} registered users.`
+          : '';
+        toast.success(response.message + notificationInfo);
         setHasUnsavedChanges(false); // Reset unsaved changes flag after successful save
 
         // Update original values to current values after successful save

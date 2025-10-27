@@ -253,8 +253,8 @@ const StudentRegistration: React.FC = () => {
               className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent appearance-none bg-white pr-10"
             >
               <option value="">Select</option>
-              {Array.isArray(eventCommitteesInfo) && eventCommitteesInfo.map((committee: any) => (
-                <option key={committee.abbr} value={committee.id}>
+              {Array.isArray(eventCommitteesInfo) && eventCommitteesInfo.map((committee: any, index: number) => (
+                <option key={`${committee.abbr}-${committee.id}-${index}`} value={committee.id}>
                   {committee.abbr}  ({committee.committee.committee})
                 </option>
               ))}
@@ -282,8 +282,8 @@ const StudentRegistration: React.FC = () => {
               className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent appearance-none bg-white pr-10"
             >
               <option value="">Select</option>
-              {Array.isArray(eventCommitteesInfo) && eventCommitteesInfo.map((committee: any) => (
-                <option key={committee.abbr} value={committee.id}>
+              {Array.isArray(eventCommitteesInfo) && eventCommitteesInfo.map((committee: any, index: number) => (
+                <option key={`${committee.abbr}-${committee.id}-${index}`} value={committee.id}>
                   {committee.abbr}  ({committee.committee.committee})
                 </option>
               ))}
@@ -310,8 +310,8 @@ const StudentRegistration: React.FC = () => {
               className="w-[400px] px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E395D] focus:border-transparent appearance-none bg-white pr-10"
             >
               <option value="">Select</option>
-              {Array.isArray(eventCommitteesInfo) && eventCommitteesInfo.map((committee: any) => (
-                <option key={committee.abbr} value={committee.id}>
+              {Array.isArray(eventCommitteesInfo) && eventCommitteesInfo.map((committee: any, index: number) => (
+                <option key={`${committee.abbr}-${committee.id}-${index}`} value={committee.id}>
                   {committee.abbr}  ({committee.committee.committee})
                 </option>
               ))}

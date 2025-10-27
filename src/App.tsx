@@ -38,9 +38,9 @@ import ViewDelegateProfile from './pages/ViewDelegateProfile';
 function App() {
   return (
     <SupabaseAuthProvider>
-      <AppProvider>
-        <NotificationProvider>
-          <Router>
+      <Router>
+        <AppProvider>
+          <NotificationProvider>
             <div className="App">
               <Routes>
               {/* Public Routes - No authentication required */}
@@ -83,9 +83,9 @@ function App() {
               </Routes>
               <Toaster position="bottom-right" richColors />
             </div>
-          </Router>
-        </NotificationProvider>
-      </AppProvider>
+          </NotificationProvider>
+        </AppProvider>
+      </Router>
     </SupabaseAuthProvider>
   );
 }
