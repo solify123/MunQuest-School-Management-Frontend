@@ -47,6 +47,10 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
   const dropdownRef = useRef<HTMLDivElement>(null);
   const nameDropdownRef = useRef<HTMLDivElement>(null);
   const emailDropdownRef = useRef<HTMLDivElement>(null);
+  
+  // Pagination state (match SchoolsTable styling/behavior)
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [itemsPerPage] = useState<number>(7);
 
   // Helper function to check if user is an organizer
   const isUserOrganiser = (userId: string) => {
@@ -72,7 +76,6 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
   // Filter users based on search term and superuser role
   useEffect(() => {
     let filteredByRole = users;
-
     // If this is the superuser tab, only show users with global_role "superuser"
     if (isSuperUser) {
       filteredByRole = users.filter((user: any) => user?.global_role === 'superuser');
@@ -99,7 +102,34 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
       });
       setFilteredUsers(filtered);
     }
+    // Reset to first page when filters/source change
+    setCurrentPage(1);
   }, [searchTerm, users, isSuperUser]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentUsers = filteredUsers.slice(startIndex, endIndex);
+
+  // Pagination handlers
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
 
   // Handle clicking outside dropdown to close it
   useEffect(() => {
@@ -397,7 +427,7 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
           {searchTerm ? 'No users found matching your search' : 'No users found'}
         </div>
       ) : filteredUsers.length > 0 ? (
-        filteredUsers.map((user: any) => (
+        currentUsers.map((user: any) => (
           <div key={user?.id || Math.random()} className={`grid gap-2 mb-2 ${isSuperUser ? 'grid-cols-12' : 'grid-cols-10'}`}>
             {isSuperUser ? (
               // Superusers section columns
@@ -688,6 +718,71 @@ const GlobalUserTable: React.FC<GlobalUserTableProps> = ({ users, onAction, isSu
           </div>
         ))
       ) : null}
+
+      {/* Pagination Controls */}
+      {filteredUsers.length > 0 && (
+        <div className="flex items-center justify-between mt-6 px-4">
+          <div className="text-sm text-gray-600">
+            Showing {startIndex + 1} to {Math.min(endIndex, filteredUsers.length)} of {filteredUsers.length} {isSuperUser ? 'users' : (isSuperUser ? 'users' : 'users')}
+          </div>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={handlePreviousPage}
+              disabled={currentPage === 1}
+              className={`px-3 py-1 rounded-md border ${
+                currentPage === 1
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
+              }`}
+            >
+              Previous
+            </button>
+            
+            {/* Page Numbers */}
+            <div className="flex items-center space-x-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                if (
+                  page === 1 ||
+                  page === totalPages ||
+                  (page >= currentPage - 1 && page <= currentPage + 1)
+                ) {
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => handlePageChange(page)}
+                      className={`px-3 py-1 rounded-md border ${
+                        currentPage === page
+                          ? 'bg-[#C2A46D] text-white border-[#C2A46D]'
+                          : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  );
+                } else if (
+                  (page === currentPage - 2 && page > 1) ||
+                  (page === currentPage + 2 && page < totalPages)
+                ) {
+                  return <span key={page} className="px-2 text-gray-400">...</span>;
+                }
+                return null;
+              })}
+            </div>
+
+            <button
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages}
+              className={`px-3 py-1 rounded-md border ${
+                currentPage === totalPages
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300'
+              }`}
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Invite Superuser Section - Only show for Superusers section */}
       {isSuperUser && (
