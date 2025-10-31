@@ -62,7 +62,6 @@ const Dashboard: React.FC = () => {
       const userId = localStorage.getItem('userId');
       if (!userId) return false;
       const response = await checkRegistrationStatusApi(userId as string);
-      console.log(response, "response")
       if (response.success && response.data) {
         if (response.data === 'cancelled') {
           toast.warning('Your registration has been cancelled by the admin');
