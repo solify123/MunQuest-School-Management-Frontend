@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import GlobalUserTable from './GlobalUserTable';
 import { useApp } from '../../contexts/AppContext';
 
@@ -7,20 +7,28 @@ interface GlobalUserPageProps {
   isSuperUser?: boolean;
 }
 
-const GlobalUserPage: React.FC<GlobalUserPageProps> = ({ type = 'students', isSuperUser = false }) => {
+const GlobalUserPage: React.FC<GlobalUserPageProps> = ({ type = 'students', isSuperUser = true }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [isSuperMasterlist, setIsSuperMasterlist] = useState(false);
   const { allUsers } = useApp();
 
-  // Filter users based on type
+  useEffect(() => {
+    if (isSuperUser && type === 'students') {
+      setIsSuperMasterlist(true);
+    } else if (isSuperUser && type === 'teachers') {
+      setIsSuperMasterlist(true);
+    } else {
+      setIsSuperMasterlist(false);
+    }
+  }, [isSuperUser, type])
+
   const getData = () => {
-    if (isSuperUser) {
+    if (isSuperMasterlist) {
       // For superusers, filter by global_role = superuser and then by role
       const superUsers = allUsers.filter(user =>
         user.global_role === 'superuser'
       ) || [];
 
-      console.log("allUsers", allUsers);
-      console.log("superUsers", superUsers);
       switch (type) {
         case 'students':
           return superUsers.filter(user => user.role === 'student') || [];
@@ -68,7 +76,7 @@ const GlobalUserPage: React.FC<GlobalUserPageProps> = ({ type = 'students', isSu
         role.includes(searchLower) ||
         locality.includes(searchLower);
     });
-  }, [type, allUsers, searchTerm]);
+  }, [type, allUsers, searchTerm, isSuperMasterlist]);
 
   const handleUserAction = (action: string) => {
     // Implement action logic here

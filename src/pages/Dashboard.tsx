@@ -62,6 +62,7 @@ const Dashboard: React.FC = () => {
       const userId = localStorage.getItem('userId');
       if (!userId) return false;
       const response = await checkRegistrationStatusApi(userId as string);
+      console.log(response, "response")
       if (response.success && response.data) {
         if (response.data === 'cancelled') {
           toast.warning('Your registration has been cancelled by the admin');
@@ -95,15 +96,13 @@ const Dashboard: React.FC = () => {
   // Filter events based on active tab
   const getFilteredEvents = () => {
     const today = new Date();
-    const userId = localStorage.getItem('userId');
     const toDate = (value: any) => (value ? new Date(value) : null);
 
     switch (activeTab) {
       case 'Upcoming': {
         return allEvents.filter((event: any) => {
           const endDate = toDate(event.end_date) || toDate(event.start_date);
-          const registration = allRegistrations.filter(item => item.event_id === event.id && item.user_id === userId);
-          return endDate && endDate >= today && event.status !== 'cancelled' && event.organiser.userid !== userId && registration.length === 0;
+          return endDate && endDate >= today && event.status !== 'cancelled';
         });
       }
       case 'Registered': {
